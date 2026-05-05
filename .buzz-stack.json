@@ -1,0 +1,65 @@
+{
+  "project": "buzz",
+  "stackVersion": "0.1.0",
+  "createdBy": "create-buzz-stack",
+  "createdAt": "2026-05-06T00:00:00.000Z",
+  "repoInitialized": true,
+  "ciProvider": "github-actions",
+  "hostingProvider": null,
+  "components": {
+    "mobile": {
+      "enabled": true,
+      "configured": true,
+      "provider": "expo"
+    },
+    "admin": {
+      "enabled": true,
+      "configured": true,
+      "hosting": null
+    },
+    "supabase": {
+      "enabled": true,
+      "configured": true
+    },
+    "githubActions": {
+      "enabled": true,
+      "configured": true
+    },
+    "railway": {
+      "enabled": false,
+      "configured": false
+    },
+    "api": {
+      "enabled": true,
+      "configured": true,
+      "hosting": null
+    },
+    "worker": {
+      "enabled": true,
+      "configured": true,
+      "hosting": null
+    },
+    "sentry": {
+      "enabled": false,
+      "configured": false
+    },
+    "posthog": {
+      "enabled": false,
+      "configured": false
+    },
+    "stripe": {
+      "enabled": false,
+      "configured": false
+    },
+    "push": {
+      "enabled": false,
+      "configured": false,
+      "provider": null
+    },
+    "ai": {
+      "enabled": true,
+      "configured": false,
+      "providers": ["mock"]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+name: Mobile Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        required: true
+        type: choice
+        options: [development, staging, production]
+      platform:
+        required: true
+        type: choice
+        options: [ios, android, all]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/mobile/build-${{ inputs.profile }}.sh

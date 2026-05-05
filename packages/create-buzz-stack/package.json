@@ -1,0 +1,33 @@
+{
+  "name": "create-buzz-stack",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "create-buzz-stack": "./dist/index.js",
+    "buzz-stack": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@inquirer/prompts": "latest",
+    "chalk": "latest",
+    "commander": "latest",
+    "execa": "latest",
+    "fs-extra": "latest",
+    "ora": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "latest",
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "echo 'create-buzz-stack lint placeholder'",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test src/**/*.test.ts"
+  }
+}

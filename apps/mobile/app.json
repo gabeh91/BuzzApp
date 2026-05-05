@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Buzz",
+    "slug": "buzz",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "ios": {
+      "bundleIdentifier": "com.buzz.dev"
+    },
+    "android": {
+      "package": "com.buzz.dev"
+    }
+  }
+}
