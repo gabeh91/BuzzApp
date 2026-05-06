@@ -1,7 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["src/*"],
+      "@graphql/*": ["graphql/*"]
+    },
+    "types": ["node"]
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }
