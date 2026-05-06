@@ -12,14 +12,6 @@
     "declaration": true,
     "sourceMap": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
-    "paths": {
-      "@buzz/config": ["packages/config/src/index.ts"],
-      "@buzz/shared-types": ["packages/shared-types/src/index.ts"],
-      "@buzz/ui": ["packages/ui/src/index.ts"],
-      "@buzz/validation": ["packages/validation/src/index.ts"]
-    }
+    "exactOptionalPropertyTypes": true
   }
 }

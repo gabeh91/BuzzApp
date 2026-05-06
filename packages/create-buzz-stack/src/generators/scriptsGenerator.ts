@@ -9,7 +9,7 @@ ${contents}
 }
 
 export function generateScriptFiles(): GeneratedFile[] {
-  const files: GeneratedFile[] = [
+  const scriptDefinitions: Array<[path: string, contents: string]> = [
     ["scripts/ci/typecheck.sh", "pnpm typecheck"],
     ["scripts/ci/lint.sh", "pnpm lint"],
     ["scripts/ci/test.sh", "pnpm test"],
@@ -33,7 +33,9 @@ export function generateScriptFiles(): GeneratedFile[] {
     ["scripts/mobile/build-prod.sh", "eas build --profile production"],
     ["scripts/secrets/check-required-env.ts", "console.log('TODO: implement required env checks');"],
     ["scripts/secrets/print-required-secrets.ts", "console.log('TODO: print required secrets');"]
-  ].map(([path, contents]) => ({
+  ];
+
+  const files: GeneratedFile[] = scriptDefinitions.map(([path, contents]) => ({
     path,
     contents: path.endsWith(".sh") ? shell(contents) : `${contents}\n`,
     executable: path.endsWith(".sh")

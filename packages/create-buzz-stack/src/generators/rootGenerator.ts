@@ -118,8 +118,7 @@ function generateBaseRootFiles(config: BuzzStackConfig): GeneratedFile[] {
     "declaration": true,
     "sourceMap": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "ignoreDeprecations": "6.0"
+    "exactOptionalPropertyTypes": true
   }
 }
 `

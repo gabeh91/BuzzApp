@@ -119,7 +119,7 @@ import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 const interests = ["Surfing", "Tennis", "Singing", "Running", "Climbing", "Language Exchange", "Board Games", "Coffee"];
 const tabs = ["Home", "Interests", "Settings"] as const;
 
-export default function App(): JSX.Element {
+export default function App() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Home");
   const [activationMessage, setActivationMessage] = useState("Tap the button to simulate a local interest activation.");
   const env = process.env.EXPO_PUBLIC_APP_ENV ?? "local";
@@ -208,6 +208,20 @@ export default function App(): JSX.Element {
     </SafeAreaView>
   );
 }
+`
+    },
+    {
+      path: "apps/mobile/env.d.ts",
+      contents: `declare const process: {
+  env: {
+    EXPO_PUBLIC_APP_ENV?: string;
+    EXPO_PUBLIC_SUPABASE_URL?: string;
+    EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
+    EXPO_PUBLIC_SENTRY_DSN?: string;
+    EXPO_PUBLIC_POSTHOG_PUBLIC_KEY?: string;
+    EXPO_PUBLIC_POSTHOG_HOST?: string;
+  };
+};
 `
     },
     {

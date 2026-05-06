@@ -14,7 +14,7 @@ const interests = [
 
 const tabs = ["Home", "Interests", "Settings"] as const;
 
-export default function App(): JSX.Element {
+export default function App() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Home");
   const [activationMessage, setActivationMessage] = useState("Tap the button to simulate a local interest activation.");
   const env = process.env.EXPO_PUBLIC_APP_ENV ?? "local";

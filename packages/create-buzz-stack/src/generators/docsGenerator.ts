@@ -8,7 +8,7 @@ ${body}
 }
 
 export function generateDocs(): GeneratedFile[] {
-  return [
+  const docs: Array<[name: string, body: string]> = [
     ["ONBOARDING", "Run `pnpm install`, then `pnpm bootstrap:dev`, then `pnpm dev`."],
     ["ENVIRONMENTS", "Local development is plug-and-play. Staging and production require hosted Supabase, GitHub secrets, and optional Railway services."],
     ["RELEASE_PROCESS", "Use GitHub Actions deploy workflows for environment promotion. Production deploys should only run in GitHub Actions."],
@@ -21,7 +21,9 @@ export function generateDocs(): GeneratedFile[] {
     ["AI_PROMPTS", "AI provider calls are backend-only. Use mock mode locally unless explicit provider credentials are configured."],
     ["RAILWAY", "Enable Railway later with `buzz-stack configure railway`. Set project and service IDs via environment variables."],
     ["GITHUB_ACTIONS", "CI validates lint, types, env safety, migrations, and app builds. Deploy workflows promote changes across environments."]
-  ].map(([name, body]) => ({
+  ];
+
+  return docs.map(([name, body]) => ({
     path: `docs/${name}.md`,
     contents: doc(name.replaceAll("_", " "), body)
   }));
