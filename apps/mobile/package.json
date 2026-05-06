@@ -10,9 +10,11 @@
     "test": "echo 'mobile tests placeholder'"
   },
   "dependencies": {
+    "@apollo/client": "latest",
     "@babel/runtime": "7.29.2",
     "@supabase/supabase-js": "latest",
     "expo": "~52.0.0",
+    "graphql": "latest",
     "react": "18.3.1",
     "react-native": "0.76.3"
   },

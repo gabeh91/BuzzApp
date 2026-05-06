@@ -17,9 +17,11 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
     "test": "echo \\"mobile tests placeholder\\""
   },
   "dependencies": {
+    "@apollo/client": "latest",
     "@babel/runtime": "7.29.2",
     "@supabase/supabase-js": "latest",
     "expo": "~52.0.0",
+    "graphql": "latest",
     "react": "18.3.1",
     "react-native": "0.76.3"
   },
@@ -123,39 +125,119 @@ module.exports = config;
     },
     {
       path: "apps/mobile/App.tsx",
-      contents: `import React, { useMemo, useState } from "react";
+      contents: `import { ApolloClient, gql, HttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
+import React, { useMemo, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
-const interests = ["Surfing", "Tennis", "Singing", "Running", "Climbing", "Language Exchange", "Board Games", "Coffee"];
+type Interest = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+};
+
+type BuzzHomeQuery = {
+  interestsCollection?: {
+    edges: Array<{
+      node: Interest;
+    }>;
+  };
+};
+
+type ActivateInterestMutation = {
+  activateInterest?: {
+    ok?: boolean;
+    message?: string;
+    interestId?: string;
+    matchedUsers?: unknown[];
+  };
+};
+
+const fallbackInterests: Interest[] = [
+  { id: "00000000-0000-0000-0000-000000000001", name: "Surfing", slug: "surfing", category: "sport" },
+  { id: "00000000-0000-0000-0000-000000000002", name: "Tennis", slug: "tennis", category: "sport" },
+  { id: "00000000-0000-0000-0000-000000000003", name: "Singing", slug: "singing", category: "music" },
+  { id: "00000000-0000-0000-0000-000000000004", name: "Running", slug: "running", category: "fitness" },
+  { id: "00000000-0000-0000-0000-000000000005", name: "Climbing", slug: "climbing", category: "fitness" },
+  {
+    id: "00000000-0000-0000-0000-000000000006",
+    name: "Language Exchange",
+    slug: "language-exchange",
+    category: "learning"
+  },
+  { id: "00000000-0000-0000-0000-000000000007", name: "Board Games", slug: "board-games", category: "social" },
+  { id: "00000000-0000-0000-0000-000000000008", name: "Coffee", slug: "coffee", category: "food" }
+];
+
+const fallbackInterestId = "00000000-0000-0000-0000-000000000001";
 const tabs = ["Home", "Interests", "Settings"] as const;
+const env = process.env.EXPO_PUBLIC_APP_ENV ?? "local";
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const graphqlUrl = supabaseUrl.replace(/\\/$/, "") + "/graphql/v1";
 
-export default function App() {
+const BUZZ_HOME_QUERY = gql\`
+  query BuzzHome {
+    interestsCollection(first: 20) {
+      edges {
+        node {
+          id
+          name
+          slug
+          category
+        }
+      }
+    }
+  }
+\`;
+
+const ACTIVATE_INTEREST_MUTATION = gql\`
+  mutation ActivateInterest($interestId: UUID!) {
+    activateInterest(interestId: $interestId)
+  }
+\`;
+
+function createBuzzApolloClient() {
+  return new ApolloClient({
+    link: new HttpLink({
+      uri: graphqlUrl,
+      headers: {
+        apikey: supabaseAnonKey,
+        authorization: supabaseAnonKey ? \`Bearer \${supabaseAnonKey}\` : ""
+      }
+    }),
+    cache: new InMemoryCache()
+  });
+}
+
+function BuzzMobileApp() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Home");
-  const [activationMessage, setActivationMessage] = useState("Tap the button to simulate a local interest activation.");
-  const env = process.env.EXPO_PUBLIC_APP_ENV ?? "local";
-  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
-  const connectionStatus = useMemo(() => (supabaseUrl ? "Configured for local Supabase" : "Missing Supabase URL"), [supabaseUrl]);
+  const [activationMessage, setActivationMessage] = useState("Tap the button to run an Apollo GraphQL mutation.");
+  const { data, loading, error } = useQuery<BuzzHomeQuery>(BUZZ_HOME_QUERY);
+  const [activateInterest, { loading: activating }] = useMutation<ActivateInterestMutation>(
+    ACTIVATE_INTEREST_MUTATION
+  );
+  const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? fallbackInterests;
+  const firstInterestId = interests[0]?.id ?? fallbackInterestId;
+  const connectionStatus = loading
+    ? "Loading from Supabase GraphQL"
+    : error
+      ? "Using local fallback data until Supabase GraphQL is reachable"
+      : "Connected to Supabase GraphQL";
 
-  async function activateInterest(): Promise<void> {
+  async function activateFirstInterest(): Promise<void> {
     try {
-      const response = await fetch(\`\${supabaseUrl}/functions/v1/activate-interest\`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          interestId: "00000000-0000-0000-0000-000000000001"
-        })
+      const result = await activateInterest({
+        variables: {
+          interestId: firstInterestId
+        }
       });
 
-      if (!response.ok) {
-        throw new Error("Local function returned a non-200 response");
-      }
-
-      const payload = (await response.json()) as { message?: string };
-      setActivationMessage(payload.message ?? "Local activation completed.");
+      const payload = result.data?.activateInterest;
+      setActivationMessage(payload?.message ?? "GraphQL mutation completed.");
     } catch {
-      setActivationMessage("Local fallback: interest activation simulated without a live Edge Function.");
+      setActivationMessage("Local fallback: authentication-backed activation is ready for Supabase Auth.");
     }
   }
 
@@ -182,16 +264,19 @@ export default function App() {
 
         {tab === "Home" ? (
           <View style={{ gap: 12 }}>
-            <Text style={{ fontSize: 22, fontWeight: "600", color: "#16324f" }}>Local development is ready</Text>
+            <Text style={{ fontSize: 22, fontWeight: "600", color: "#16324f" }}>Apollo GraphQL local development</Text>
             <Text>Environment: {env}</Text>
-            <Text>Supabase: {connectionStatus}</Text>
+            <Text>Supabase GraphQL: {connectionStatus}</Text>
             <Pressable
+              disabled={activating}
               onPress={() => {
-                void activateInterest();
+                void activateFirstInterest();
               }}
-              style={{ backgroundColor: "#e67e22", padding: 14, borderRadius: 16 }}
+              style={{ backgroundColor: activating ? "#9e6f42" : "#e67e22", padding: 14, borderRadius: 16 }}
             >
-              <Text style={{ color: "white", fontWeight: "600" }}>Activate Interest</Text>
+              <Text style={{ color: "white", fontWeight: "600" }}>
+                {activating ? "Activating..." : "Activate Interest"}
+              </Text>
             </Pressable>
             <Text>{activationMessage}</Text>
           </View>
@@ -200,8 +285,9 @@ export default function App() {
         {tab === "Interests" ? (
           <View style={{ gap: 10 }}>
             {interests.map((interest) => (
-              <View key={interest} style={{ backgroundColor: "white", borderRadius: 16, padding: 14 }}>
-                <Text style={{ fontSize: 18, color: "#16324f" }}>{interest}</Text>
+              <View key={interest.id} style={{ backgroundColor: "white", borderRadius: 16, padding: 14 }}>
+                <Text style={{ fontSize: 18, color: "#16324f" }}>{interest.name}</Text>
+                <Text style={{ color: "#536b7a" }}>{interest.category}</Text>
               </View>
             ))}
           </View>
@@ -212,10 +298,22 @@ export default function App() {
             <Text style={{ fontWeight: "600" }}>Environment Debug</Text>
             <Text>EXPO_PUBLIC_APP_ENV={env}</Text>
             <Text>EXPO_PUBLIC_SUPABASE_URL={supabaseUrl}</Text>
+            <Text>GraphQL endpoint={graphqlUrl}</Text>
+            <Text>Anon key={supabaseAnonKey ? "configured" : "missing"}</Text>
           </View>
         ) : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+export default function App() {
+  const client = useMemo(() => createBuzzApolloClient(), []);
+
+  return (
+    <ApolloProvider client={client}>
+      <BuzzMobileApp />
+    </ApolloProvider>
   );
 }
 `
@@ -249,7 +347,9 @@ export default function App() {
     "test": "echo \\"admin tests placeholder\\""
   },
   "dependencies": {
+    "@apollo/client": "latest",
     "@supabase/supabase-js": "latest",
+    "graphql": "latest",
     "next": "14.2.20",
     "react": "18.3.1",
     "react-dom": "18.3.1"
@@ -321,25 +421,140 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     },
     {
       path: "apps/admin/app/page.tsx",
-      contents: `const interests = ["Surfing", "Tennis", "Singing", "Running", "Climbing", "Language Exchange", "Board Games", "Coffee"];
-const businesses = ["Ocean Club", "Northside Tennis", "Laneway Coffee"];
-const events = ["Welcome Picnic", "Climbing Night", "Board Game Social"];
+      contents: `"use client";
 
-export default function HomePage() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
-  const connectionStatus = supabaseUrl ? "Configured for local Supabase" : "Missing Supabase URL";
+import { ApolloClient, gql, HttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloProvider, useQuery } from "@apollo/client/react";
+import { useMemo } from "react";
+
+type Edge<T> = {
+  node: T;
+};
+
+type Interest = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+};
+
+type Business = {
+  id: string;
+  name: string;
+  description?: string | null;
+};
+
+type Event = {
+  id: string;
+  title: string;
+};
+
+type AdminDashboardQuery = {
+  interestsCollection?: {
+    edges: Array<Edge<Interest>>;
+  };
+  businessesCollection?: {
+    edges: Array<Edge<Business>>;
+  };
+  eventsCollection?: {
+    edges: Array<Edge<Event>>;
+  };
+};
+
+const fallbackInterests: Interest[] = [
+  { id: "interest-surfing", name: "Surfing", slug: "surfing", category: "sport" },
+  { id: "interest-tennis", name: "Tennis", slug: "tennis", category: "sport" },
+  { id: "interest-singing", name: "Singing", slug: "singing", category: "music" },
+  { id: "interest-running", name: "Running", slug: "running", category: "fitness" }
+];
+
+const fallbackBusinesses: Business[] = [
+  { id: "business-ocean-club", name: "Ocean Club", description: "Local partner placeholder" },
+  { id: "business-northside-tennis", name: "Northside Tennis", description: "Local partner placeholder" },
+  { id: "business-laneway-coffee", name: "Laneway Coffee", description: "Local partner placeholder" }
+];
+
+const fallbackEvents: Event[] = [
+  { id: "event-welcome-picnic", title: "Welcome Picnic" },
+  { id: "event-climbing-night", title: "Climbing Night" },
+  { id: "event-board-game-social", title: "Board Game Social" }
+];
+
+const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? "local";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const graphqlUrl = supabaseUrl.replace(/\\/$/, "") + "/graphql/v1";
+
+const ADMIN_DASHBOARD_QUERY = gql\`
+  query AdminDashboard {
+    interestsCollection(first: 20) {
+      edges {
+        node {
+          id
+          name
+          slug
+          category
+        }
+      }
+    }
+    businessesCollection(first: 10) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+    }
+    eventsCollection(first: 10) {
+      edges {
+        node {
+          id
+          title
+        }
+      }
+    }
+  }
+\`;
+
+function createBuzzApolloClient() {
+  return new ApolloClient({
+    link: new HttpLink({
+      uri: graphqlUrl,
+      headers: {
+        apikey: supabaseAnonKey,
+        authorization: supabaseAnonKey ? \`Bearer \${supabaseAnonKey}\` : ""
+      }
+    }),
+    cache: new InMemoryCache()
+  });
+}
+
+function AdminDashboard() {
+  const { data, loading, error } = useQuery<AdminDashboardQuery>(ADMIN_DASHBOARD_QUERY);
+  const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? fallbackInterests;
+  const businesses = data?.businessesCollection?.edges.map((edge) => edge.node) ?? fallbackBusinesses;
+  const events = data?.eventsCollection?.edges.map((edge) => edge.node) ?? fallbackEvents;
+  const connectionStatus = loading
+    ? "Loading from Supabase GraphQL"
+    : error
+      ? "Using local fallback data until Supabase GraphQL is reachable"
+      : "Connected to Supabase GraphQL";
 
   return (
     <main style={{ padding: 32 }}>
       <h1>Buzz Admin</h1>
-      <p>Environment: {process.env.NEXT_PUBLIC_APP_ENV ?? "local"}</p>
+      <p>Environment: {appEnv}</p>
       <p>Supabase URL: {supabaseUrl}</p>
+      <p>GraphQL endpoint: {graphqlUrl}</p>
       <p>Connection status: {connectionStatus}</p>
       <section>
         <h2>Seeded interests</h2>
         <ul>
           {interests.map((interest) => (
-            <li key={interest}>{interest}</li>
+            <li key={interest.id}>
+              {interest.name} <span style={{ color: "#667" }}>({interest.category})</span>
+            </li>
           ))}
         </ul>
       </section>
@@ -347,7 +562,10 @@ export default function HomePage() {
         <h2>Sample businesses</h2>
         <ul>
           {businesses.map((business) => (
-            <li key={business}>{business}</li>
+            <li key={business.id}>
+              {business.name}
+              {business.description ? <span style={{ color: "#667" }}> - {business.description}</span> : null}
+            </li>
           ))}
         </ul>
       </section>
@@ -355,11 +573,21 @@ export default function HomePage() {
         <h2>Sample events</h2>
         <ul>
           {events.map((event) => (
-            <li key={event}>{event}</li>
+            <li key={event.id}>{event.title}</li>
           ))}
         </ul>
       </section>
     </main>
+  );
+}
+
+export default function HomePage() {
+  const client = useMemo(() => createBuzzApolloClient(), []);
+
+  return (
+    <ApolloProvider client={client}>
+      <AdminDashboard />
+    </ApolloProvider>
   );
 }
 `

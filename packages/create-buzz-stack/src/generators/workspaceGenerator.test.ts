@@ -39,3 +39,31 @@ test("mobile scaffold registers the Expo root component", () => {
   assert.ok(mobileEntry);
   assert.match(mobileEntry.contents, /registerRootComponent\(App\)/);
 });
+
+test("mobile and admin scaffolds use Apollo against Supabase GraphQL", () => {
+  const files = generateWorkspaceFiles(getDefaultConfig());
+  const mobilePackageJson = files.find((file) => file.path === "apps/mobile/package.json");
+  const adminPackageJson = files.find((file) => file.path === "apps/admin/package.json");
+  const mobileApp = files.find((file) => file.path === "apps/mobile/App.tsx");
+  const adminPage = files.find((file) => file.path === "apps/admin/app/page.tsx");
+
+  assert.ok(mobilePackageJson);
+  assert.match(mobilePackageJson.contents, /"@apollo\/client": "latest"/);
+  assert.match(mobilePackageJson.contents, /"graphql": "latest"/);
+  assert.ok(adminPackageJson);
+  assert.match(adminPackageJson.contents, /"@apollo\/client": "latest"/);
+  assert.match(adminPackageJson.contents, /"graphql": "latest"/);
+
+  assert.ok(mobileApp);
+  assert.match(mobileApp.contents, /ApolloProvider/);
+  assert.match(mobileApp.contents, /\/graphql\/v1/);
+  assert.match(mobileApp.contents, /useQuery/);
+  assert.match(mobileApp.contents, /useMutation/);
+  assert.doesNotMatch(mobileApp.contents, /fallbackInterests\[0\]\.id/);
+
+  assert.ok(adminPage);
+  assert.match(adminPage.contents, /"use client"/);
+  assert.match(adminPage.contents, /ApolloProvider/);
+  assert.match(adminPage.contents, /\/graphql\/v1/);
+  assert.match(adminPage.contents, /useQuery/);
+});

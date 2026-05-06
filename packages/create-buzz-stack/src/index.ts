@@ -9,10 +9,11 @@ import { registerEnvCommand } from "./commands/env.js";
 import { registerGenerateCommand } from "./commands/generate.js";
 import { registerInitCommand } from "./commands/init.js";
 import { registerSecretsCommand } from "./commands/secrets.js";
+import { isCreateBuzzStackInvocation } from "./utils/invocation.js";
 
 const program = new Command();
 const invocation = process.argv[1] ?? "buzz-stack";
-const invokedAsCreate = invocation.includes("create-buzz-stack");
+const invokedAsCreate = isCreateBuzzStackInvocation(invocation);
 
 program
   .name(invokedAsCreate ? "create-buzz-stack" : "buzz-stack")

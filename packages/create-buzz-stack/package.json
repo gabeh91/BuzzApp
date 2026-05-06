@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "create-buzz-stack": "./dist/index.js",
+    "create-buzz-stack": "./dist/create-buzz-stack.js",
     "buzz-stack": "./dist/index.js"
   },
   "files": [
@@ -27,6 +27,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "echo 'create-buzz-stack lint placeholder'",
+    "prepare": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test src/**/*.test.ts"
   }
