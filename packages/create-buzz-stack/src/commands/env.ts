@@ -10,7 +10,9 @@ export function registerEnvCommand(program: Command): void {
     .description("Validate environment files")
     .action(async () => {
       try {
-        await runEnvValidate(process.cwd());
+        await runEnvValidate(process.cwd(), {
+          ci: process.env.CI === "true"
+        });
       } catch (error) {
         logger.error((error as Error).message);
         process.exitCode = 1;
