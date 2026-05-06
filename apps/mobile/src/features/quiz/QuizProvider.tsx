@@ -1,6 +1,8 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
-import { deriveProfileTraits, quizQuestions, type ProfileTraits, type QuizAnswers, type QuizQuestion } from "./quizModel";
+import { useI18n } from "@/i18n/I18nProvider";
+
+import { createQuizQuestions, deriveProfileTraits, type ProfileTraits, type QuizAnswers, type QuizQuestion } from "./quizModel";
 
 type QuizContextValue = {
   answers: QuizAnswers;
@@ -21,10 +23,12 @@ type QuizContextValue = {
 const QuizContext = createContext<QuizContextValue | null>(null);
 
 export const QuizProvider = ({ children }: { children: ReactNode }) => {
+  const { LL } = useI18n();
+  const quizQuestions = useMemo(() => createQuizQuestions(LL), [LL]);
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const activeQuestion = quizQuestions[activeQuestionIndex] ?? quizQuestions[0];
-  const traits = deriveProfileTraits(answers);
+  const traits = deriveProfileTraits(answers, quizQuestions, LL);
 
   if (!activeQuestion) {
     throw new Error("Quiz questions must include at least one question");

@@ -53,17 +53,16 @@ function AdminDashboard() {
   const businesses = data?.businessesCollection?.edges.map((edge) => edge.node) ?? fallbackBusinesses;
   const events = data?.eventsCollection?.edges.map((edge) => edge.node) ?? fallbackEvents;
   const connectionStatus = loading
-    ? "Loading from Supabase GraphQL"
+    ? "Loading city data"
     : error
-      ? "Using local fallback data until Supabase GraphQL is reachable"
-      : "Connected to Supabase GraphQL";
+      ? "Showing starter city data while local services start"
+      : "Connected to city data";
 
   return (
     <main style={{ padding: 32 }}>
       <h1>Buzz Admin</h1>
       <p>Environment: {appEnv}</p>
       <p>Supabase URL: {supabaseUrl}</p>
-      <p>GraphQL endpoint: {graphqlUrl}</p>
       <p>Connection status: {connectionStatus}</p>
       <section>
         <h2>Seeded interests</h2>

@@ -22,8 +22,13 @@ test("mobile app exposes Expo Router layout, onboarding, and home routes", () =>
   assert.equal(existsSync("app/_layout.tsx"), true);
   assert.equal(existsSync("app/index.tsx"), true);
   assert.equal(existsSync("app/home.tsx"), true);
+  assert.equal(existsSync("src/app"), false);
 
-  assert.match(readFileSync("app/_layout.tsx", "utf8"), /<Stack/);
+  const layoutSource = readFileSync("app/_layout.tsx", "utf8");
+
+  assert.match(layoutSource, /<Stack/);
+  assert.match(layoutSource, /@\/providers\/AppProviders/);
+  assert.doesNotMatch(layoutSource, /@\/app\/AppProviders/);
   assert.match(readFileSync("app/index.tsx", "utf8"), /OnboardingScreen/);
   assert.match(readFileSync("app/home.tsx", "utf8"), /BuzzHomeScreen/);
 });

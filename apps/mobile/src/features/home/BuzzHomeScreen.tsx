@@ -4,6 +4,7 @@ import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "rea
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { useQuiz } from "@/features/quiz/QuizProvider";
+import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
@@ -12,35 +13,36 @@ export const BuzzHomeScreen = () => {
   const router = useRouter();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
+  const { LL } = useI18n();
   const { user } = useBuzzAuth();
   const { traits } = useQuiz();
   const { state } = useInterestFlow();
-  const selectedInterestName = state.selectedInterest?.name ?? "your next interest";
+  const selectedInterestName = state.selectedInterest?.name ?? LL.home.fallbackInterest();
   const match = state.matchPreview;
 
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.logo}>Buzz</Text>
+          <Text style={styles.logo}>{LL.brand.name()}</Text>
           <Text style={styles.city}>{user.cityName}</Text>
         </View>
 
         <View style={styles.heroCard}>
-          <Text style={styles.eyebrow}>Local demo loop</Text>
+          <Text style={styles.eyebrow}>{LL.home.firstPlan()}</Text>
           <Text style={styles.title}>
-            {match ? `You activated ${selectedInterestName}.` : "Your onboarding state is ready."}
+            {match ? LL.home.titleActivated({ interest: selectedInterestName }) : LL.home.titleReady()}
           </Text>
           <Text style={styles.body}>
             {match
-              ? "This is the first post-onboarding route. Expo Router owns route transitions; the product flow state stays in context."
-              : "Complete onboarding to generate a deterministic match preview."}
+              ? LL.home.activatedBody()
+              : LL.home.readyBody()}
           </Text>
         </View>
 
         <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Match preview</Text>
-          <Text style={styles.panelBody}>{match?.headline ?? "No match preview yet."}</Text>
+          <Text style={styles.panelTitle}>{LL.home.suggestedNextStep()}</Text>
+          <Text style={styles.panelBody}>{match?.headline ?? LL.home.emptyPlan()}</Text>
           <Text style={styles.panelBody}>{match?.reason ?? traits.summary}</Text>
         </View>
 
@@ -50,7 +52,7 @@ export const BuzzHomeScreen = () => {
           }}
           style={styles.secondaryAction}
         >
-          <Text style={styles.secondaryActionText}>Review onboarding</Text>
+          <Text style={styles.secondaryActionText}>{LL.home.reviewOnboarding()}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

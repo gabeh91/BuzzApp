@@ -1,12 +1,21 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming
+} from "react-native-reanimated";
 
 import { useActivateInterestMutation, useBuzzHomeQuery } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import type { BuzzInterest } from "@/features/interests/interestFlow";
 import { useQuiz } from "@/features/quiz/QuizProvider";
+import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
@@ -47,8 +56,6 @@ const fallbackInterests: BuzzInterest[] = [
   { id: "00000000-0000-0000-0000-000000000010", name: "Gym / Fitness", slug: "gym-fitness", category: "fitness" }
 ];
 
-const env = process.env.EXPO_PUBLIC_APP_ENV ?? "local";
-
 const isBuzzInterest = (value: unknown): value is BuzzInterest => {
   const interest = value as Partial<BuzzInterest>;
 
@@ -59,17 +66,92 @@ const getInterestsFromGraphql = (data: ReturnType<typeof useBuzzHomeQuery>["data
   return data?.interestsCollection?.edges.map((edge) => edge.node).filter(isBuzzInterest) ?? fallbackInterests;
 };
 
+const useStepTransition = (transitionKey: string) => {
+  const entrance = useSharedValue(0);
+  const ambient = useSharedValue(0);
+
+  useEffect(() => {
+    entrance.value = 0;
+    entrance.value = withTiming(1, {
+      duration: 420,
+      easing: Easing.out(Easing.cubic)
+    });
+  }, [entrance, transitionKey]);
+
+  useEffect(() => {
+    ambient.value = withRepeat(
+      withSequence(
+        withTiming(1, {
+          duration: 3600,
+          easing: Easing.inOut(Easing.sin)
+        }),
+        withTiming(0, {
+          duration: 3600,
+          easing: Easing.inOut(Easing.sin)
+        })
+      ),
+      -1,
+      false
+    );
+  }, [ambient]);
+
+  const stepStyle = useAnimatedStyle(() => {
+    return {
+      opacity: entrance.value,
+      transform: [
+        {
+          translateY: 18 * (1 - entrance.value)
+        },
+        {
+          scale: 0.985 + entrance.value * 0.015
+        }
+      ]
+    };
+  });
+
+  const skyStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: -18 * ambient.value
+        },
+        {
+          translateY: 16 * ambient.value
+        }
+      ]
+    };
+  });
+
+  const goldStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: 22 * ambient.value
+        },
+        {
+          translateY: -14 * ambient.value
+        }
+      ]
+    };
+  });
+
+  return {
+    stepStyle,
+    skyStyle,
+    goldStyle
+  };
+};
+
 const ProgressBar = ({ current, total }: { current: number; total: number }) => {
   const { styles } = useOnboardingTheme();
+  const { LL } = useI18n();
 
   return (
     <View style={styles.progressGroup}>
       <View style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: `${Math.round((current / total) * 100)}%` }]} />
       </View>
-      <Text style={styles.progressLabel}>
-        Step {current} of {total}
-      </Text>
+      <Text style={styles.progressLabel}>{LL.onboarding.progress({ current, total })}</Text>
     </View>
   );
 };
@@ -104,11 +186,12 @@ const SecondaryButton = ({ label, disabled, onPress }: { label: string; disabled
 
 const AmbientBackground = () => {
   const { styles } = useOnboardingTheme();
+  const transition = useStepTransition("ambient");
 
   return (
     <View pointerEvents="none" style={styles.ambientRoot}>
-      <View style={styles.ambientSky} />
-      <View style={styles.ambientGold} />
+      <Animated.View style={[styles.ambientSky, transition.skyStyle]} />
+      <Animated.View style={[styles.ambientGold, transition.goldStyle]} />
     </View>
   );
 };
@@ -116,21 +199,19 @@ const AmbientBackground = () => {
 const IntroContent = () => {
   const { styles } = useOnboardingTheme();
   const { state } = useOnboarding();
-  const { user, mode } = useBuzzAuth();
+  const { user } = useBuzzAuth();
+  const { LL } = useI18n();
+  const stepCopy = LL.onboarding.steps[state.step.id];
 
   if (state.step.id === "profile") {
     return (
       <View style={styles.contentStack}>
         <View style={styles.profileCard}>
-          <Text style={styles.metaLabel}>Replaceable auth boundary</Text>
+          <Text style={styles.metaLabel}>{LL.onboarding.profile.metaLabel()}</Text>
           <Text style={styles.profileName}>{user.displayName}</Text>
-          <Text style={styles.profileMeta}>
-            {user.cityName} · {mode} mode · {user.isDemo ? "demo profile" : "authenticated profile"}
-          </Text>
+          <Text style={styles.profileMeta}>{LL.onboarding.profile.meta({ city: user.cityName })}</Text>
         </View>
-        <Text style={styles.bodyCopy}>
-          Screens consume `useBuzzAuth()`. When Supabase Auth replaces demo mode, this profile step should keep the same UI contract.
-        </Text>
+        <Text style={styles.bodyCopy}>{LL.onboarding.profile.body()}</Text>
       </View>
     );
   }
@@ -138,7 +219,7 @@ const IntroContent = () => {
   if (state.step.id === "howItWorks") {
     return (
       <View style={styles.howItWorksList}>
-        {["Choose what you actually want to do.", "Activate when you are open to a plan.", "Match into a small activity group."].map(
+        {[LL.onboarding.howItWorks.itemOne(), LL.onboarding.howItWorks.itemTwo(), LL.onboarding.howItWorks.itemThree()].map(
           (item, index) => (
             <View key={item} style={[styles.howItWorksItem, index === 1 ? styles.howItWorksItemFeatured : null]}>
               <Text style={[styles.howItWorksNumber, index === 1 ? styles.howItWorksFeaturedText : null]}>0{index + 1}</Text>
@@ -150,7 +231,7 @@ const IntroContent = () => {
     );
   }
 
-  return <Text style={styles.bodyCopy}>{state.step.body}</Text>;
+  return <Text style={styles.bodyCopy}>{stepCopy.body()}</Text>;
 };
 
 const QuizContent = () => {
@@ -195,6 +276,7 @@ const InterestsContent = ({
 }) => {
   const { colors, styles } = useOnboardingTheme();
   const interestFlow = useInterestFlow();
+  const { LL } = useI18n();
 
   return (
     <View style={styles.contentStack}>
@@ -202,10 +284,10 @@ const InterestsContent = ({
         {loading ? <ActivityIndicator color={colors.accent} /> : null}
         <Text style={styles.statusCopy}>
           {loading
-            ? "Loading interests from Supabase GraphQL"
+            ? LL.onboarding.interests.loading()
             : error
-              ? "Using local fallback interests until GraphQL is reachable"
-              : "Loaded from Supabase GraphQL"}
+              ? LL.onboarding.interests.error()
+              : LL.onboarding.interests.ready()}
         </Text>
       </View>
       <View style={styles.interestGrid}>
@@ -233,13 +315,14 @@ const ActivationContent = () => {
   const { styles } = useOnboardingTheme();
   const interestFlow = useInterestFlow();
   const quiz = useQuiz();
+  const { LL } = useI18n();
   const selected = interestFlow.state.selectedInterest;
 
   return (
     <View style={styles.contentStack}>
       <View style={styles.activationCard}>
-        <Text style={styles.activationEyebrow}>Ready signal</Text>
-        <Text style={styles.activationTitle}>{selected ? selected.name : "Choose an interest first"}</Text>
+        <Text style={styles.activationEyebrow}>{LL.onboarding.activation.eyebrow()}</Text>
+        <Text style={styles.activationTitle}>{selected ? selected.name : LL.onboarding.activation.chooseInterestFirst()}</Text>
         <Text style={styles.activationCopy}>{quiz.traits.summary}</Text>
       </View>
       <Text style={styles.bodyCopy}>{interestFlow.state.activation.message}</Text>
@@ -250,21 +333,22 @@ const ActivationContent = () => {
 const MatchPreviewContent = () => {
   const { styles } = useOnboardingTheme();
   const interestFlow = useInterestFlow();
+  const { LL } = useI18n();
   const match = interestFlow.state.matchPreview;
 
   if (!match) {
-    return <Text style={styles.bodyCopy}>Activate an interest to create a local deterministic match preview.</Text>;
+    return <Text style={styles.bodyCopy}>{LL.onboarding.matchPreview.empty()}</Text>;
   }
 
   return (
     <View style={styles.contentStack}>
       <View style={styles.matchCard}>
-        <Text style={styles.matchEyebrow}>Demo match</Text>
+        <Text style={styles.matchEyebrow}>{LL.onboarding.matchPreview.eyebrow()}</Text>
         <Text style={styles.matchTitle}>{match.headline}</Text>
         <Text style={styles.matchReason}>{match.reason}</Text>
       </View>
       <View style={styles.suggestionCard}>
-        <Text style={styles.suggestionTitle}>Suggested next step</Text>
+        <Text style={styles.suggestionTitle}>{LL.onboarding.matchPreview.suggestedNextStep()}</Text>
         <Text style={styles.suggestionCopy}>{match.suggestedPlan}</Text>
       </View>
     </View>
@@ -305,16 +389,21 @@ const OnboardingExperience = () => {
   const { styles } = useOnboardingTheme();
   const router = useRouter();
   const onboarding = useOnboarding();
+  const { user } = useBuzzAuth();
+  const { LL } = useI18n();
   const quiz = useQuiz();
   const interestFlow = useInterestFlow();
   const { data, loading, error } = useBuzzHomeQuery();
   const [activateInterest, { loading: activating }] = useActivateInterestMutation();
   const interests = getInterestsFromGraphql(data);
   const selectedInterest = interestFlow.state.selectedInterest;
+  const transitionKey = onboarding.state.step.id;
+  const transition = useStepTransition(transitionKey);
+  const stepCopy = LL.onboarding.steps[onboarding.state.step.id];
 
   const activateSelectedInterest = async () => {
     if (!selectedInterest) {
-      interestFlow.failActivation("Choose an interest before activating.");
+      interestFlow.failActivation(LL.interests.activation.chooseBeforeActivating());
       return;
     }
 
@@ -337,17 +426,17 @@ const OnboardingExperience = () => {
   const primaryLabel =
     onboarding.state.step.id === "quiz"
       ? quiz.isLastQuestion
-        ? "Finish quiz"
-        : "Next question"
+        ? LL.onboarding.actions.finishQuiz()
+        : LL.onboarding.actions.nextQuestion()
       : onboarding.state.step.id === "interests"
-        ? "Use this interest"
+        ? LL.onboarding.actions.useInterest()
         : onboarding.state.step.id === "activation"
           ? activating || interestFlow.state.activation.status === "activating"
-            ? "Activating..."
-            : "Activate interest"
+            ? LL.onboarding.actions.activating()
+            : LL.onboarding.actions.activateInterest()
           : onboarding.isLastStep
-            ? "Enter Buzz"
-            : "Continue";
+            ? LL.onboarding.actions.enterBuzz()
+            : LL.common.continue();
 
   const primaryDisabled =
     (onboarding.state.step.id === "quiz" && !quiz.hasAnsweredActiveQuestion) ||
@@ -391,26 +480,26 @@ const OnboardingExperience = () => {
     <SafeAreaView style={styles.screen}>
       <AmbientBackground />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Animated.View style={styles.layout}>
+        <Animated.View style={[styles.layout, transition.stepStyle]}>
           <View style={styles.headerStack}>
             <View style={styles.headerRow}>
-              <Text style={styles.logo}>Buzz</Text>
-              <Text style={styles.envLabel}>{env}</Text>
+              <Text style={styles.logo}>{LL.brand.name()}</Text>
+              <Text style={styles.envLabel}>{user.cityName}</Text>
             </View>
             <ProgressBar current={onboarding.state.progress.current} total={onboarding.state.progress.total} />
           </View>
 
           <View style={styles.mainCard}>
             <View style={styles.titleStack}>
-              <Text style={styles.eyebrow}>{onboarding.state.step.eyebrow}</Text>
-              <Text style={styles.title}>{onboarding.state.step.title}</Text>
+              <Text style={styles.eyebrow}>{stepCopy.eyebrow()}</Text>
+              <Text style={styles.title}>{stepCopy.title()}</Text>
             </View>
             <StepContent interests={interests} loading={loading} error={error} />
           </View>
 
           <View style={styles.buttonStack}>
             <PrimaryButton label={primaryLabel} disabled={primaryDisabled} onPress={handlePrimary} />
-            <SecondaryButton label="Back" disabled={onboarding.isFirstStep && onboarding.state.step.id !== "quiz"} onPress={handleBack} />
+            <SecondaryButton label={LL.common.back()} disabled={onboarding.isFirstStep && onboarding.state.step.id !== "quiz"} onPress={handleBack} />
           </View>
         </Animated.View>
       </ScrollView>

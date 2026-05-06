@@ -33,6 +33,6 @@ test("activateInterestLocally creates a deterministic preview from selected inte
   });
 
   assert.equal(activated.activation.status, "complete");
-  assert.equal(activated.activation.message, "Surfing is active for your demo profile.");
+  assert.equal(activated.activation.message, "Surfing is active. Buzz will use it to shape your next suggestion.");
   assert.equal(activated.matchPreview?.interestName, "Surfing");
 });

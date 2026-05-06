@@ -14,7 +14,7 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
     "start": "expo start",
     "lint": "echo \\"mobile lint placeholder\\"",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/auth/*.test.ts src/features/*/*.test.ts src/navigation/*.test.ts src/theme/*.test.ts"
+    "test": "tsx --test src/auth/*.test.ts src/features/*/*.test.ts src/i18n/*.test.ts src/navigation/*.test.ts src/theme/*.test.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.14.1",
@@ -28,8 +28,10 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
     "graphql": "latest",
     "react": "18.3.1",
     "react-native": "0.76.3",
+    "react-native-reanimated": "~3.16.1",
     "react-native-safe-area-context": "4.12.0",
-    "react-native-screens": "~4.4.0"
+    "react-native-screens": "~4.4.0",
+    "typesafe-i18n": "^5.27.1"
   },
   "devDependencies": {
     "@types/node": "latest",
@@ -38,6 +40,18 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
     "typescript": "latest"
   }
 }
+`
+    },
+    {
+      path: "apps/mobile/babel.config.js",
+      contents: `module.exports = function (api) {
+  api.cache(true);
+
+  return {
+    presets: ["babel-preset-expo"],
+    plugins: ["react-native-reanimated/plugin"]
+  };
+};
 `
     },
     {
@@ -137,7 +151,7 @@ module.exports = config;
       contents: `import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-import { AppProviders } from "@/app/AppProviders";
+import { AppProviders } from "@/providers/AppProviders";
 import { colors } from "@/theme/tokens";
 
 const RootLayout = () => {
@@ -184,7 +198,7 @@ export default HomeRoute;
 `
     },
     {
-      path: "apps/mobile/src/app/AppProviders.tsx",
+      path: "apps/mobile/src/providers/AppProviders.tsx",
       contents: `import { ApolloProvider } from "@apollo/client";
 import { useMemo, type ReactNode } from "react";
 
@@ -192,6 +206,7 @@ import { BuzzAuthProvider } from "@/auth/AuthProvider";
 import { InterestFlowProvider } from "@/features/interests/InterestFlowProvider";
 import { OnboardingProvider } from "@/features/onboarding/OnboardingProvider";
 import { QuizProvider } from "@/features/quiz/QuizProvider";
+import { I18nProvider } from "@/i18n/I18nProvider";
 import { createBuzzApolloClient } from "@/lib/apollo";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
@@ -201,17 +216,187 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
   return (
     <ApolloProvider client={client}>
       <ThemeProvider>
-        <BuzzAuthProvider>
-          <OnboardingProvider>
-            <QuizProvider>
-              <InterestFlowProvider>{children}</InterestFlowProvider>
-            </QuizProvider>
-          </OnboardingProvider>
-        </BuzzAuthProvider>
+        <I18nProvider>
+          <BuzzAuthProvider>
+            <OnboardingProvider>
+              <QuizProvider>
+                <InterestFlowProvider>{children}</InterestFlowProvider>
+              </QuizProvider>
+            </OnboardingProvider>
+          </BuzzAuthProvider>
+        </I18nProvider>
       </ThemeProvider>
     </ApolloProvider>
   );
 };
+`
+    },
+    {
+      path: "apps/mobile/src/i18n/en.ts",
+      contents: `import type { BaseTranslation } from "typesafe-i18n";
+
+const en = {
+  brand: {
+    name: "Buzz"
+  },
+  common: {
+    continue: "Continue"
+  },
+  onboarding: {
+    status: {
+      loadingInterests: "Finding interests for your city",
+      starterInterests: "Showing starter interests for now",
+      readyInterests: "Choose what feels doable this week"
+    },
+    actions: {
+      activating: "Activating..."
+    },
+    steps: {
+      welcome: {
+        eyebrow: "Welcome to Buzz",
+        title: "A softer way to find your people in a new city.",
+        body: "Start with what you actually want to do. Buzz turns interests into low-pressure reasons to meet."
+      },
+      city: {
+        eyebrow: "Launch city",
+        title: "Melbourne first, city-by-city after that.",
+        body: "Keeping the first launch focused makes matching more relevant and keeps the local experience intentional."
+      },
+      intent: {
+        eyebrow: "Your intent",
+        title: "Tell Buzz why you are here.",
+        body: "New to town, returning after time away, or just widening your circle. The activity comes first."
+      },
+      howItWorks: {
+        eyebrow: "How it works",
+        title: "Pick interests, activate one, then meet around a plan.",
+        body: "Buzz avoids cold friend-swiping. You match around shared momentum."
+      },
+      profile: {
+        eyebrow: "Profile basics",
+        title: "Create a lightweight local profile.",
+        body: "Add just enough context for Buzz to shape your first suggestions."
+      },
+      quizIntro: {
+        eyebrow: "Discovery quiz",
+        title: "A few quick questions so matches feel less random.",
+        body: "The quiz captures practical signals like energy, availability, planning style, and group comfort."
+      },
+      quiz: {
+        eyebrow: "Quiz",
+        title: "Answer as you are.",
+        body: "Your answers help Buzz shape practical suggestions."
+      },
+      interests: {
+        eyebrow: "Interests",
+        title: "Choose what you would genuinely do this week.",
+        body: "Start with something you would actually say yes to."
+      },
+      activation: {
+        eyebrow: "Activation",
+        title: "Activate one interest when you are open to doing it.",
+        body: "Activation is a clear signal that you are ready for a plan."
+      },
+      matchPreview: {
+        eyebrow: "First match",
+        title: "Buzz forms a practical next step.",
+        body: "Your first preview keeps the next step practical."
+      }
+    }
+  },
+  home: {
+    firstPlan: "First plan",
+    titleActivated: "You activated {interest:string}.",
+    titleReady: "Your Buzz profile is ready.",
+    activatedBody: "Buzz has enough context to start shaping low-pressure plans around this interest.",
+    readyBody: "Complete onboarding to unlock your first suggested plan.",
+    suggestedNextStep: "Suggested next step",
+    emptyPlan: "No suggested plan yet.",
+    reviewOnboarding: "Review onboarding",
+    fallbackInterest: "your next interest"
+  },
+  interests: {
+    activation: {
+      initial: "Pick one interest to activate when you are open to doing it.",
+      selected: "{interest:string} is ready when you are.",
+      activating: "Activating your interest...",
+      complete: "{interest:string} is active. Buzz will use it to shape your next suggestion.",
+      chooseBeforeActivating: "Choose an interest before activating."
+    }
+  }
+} as const satisfies BaseTranslation;
+
+export default en;
+`
+    },
+    {
+      path: "apps/mobile/src/i18n/index.ts",
+      contents: `import { i18nObject } from "typesafe-i18n";
+
+import en from "@/i18n/en";
+
+export const baseLocale = "en";
+export const locales = ["en"] as const;
+
+export type AppLocale = (typeof locales)[number];
+
+export const translations = {
+  en
+} as const;
+
+export const createI18n = (locale: AppLocale = baseLocale) => {
+  return i18nObject(locale, translations[locale]);
+};
+
+export const LL = createI18n(baseLocale);
+
+export type I18n = typeof LL;
+`
+    },
+    {
+      path: "apps/mobile/src/i18n/I18nProvider.tsx",
+      contents: `import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+
+import { baseLocale, createI18n, type AppLocale, type I18n } from "@/i18n";
+
+type I18nContextValue = {
+  locale: AppLocale;
+  LL: I18n;
+  setLocale: (locale: AppLocale) => void;
+};
+
+const I18nContext = createContext<I18nContextValue | null>(null);
+
+export const I18nProvider = ({ children }: { children: ReactNode }) => {
+  const [locale, setLocale] = useState<AppLocale>(baseLocale);
+  const LL = useMemo(() => createI18n(locale), [locale]);
+
+  return <I18nContext.Provider value={{ locale, LL, setLocale }}>{children}</I18nContext.Provider>;
+};
+
+export const useI18n = (): I18nContextValue => {
+  const value = useContext(I18nContext);
+
+  if (!value) {
+    throw new Error("useI18n must be used within I18nProvider");
+  }
+
+  return value;
+};
+`
+    },
+    {
+      path: "apps/mobile/src/i18n/i18nArchitecture.test.ts",
+      contents: `import assert from "node:assert/strict";
+import test from "node:test";
+
+import { LL, locales } from "@/i18n";
+
+test("typesafe-i18n exposes the base mobile locale", () => {
+  assert.deepEqual(locales, ["en"]);
+  assert.equal(LL.brand.name(), "Buzz");
+  assert.equal(LL.home.titleActivated({ interest: "Surfing" }), "You activated Surfing.");
+});
 `
     },
     {
@@ -266,28 +451,74 @@ test("routes define Expo Router paths", () => {
     },
     {
       path: "apps/mobile/src/features/onboarding/OnboardingScreen.tsx",
-      contents: `import { useRouter } from "expo-router";
+      contents: `import { useEffect } from "react";
+import { useRouter } from "expo-router";
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming
+} from "react-native-reanimated";
 
 import { useActivateInterestMutation, useBuzzHomeQuery } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { useOnboarding } from "@/features/onboarding/OnboardingProvider";
 import { useQuiz } from "@/features/quiz/QuizProvider";
+import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
+
+const useStepTransition = (transitionKey: string) => {
+  const entrance = useSharedValue(0);
+  const drift = useSharedValue(0);
+
+  useEffect(() => {
+    entrance.value = 0;
+    entrance.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) });
+  }, [entrance, transitionKey]);
+
+  useEffect(() => {
+    drift.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 3600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 3600, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      false
+    );
+  }, [drift]);
+
+  const stepStyle = useAnimatedStyle(() => ({
+    opacity: entrance.value,
+    transform: [{ translateY: 18 * (1 - entrance.value) }, { scale: 0.985 + entrance.value * 0.015 }]
+  }));
+
+  const accentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: 14 * drift.value }, { translateY: -10 * drift.value }]
+  }));
+
+  return { stepStyle, accentStyle };
+};
 
 export const OnboardingScreen = () => {
   const router = useRouter();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const onboarding = useOnboarding();
+  const { user } = useBuzzAuth();
+  const { LL } = useI18n();
   const quiz = useQuiz();
   const interestFlow = useInterestFlow();
   const { data, loading, error } = useBuzzHomeQuery();
   const [activateInterest, { loading: activating }] = useActivateInterestMutation();
   const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? [];
+  const transition = useStepTransition(onboarding.state.step.id);
+  const stepCopy = LL.onboarding.steps[onboarding.state.step.id as keyof typeof LL.onboarding.steps];
 
   const continueFlow = () => {
     if (onboarding.isLastStep) {
@@ -305,7 +536,7 @@ export const OnboardingScreen = () => {
 
   const activateSelectedInterest = async () => {
     if (!interestFlow.state.selectedInterest) {
-      interestFlow.failActivation("Choose an interest before activating.");
+      interestFlow.failActivation(LL.interests.activation.chooseBeforeActivating());
       return;
     }
 
@@ -324,10 +555,11 @@ export const OnboardingScreen = () => {
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.logo}>Buzz</Text>
-        <View style={styles.card}>
-          <Text style={styles.eyebrow}>{onboarding.state.step.eyebrow}</Text>
-          <Text style={styles.title}>{onboarding.state.step.title}</Text>
+        <Animated.Text style={[styles.logo, transition.accentStyle]}>{LL.brand.name()}</Animated.Text>
+        <Text style={styles.copy}>{user.cityName}</Text>
+        <Animated.View style={[styles.card, transition.stepStyle]}>
+          <Text style={styles.eyebrow}>{stepCopy.eyebrow()}</Text>
+          <Text style={styles.title}>{stepCopy.title()}</Text>
 
           {onboarding.state.step.id === "quiz" ? (
             <View style={styles.stack}>
@@ -348,7 +580,11 @@ export const OnboardingScreen = () => {
           {onboarding.state.step.id === "interests" ? (
             <View style={styles.pillGrid}>
               <Text style={styles.copy}>
-                {loading ? "Loading interests..." : error ? "Using fallback interests." : "Loaded from Supabase GraphQL."}
+                {loading
+                  ? LL.onboarding.status.loadingInterests()
+                  : error
+                    ? LL.onboarding.status.starterInterests()
+                    : LL.onboarding.status.readyInterests()}
               </Text>
             {interests.map((interest) => (
               <Pressable
@@ -379,9 +615,9 @@ export const OnboardingScreen = () => {
           ) : null}
 
           {!["quiz", "interests", "activation", "matchPreview"].includes(onboarding.state.step.id) ? (
-            <Text style={styles.copy}>{onboarding.state.step.body}</Text>
+            <Text style={styles.copy}>{stepCopy.body()}</Text>
           ) : null}
-        </View>
+        </Animated.View>
 
         <Pressable
           disabled={onboarding.state.step.id === "quiz" && !quiz.hasAnsweredActiveQuestion}
@@ -396,7 +632,7 @@ export const OnboardingScreen = () => {
           style={styles.primaryButton}
         >
           <Text style={styles.primaryButtonText}>
-            {onboarding.state.step.id === "activation" && activating ? "Activating..." : "Continue"}
+            {onboarding.state.step.id === "activation" && activating ? LL.onboarding.actions.activating() : LL.common.continue()}
           </Text>
         </Pressable>
       </ScrollView>
@@ -836,12 +1072,12 @@ export const onboardingSteps: OnboardingStep[] = [
   ["city", "Launch city", "Melbourne first, city-by-city after that.", "A focused city makes matching more relevant."],
   ["intent", "Your intent", "Tell Buzz why you are here.", "The activity comes first; friendship may follow."],
   ["howItWorks", "How it works", "Pick interests, activate one, then meet around a plan.", "No cold friend-swiping."],
-  ["profile", "Profile basics", "Create a lightweight local profile.", "Demo auth is isolated behind useBuzzAuth()."],
+  ["profile", "Profile basics", "Create a lightweight local profile.", "Add just enough context for Buzz to shape your first suggestions."],
   ["quizIntro", "Discovery quiz", "A few quick questions so matches feel less random.", "The quiz captures practical matching signals."],
-  ["quiz", "Quiz", "Answer as you are.", "Deterministic traits first; AI enrichment later."],
-  ["interests", "Interests", "Choose what you would genuinely do this week.", "Interests load from Supabase GraphQL."],
+  ["quiz", "Quiz", "Answer as you are.", "Your answers help Buzz shape practical suggestions."],
+  ["interests", "Interests", "Choose what you would genuinely do this week.", "Start with something you would actually say yes to."],
   ["activation", "Activation", "Activate one interest when you are open to doing it.", "Activation is the core ready signal."],
-  ["matchPreview", "First match", "Buzz forms a practical next step.", "The first preview is deterministic and transparent."]
+  ["matchPreview", "First match", "Buzz forms a practical next step.", "Your first preview keeps the next step practical."]
 ].map(([id, eyebrow, title, body]) => ({ id: id as OnboardingStepId, eyebrow, title, body }));
 
 const createState = (index: number): OnboardingState => {
@@ -933,6 +1169,7 @@ import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "rea
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
+import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
@@ -941,20 +1178,25 @@ export const BuzzHomeScreen = () => {
   const router = useRouter();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
+  const { LL } = useI18n();
   const { user } = useBuzzAuth();
   const { state } = useInterestFlow();
+  const selectedInterestName = state.selectedInterest?.name ?? LL.home.fallbackInterest();
 
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.logo}>Buzz</Text>
+        <Text style={styles.logo}>{LL.brand.name()}</Text>
         <View style={styles.card}>
-          <Text style={styles.eyebrow}>{user.cityName}</Text>
-          <Text style={styles.title}>{state.matchPreview?.headline ?? "Your Buzz loop is ready."}</Text>
-          <Text style={styles.copy}>{state.matchPreview?.reason ?? "Complete onboarding to activate your first interest."}</Text>
+          <Text style={styles.eyebrow}>{state.matchPreview ? LL.home.firstPlan() : user.cityName}</Text>
+          <Text style={styles.title}>
+            {state.matchPreview ? LL.home.titleActivated({ interest: selectedInterestName }) : LL.home.titleReady()}
+          </Text>
+          <Text style={styles.copy}>{state.matchPreview ? LL.home.activatedBody() : LL.home.readyBody()}</Text>
+          <Text style={styles.copy}>{state.matchPreview?.reason ?? LL.home.emptyPlan()}</Text>
         </View>
         <Pressable onPress={() => router.replace(routes.onboarding)} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Review onboarding</Text>
+          <Text style={styles.secondaryButtonText}>{LL.home.reviewOnboarding()}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -1167,8 +1409,10 @@ test("createDemoMatchPreview gives a deterministic local match", () => {
     },
     {
       path: "apps/mobile/src/features/interests/interestFlow.ts",
-      contents: `import { createDemoMatchPreview, type DemoMatchPreview } from "../matching/demoMatch";
-import type { ProfileTraits } from "../quiz/quizModel";
+      contents: `import { LL, type I18n } from "@/i18n";
+
+import { createDemoMatchPreview, type DemoMatchPreview } from "@/features/matching/demoMatch";
+import type { ProfileTraits } from "@/features/quiz/quizModel";
 
 export type BuzzInterest = {
   id: string;
@@ -1186,32 +1430,61 @@ export type InterestFlowState = {
   matchPreview: DemoMatchPreview | null;
 };
 
-export const createInitialInterestFlowState = (): InterestFlowState => ({
+export type InterestFlowCopy = {
+  initialMessage: string;
+  selectedMessage: (interest: string) => string;
+  activatingMessage: string;
+  completeMessage: (interest: string) => string;
+  chooseBeforeActivatingMessage: string;
+};
+
+export const createInterestFlowCopy = (translations: I18n = LL): InterestFlowCopy => ({
+  initialMessage: translations.interests.activation.initial(),
+  selectedMessage: (interest) => translations.interests.activation.selected({ interest }),
+  activatingMessage: translations.interests.activation.activating(),
+  completeMessage: (interest) => translations.interests.activation.complete({ interest }),
+  chooseBeforeActivatingMessage: translations.interests.activation.chooseBeforeActivating()
+});
+
+const defaultInterestFlowCopy = createInterestFlowCopy();
+
+export const createInitialInterestFlowState = (copy: InterestFlowCopy = defaultInterestFlowCopy): InterestFlowState => ({
   selectedInterest: null,
-  activation: { status: "idle", message: "Pick one interest to activate." },
+  activation: { status: "idle", message: copy.initialMessage },
   matchPreview: null
 });
 
-export const selectInterest = (state: InterestFlowState, interest: BuzzInterest): InterestFlowState => ({
+export const selectInterest = (
+  state: InterestFlowState,
+  interest: BuzzInterest,
+  copy: InterestFlowCopy = defaultInterestFlowCopy
+): InterestFlowState => ({
   ...state,
   selectedInterest: interest,
-  activation: { status: "idle", message: interest.name + " is ready when you are." },
+  activation: { status: "idle", message: copy.selectedMessage(interest.name) },
   matchPreview: null
 });
 
-export const markInterestActivating = (state: InterestFlowState): InterestFlowState => ({
+export const markInterestActivating = (
+  state: InterestFlowState,
+  copy: InterestFlowCopy = defaultInterestFlowCopy
+): InterestFlowState => ({
   ...state,
-  activation: { status: "activating", message: "Activating your interest..." }
+  activation: { status: "activating", message: copy.activatingMessage }
 });
 
-export const activateInterestLocally = (state: InterestFlowState, traits: ProfileTraits): InterestFlowState => {
+export const activateInterestLocally = (
+  state: InterestFlowState,
+  traits: ProfileTraits,
+  copy: InterestFlowCopy = defaultInterestFlowCopy
+): InterestFlowState => {
   if (!state.selectedInterest) {
-    return { ...state, activation: { status: "error", message: "Choose an interest before activating." } };
+    return { ...state, activation: { status: "error", message: copy.chooseBeforeActivatingMessage } };
   }
 
   return {
     ...state,
-    activation: { status: "complete", message: state.selectedInterest.name + " is active for your demo profile." },
+    activation: { status: "complete", message: copy.completeMessage(state.selectedInterest.name) },
     matchPreview: createDemoMatchPreview({ interestName: state.selectedInterest.name, traits })
   };
 };
@@ -1224,11 +1497,13 @@ export const markInterestActivationError = (state: InterestFlowState, message: s
     },
     {
       path: "apps/mobile/src/features/interests/InterestFlowProvider.tsx",
-      contents: `import { createContext, useContext, useState, type ReactNode } from "react";
+      contents: `import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
-import type { ProfileTraits } from "../quiz/quizModel";
+import { useI18n } from "@/i18n/I18nProvider";
+import type { ProfileTraits } from "@/features/quiz/quizModel";
 import {
   activateInterestLocally,
+  createInterestFlowCopy,
   createInitialInterestFlowState,
   markInterestActivating,
   markInterestActivationError,
@@ -1248,15 +1523,17 @@ type InterestFlowContextValue = {
 const InterestFlowContext = createContext<InterestFlowContextValue | null>(null);
 
 export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState(createInitialInterestFlowState);
+  const { LL } = useI18n();
+  const copy = useMemo(() => createInterestFlowCopy(LL), [LL]);
+  const [state, setState] = useState(() => createInitialInterestFlowState(copy));
 
   return (
     <InterestFlowContext.Provider
       value={{
         state,
-        select: (interest) => setState((current) => selectInterest(current, interest)),
-        markActivating: () => setState((current) => markInterestActivating(current)),
-        completeLocalActivation: (traits) => setState((current) => activateInterestLocally(current, traits)),
+        select: (interest) => setState((current) => selectInterest(current, interest, copy)),
+        markActivating: () => setState((current) => markInterestActivating(current, copy)),
+        completeLocalActivation: (traits) => setState((current) => activateInterestLocally(current, traits, copy)),
         failActivation: (message) => setState((current) => markInterestActivationError(current, message))
       }}
     >
@@ -1470,17 +1747,16 @@ function AdminDashboard() {
   const businesses = data?.businessesCollection?.edges.map((edge) => edge.node) ?? fallbackBusinesses;
   const events = data?.eventsCollection?.edges.map((edge) => edge.node) ?? fallbackEvents;
   const connectionStatus = loading
-    ? "Loading from Supabase GraphQL"
+    ? "Loading city data"
     : error
-      ? "Using local fallback data until Supabase GraphQL is reachable"
-      : "Connected to Supabase GraphQL";
+      ? "Showing starter city data while local services start"
+      : "Connected to city data";
 
   return (
     <main style={{ padding: 32 }}>
       <h1>Buzz Admin</h1>
       <p>Environment: {appEnv}</p>
       <p>Supabase URL: {supabaseUrl}</p>
-      <p>GraphQL endpoint: {graphqlUrl}</p>
       <p>Connection status: {connectionStatus}</p>
       <section>
         <h2>Seeded interests</h2>

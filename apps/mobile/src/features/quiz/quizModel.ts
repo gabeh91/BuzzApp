@@ -1,3 +1,5 @@
+import { LL, type I18n } from "@/i18n";
+
 export type QuizTraitName = "energy" | "planning" | "socialStyle" | "availability" | "activityIntent";
 
 export type ProfileTraits = {
@@ -40,208 +42,214 @@ const option = (
   traits
 });
 
-export const quizQuestions: QuizQuestion[] = [
-  {
-    id: "energy-after-work",
-    group: "lifestyle",
-    prompt: "After work, what usually feels most realistic?",
-    options: [
-      option("quiet-reset", "A quiet reset", "Low-pressure plans land best.", { energy: "low" }),
-      option("easy-outing", "An easy outing", "You like something social but contained.", { energy: "medium" }),
-      option("proper-plan", "A proper plan", "If it is worthwhile, you are in.", { energy: "high" })
-    ]
-  },
-  {
-    id: "weekend-rhythm",
-    group: "lifestyle",
-    prompt: "Your ideal weekend rhythm is closest to...",
-    options: [
-      option("slow-start", "Slow start, one good thing", "A single intentional plan works.", { energy: "low", planning: "planned" }),
-      option("loose-list", "A loose list", "You like options without pressure.", { energy: "medium", planning: "balanced" }),
-      option("full-calendar", "A full calendar", "You are happy stacking plans.", { energy: "high", planning: "planned" })
-    ]
-  },
-  {
-    id: "planning-style",
-    group: "lifestyle",
-    prompt: "How far ahead do you prefer to lock plans in?",
-    options: [
-      option("same-day", "Same day is fine", "Spontaneous plans feel natural.", { planning: "spontaneous" }),
-      option("few-days", "A few days ahead", "A little structure helps.", { planning: "balanced" }),
-      option("week-plus", "A week or more", "You like clear plans.", { planning: "planned" })
-    ]
-  },
-  {
-    id: "new-city-need",
-    group: "lifestyle",
-    prompt: "What would help you feel more settled?",
-    options: [
-      option("regular-places", "Regular places", "You want familiar local anchors.", { activityIntent: "social" }),
-      option("new-skills", "New skills", "Learning gives you momentum.", { activityIntent: "learn" }),
-      option("active-routine", "An active routine", "You want repeatable activities.", { activityIntent: "practice" })
-    ]
-  },
-  {
-    id: "first-meet-format",
-    group: "social",
-    prompt: "For a first meet-up, you would rather...",
-    options: [
-      option("one-person", "Meet one person", "Focused and easy to read.", { socialStyle: "one_on_one" }),
-      option("small-crew", "Join a small crew", "Enough energy without overwhelm.", { socialStyle: "small_group" }),
-      option("bigger-group", "Go where there is a crowd", "More people feels easier.", { socialStyle: "large_group" })
-    ]
-  },
-  {
-    id: "conversation-style",
-    group: "social",
-    prompt: "Good conversation usually happens when...",
-    options: [
-      option("deep-chat", "There is time to go deeper", "One-on-one plans fit.", { socialStyle: "one_on_one" }),
-      option("shared-task", "You are doing something together", "Activity-led groups fit.", { socialStyle: "small_group" }),
-      option("light-energy", "The room has momentum", "Bigger group energy helps.", { socialStyle: "large_group" })
-    ]
-  },
-  {
-    id: "group-comfort",
-    group: "social",
-    prompt: "Walking into a new group, you prefer...",
-    options: [
-      option("known-person", "Knowing one person first", "A smaller bridge matters.", { socialStyle: "one_on_one" }),
-      option("clear-plan", "A clear plan or activity", "Structure makes groups easier.", { socialStyle: "small_group" }),
-      option("open-room", "An open room with options", "You can find your own rhythm.", { socialStyle: "large_group" })
-    ]
-  },
-  {
-    id: "social-frequency",
-    group: "social",
-    prompt: "Right now, you want social plans...",
-    options: [
-      option("occasionally", "Occasionally", "Quality over frequency.", { energy: "low" }),
-      option("weekly", "Weekly", "A steady cadence sounds good.", { energy: "medium" }),
-      option("often", "Often", "You want momentum quickly.", { energy: "high" })
-    ]
-  },
-  {
-    id: "weekday-availability",
-    group: "availability",
-    prompt: "Weekdays are usually...",
-    options: [
-      option("not-ideal", "Not ideal", "Weekends will be stronger.", { availability: "weekend" }),
-      option("some-evenings", "Some evenings work", "Mixed availability fits.", { availability: "mixed" }),
-      option("very-flexible", "Pretty flexible", "Weekday plans are realistic.", { availability: "weekday" })
-    ]
-  },
-  {
-    id: "weekend-availability",
-    group: "availability",
-    prompt: "Weekends are usually...",
-    options: [
-      option("protected", "Protected downtime", "Lower-pressure plans matter.", { energy: "low", availability: "weekday" }),
-      option("partly-open", "Partly open", "One good plan works.", { availability: "mixed" }),
-      option("best-time", "The best time to meet", "Weekend activities fit.", { availability: "weekend" })
-    ]
-  },
-  {
-    id: "schedule-reliability",
-    group: "availability",
-    prompt: "When you say yes to a plan...",
-    options: [
-      option("need-flex", "I need flexibility", "Loose plans are safer.", { planning: "spontaneous" }),
-      option("usually-good", "I am usually good", "Balanced planning fits.", { planning: "balanced" }),
-      option("locked-in", "It is locked in", "Planned groups fit.", { planning: "planned" })
-    ]
-  },
-  {
-    id: "travel-radius",
-    group: "availability",
-    prompt: "How far would you travel for the right activity?",
-    options: [
-      option("nearby", "Nearby only", "Local matches matter most.", { energy: "low" }),
-      option("across-town", "Across town sometimes", "You will travel for fit.", { energy: "medium" }),
-      option("wherever-good", "Wherever it is good", "Strong intent opens options.", { energy: "high" })
-    ]
-  },
-  {
-    id: "activity-learning",
-    group: "activities",
-    prompt: "Trying something new feels...",
-    options: [
-      option("gentle", "Good if it is gentle", "Beginner-friendly matters.", { activityIntent: "learn", energy: "low" }),
-      option("exciting", "Exciting with the right people", "Learning socially fits.", { activityIntent: "learn", socialStyle: "small_group" }),
-      option("very-me", "Very me", "You like active discovery.", { activityIntent: "learn", energy: "high" })
-    ]
-  },
-  {
-    id: "activity-repeat",
-    group: "activities",
-    prompt: "If an activity clicks, you would...",
-    options: [
-      option("keep-casual", "Keep it casual", "No pressure to make it a routine.", { planning: "spontaneous" }),
-      option("do-again", "Do it again soon", "Repeat plans could work.", { activityIntent: "practice" }),
-      option("build-routine", "Build a routine", "Consistency motivates you.", { activityIntent: "practice", planning: "planned" })
-    ]
-  },
-  {
-    id: "activity-vibe",
-    group: "activities",
-    prompt: "The best activity vibe is...",
-    options: [
-      option("calm", "Calm and easy", "Low-pressure is key.", { energy: "low" }),
-      option("warm", "Warm and social", "Connection matters.", { activityIntent: "social", socialStyle: "small_group" }),
-      option("energetic", "Energetic and memorable", "Momentum matters.", { energy: "high" })
-    ]
-  },
-  {
-    id: "skill-level",
-    group: "activities",
-    prompt: "Joining around a skill, you prefer...",
-    options: [
-      option("beginner", "Beginner-friendly", "Learning with others helps.", { activityIntent: "learn" }),
-      option("mixed", "Mixed levels", "Social fit matters more.", { socialStyle: "small_group" }),
-      option("focused", "A focused session", "Practice matters.", { activityIntent: "practice" })
-    ]
-  },
-  {
-    id: "food-coffee",
-    group: "activities",
-    prompt: "Food or coffee plans feel like...",
-    options: [
-      option("safe-first", "A safe first step", "Easy one-on-one plans fit.", { socialStyle: "one_on_one" }),
-      option("group-anchor", "A good group anchor", "Small group intros fit.", { socialStyle: "small_group" }),
-      option("backup", "A backup option", "More active plans may fit better.", { energy: "high" })
-    ]
-  },
-  {
-    id: "outdoor-indoor",
-    group: "activities",
-    prompt: "You are more drawn to...",
-    options: [
-      option("indoor", "Indoor and cosy", "Low-friction plans fit.", { energy: "low" }),
-      option("either", "Either, with good people", "Social fit leads.", { socialStyle: "small_group" }),
-      option("outdoor", "Outdoor and active", "Higher-energy plans fit.", { energy: "high" })
-    ]
-  },
-  {
-    id: "follow-through",
-    group: "activities",
-    prompt: "After a good first activity, you would like...",
-    options: [
-      option("leave-open", "Leave it open", "No forced continuity.", { planning: "spontaneous" }),
-      option("suggest-next", "Suggest a next one", "A natural follow-up helps.", { planning: "balanced" }),
-      option("make-regular", "Make it regular", "A routine could stick.", { planning: "planned" })
-    ]
-  },
-  {
-    id: "buzz-outcome",
-    group: "activities",
-    prompt: "If Buzz works for you, it will help you...",
-    options: [
-      option("feel-at-home", "Feel more at home", "Belonging is the goal.", { activityIntent: "social" }),
-      option("try-things", "Try things I have been putting off", "Discovery is the goal.", { activityIntent: "learn" }),
-      option("build-rhythm", "Build a rhythm in the city", "Routine is the goal.", { activityIntent: "practice" })
-    ]
-  }
-];
+export const createQuizQuestions = (translations: I18n = LL): QuizQuestion[] => {
+  const q = translations.quiz.questions;
+
+  return [
+    {
+      id: "energy-after-work",
+      group: "lifestyle",
+      prompt: q.energyAfterWork.prompt(),
+      options: [
+        option("quiet-reset", q.energyAfterWork.options.quietReset.label(), q.energyAfterWork.options.quietReset.supportingText(), { energy: "low" }),
+        option("easy-outing", q.energyAfterWork.options.easyOuting.label(), q.energyAfterWork.options.easyOuting.supportingText(), { energy: "medium" }),
+        option("proper-plan", q.energyAfterWork.options.properPlan.label(), q.energyAfterWork.options.properPlan.supportingText(), { energy: "high" })
+      ]
+    },
+    {
+      id: "weekend-rhythm",
+      group: "lifestyle",
+      prompt: q.weekendRhythm.prompt(),
+      options: [
+        option("slow-start", q.weekendRhythm.options.slowStart.label(), q.weekendRhythm.options.slowStart.supportingText(), { energy: "low", planning: "planned" }),
+        option("loose-list", q.weekendRhythm.options.looseList.label(), q.weekendRhythm.options.looseList.supportingText(), { energy: "medium", planning: "balanced" }),
+        option("full-calendar", q.weekendRhythm.options.fullCalendar.label(), q.weekendRhythm.options.fullCalendar.supportingText(), { energy: "high", planning: "planned" })
+      ]
+    },
+    {
+      id: "planning-style",
+      group: "lifestyle",
+      prompt: q.planningStyle.prompt(),
+      options: [
+        option("same-day", q.planningStyle.options.sameDay.label(), q.planningStyle.options.sameDay.supportingText(), { planning: "spontaneous" }),
+        option("few-days", q.planningStyle.options.fewDays.label(), q.planningStyle.options.fewDays.supportingText(), { planning: "balanced" }),
+        option("week-plus", q.planningStyle.options.weekPlus.label(), q.planningStyle.options.weekPlus.supportingText(), { planning: "planned" })
+      ]
+    },
+    {
+      id: "new-city-need",
+      group: "lifestyle",
+      prompt: q.newCityNeed.prompt(),
+      options: [
+        option("regular-places", q.newCityNeed.options.regularPlaces.label(), q.newCityNeed.options.regularPlaces.supportingText(), { activityIntent: "social" }),
+        option("new-skills", q.newCityNeed.options.newSkills.label(), q.newCityNeed.options.newSkills.supportingText(), { activityIntent: "learn" }),
+        option("active-routine", q.newCityNeed.options.activeRoutine.label(), q.newCityNeed.options.activeRoutine.supportingText(), { activityIntent: "practice" })
+      ]
+    },
+    {
+      id: "first-meet-format",
+      group: "social",
+      prompt: q.firstMeetFormat.prompt(),
+      options: [
+        option("one-person", q.firstMeetFormat.options.onePerson.label(), q.firstMeetFormat.options.onePerson.supportingText(), { socialStyle: "one_on_one" }),
+        option("small-crew", q.firstMeetFormat.options.smallCrew.label(), q.firstMeetFormat.options.smallCrew.supportingText(), { socialStyle: "small_group" }),
+        option("bigger-group", q.firstMeetFormat.options.biggerGroup.label(), q.firstMeetFormat.options.biggerGroup.supportingText(), { socialStyle: "large_group" })
+      ]
+    },
+    {
+      id: "conversation-style",
+      group: "social",
+      prompt: q.conversationStyle.prompt(),
+      options: [
+        option("deep-chat", q.conversationStyle.options.deepChat.label(), q.conversationStyle.options.deepChat.supportingText(), { socialStyle: "one_on_one" }),
+        option("shared-task", q.conversationStyle.options.sharedTask.label(), q.conversationStyle.options.sharedTask.supportingText(), { socialStyle: "small_group" }),
+        option("light-energy", q.conversationStyle.options.lightEnergy.label(), q.conversationStyle.options.lightEnergy.supportingText(), { socialStyle: "large_group" })
+      ]
+    },
+    {
+      id: "group-comfort",
+      group: "social",
+      prompt: q.groupComfort.prompt(),
+      options: [
+        option("known-person", q.groupComfort.options.knownPerson.label(), q.groupComfort.options.knownPerson.supportingText(), { socialStyle: "one_on_one" }),
+        option("clear-plan", q.groupComfort.options.clearPlan.label(), q.groupComfort.options.clearPlan.supportingText(), { socialStyle: "small_group" }),
+        option("open-room", q.groupComfort.options.openRoom.label(), q.groupComfort.options.openRoom.supportingText(), { socialStyle: "large_group" })
+      ]
+    },
+    {
+      id: "social-frequency",
+      group: "social",
+      prompt: q.socialFrequency.prompt(),
+      options: [
+        option("occasionally", q.socialFrequency.options.occasionally.label(), q.socialFrequency.options.occasionally.supportingText(), { energy: "low" }),
+        option("weekly", q.socialFrequency.options.weekly.label(), q.socialFrequency.options.weekly.supportingText(), { energy: "medium" }),
+        option("often", q.socialFrequency.options.often.label(), q.socialFrequency.options.often.supportingText(), { energy: "high" })
+      ]
+    },
+    {
+      id: "weekday-availability",
+      group: "availability",
+      prompt: q.weekdayAvailability.prompt(),
+      options: [
+        option("not-ideal", q.weekdayAvailability.options.notIdeal.label(), q.weekdayAvailability.options.notIdeal.supportingText(), { availability: "weekend" }),
+        option("some-evenings", q.weekdayAvailability.options.someEvenings.label(), q.weekdayAvailability.options.someEvenings.supportingText(), { availability: "mixed" }),
+        option("very-flexible", q.weekdayAvailability.options.veryFlexible.label(), q.weekdayAvailability.options.veryFlexible.supportingText(), { availability: "weekday" })
+      ]
+    },
+    {
+      id: "weekend-availability",
+      group: "availability",
+      prompt: q.weekendAvailability.prompt(),
+      options: [
+        option("protected", q.weekendAvailability.options.protected.label(), q.weekendAvailability.options.protected.supportingText(), { energy: "low", availability: "weekday" }),
+        option("partly-open", q.weekendAvailability.options.partlyOpen.label(), q.weekendAvailability.options.partlyOpen.supportingText(), { availability: "mixed" }),
+        option("best-time", q.weekendAvailability.options.bestTime.label(), q.weekendAvailability.options.bestTime.supportingText(), { availability: "weekend" })
+      ]
+    },
+    {
+      id: "schedule-reliability",
+      group: "availability",
+      prompt: q.scheduleReliability.prompt(),
+      options: [
+        option("need-flex", q.scheduleReliability.options.needFlex.label(), q.scheduleReliability.options.needFlex.supportingText(), { planning: "spontaneous" }),
+        option("usually-good", q.scheduleReliability.options.usuallyGood.label(), q.scheduleReliability.options.usuallyGood.supportingText(), { planning: "balanced" }),
+        option("locked-in", q.scheduleReliability.options.lockedIn.label(), q.scheduleReliability.options.lockedIn.supportingText(), { planning: "planned" })
+      ]
+    },
+    {
+      id: "travel-radius",
+      group: "availability",
+      prompt: q.travelRadius.prompt(),
+      options: [
+        option("nearby", q.travelRadius.options.nearby.label(), q.travelRadius.options.nearby.supportingText(), { energy: "low" }),
+        option("across-town", q.travelRadius.options.acrossTown.label(), q.travelRadius.options.acrossTown.supportingText(), { energy: "medium" }),
+        option("wherever-good", q.travelRadius.options.whereverGood.label(), q.travelRadius.options.whereverGood.supportingText(), { energy: "high" })
+      ]
+    },
+    {
+      id: "activity-learning",
+      group: "activities",
+      prompt: q.activityLearning.prompt(),
+      options: [
+        option("gentle", q.activityLearning.options.gentle.label(), q.activityLearning.options.gentle.supportingText(), { activityIntent: "learn", energy: "low" }),
+        option("exciting", q.activityLearning.options.exciting.label(), q.activityLearning.options.exciting.supportingText(), { activityIntent: "learn", socialStyle: "small_group" }),
+        option("very-me", q.activityLearning.options.veryMe.label(), q.activityLearning.options.veryMe.supportingText(), { activityIntent: "learn", energy: "high" })
+      ]
+    },
+    {
+      id: "activity-repeat",
+      group: "activities",
+      prompt: q.activityRepeat.prompt(),
+      options: [
+        option("keep-casual", q.activityRepeat.options.keepCasual.label(), q.activityRepeat.options.keepCasual.supportingText(), { planning: "spontaneous" }),
+        option("do-again", q.activityRepeat.options.doAgain.label(), q.activityRepeat.options.doAgain.supportingText(), { activityIntent: "practice" }),
+        option("build-routine", q.activityRepeat.options.buildRoutine.label(), q.activityRepeat.options.buildRoutine.supportingText(), { activityIntent: "practice", planning: "planned" })
+      ]
+    },
+    {
+      id: "activity-vibe",
+      group: "activities",
+      prompt: q.activityVibe.prompt(),
+      options: [
+        option("calm", q.activityVibe.options.calm.label(), q.activityVibe.options.calm.supportingText(), { energy: "low" }),
+        option("warm", q.activityVibe.options.warm.label(), q.activityVibe.options.warm.supportingText(), { activityIntent: "social", socialStyle: "small_group" }),
+        option("energetic", q.activityVibe.options.energetic.label(), q.activityVibe.options.energetic.supportingText(), { energy: "high" })
+      ]
+    },
+    {
+      id: "skill-level",
+      group: "activities",
+      prompt: q.skillLevel.prompt(),
+      options: [
+        option("beginner", q.skillLevel.options.beginner.label(), q.skillLevel.options.beginner.supportingText(), { activityIntent: "learn" }),
+        option("mixed", q.skillLevel.options.mixed.label(), q.skillLevel.options.mixed.supportingText(), { socialStyle: "small_group" }),
+        option("focused", q.skillLevel.options.focused.label(), q.skillLevel.options.focused.supportingText(), { activityIntent: "practice" })
+      ]
+    },
+    {
+      id: "food-coffee",
+      group: "activities",
+      prompt: q.foodCoffee.prompt(),
+      options: [
+        option("safe-first", q.foodCoffee.options.safeFirst.label(), q.foodCoffee.options.safeFirst.supportingText(), { socialStyle: "one_on_one" }),
+        option("group-anchor", q.foodCoffee.options.groupAnchor.label(), q.foodCoffee.options.groupAnchor.supportingText(), { socialStyle: "small_group" }),
+        option("backup", q.foodCoffee.options.backup.label(), q.foodCoffee.options.backup.supportingText(), { energy: "high" })
+      ]
+    },
+    {
+      id: "outdoor-indoor",
+      group: "activities",
+      prompt: q.outdoorIndoor.prompt(),
+      options: [
+        option("indoor", q.outdoorIndoor.options.indoor.label(), q.outdoorIndoor.options.indoor.supportingText(), { energy: "low" }),
+        option("either", q.outdoorIndoor.options.either.label(), q.outdoorIndoor.options.either.supportingText(), { socialStyle: "small_group" }),
+        option("outdoor", q.outdoorIndoor.options.outdoor.label(), q.outdoorIndoor.options.outdoor.supportingText(), { energy: "high" })
+      ]
+    },
+    {
+      id: "follow-through",
+      group: "activities",
+      prompt: q.followThrough.prompt(),
+      options: [
+        option("leave-open", q.followThrough.options.leaveOpen.label(), q.followThrough.options.leaveOpen.supportingText(), { planning: "spontaneous" }),
+        option("suggest-next", q.followThrough.options.suggestNext.label(), q.followThrough.options.suggestNext.supportingText(), { planning: "balanced" }),
+        option("make-regular", q.followThrough.options.makeRegular.label(), q.followThrough.options.makeRegular.supportingText(), { planning: "planned" })
+      ]
+    },
+    {
+      id: "buzz-outcome",
+      group: "activities",
+      prompt: q.buzzOutcome.prompt(),
+      options: [
+        option("feel-at-home", q.buzzOutcome.options.feelAtHome.label(), q.buzzOutcome.options.feelAtHome.supportingText(), { activityIntent: "social" }),
+        option("try-things", q.buzzOutcome.options.tryThings.label(), q.buzzOutcome.options.tryThings.supportingText(), { activityIntent: "learn" }),
+        option("build-rhythm", q.buzzOutcome.options.buildRhythm.label(), q.buzzOutcome.options.buildRhythm.supportingText(), { activityIntent: "practice" })
+      ]
+    }
+  ];
+};
+
+export const quizQuestions: QuizQuestion[] = createQuizQuestions();
 
 const defaultTraits: Pick<ProfileTraits, QuizTraitName> = {
   energy: "medium",
@@ -251,32 +259,34 @@ const defaultTraits: Pick<ProfileTraits, QuizTraitName> = {
   activityIntent: "social"
 };
 
-const labels: Record<QuizTraitName, Record<string, string>> = {
-  energy: {
-    low: "lower-pressure",
-    medium: "balanced-energy",
-    high: "high-momentum"
-  },
-  planning: {
-    spontaneous: "spontaneous",
-    balanced: "lightly planned",
-    planned: "planned"
-  },
-  socialStyle: {
-    one_on_one: "one-on-one",
-    small_group: "small groups",
-    large_group: "bigger groups"
-  },
-  availability: {
-    weekday: "weekday",
-    weekend: "weekend",
-    mixed: "mixed"
-  },
-  activityIntent: {
-    learn: "learning-led",
-    practice: "routine-building",
-    social: "social"
-  }
+const createTraitLabels = (translations: I18n = LL): Record<QuizTraitName, Record<string, string>> => {
+  return {
+    energy: {
+      low: translations.quiz.traitLabels.energy.low(),
+      medium: translations.quiz.traitLabels.energy.medium(),
+      high: translations.quiz.traitLabels.energy.high()
+    },
+    planning: {
+      spontaneous: translations.quiz.traitLabels.planning.spontaneous(),
+      balanced: translations.quiz.traitLabels.planning.balanced(),
+      planned: translations.quiz.traitLabels.planning.planned()
+    },
+    socialStyle: {
+      one_on_one: translations.quiz.traitLabels.socialStyle.oneOnOne(),
+      small_group: translations.quiz.traitLabels.socialStyle.smallGroup(),
+      large_group: translations.quiz.traitLabels.socialStyle.largeGroup()
+    },
+    availability: {
+      weekday: translations.quiz.traitLabels.availability.weekday(),
+      weekend: translations.quiz.traitLabels.availability.weekend(),
+      mixed: translations.quiz.traitLabels.availability.mixed()
+    },
+    activityIntent: {
+      learn: translations.quiz.traitLabels.activityIntent.learn(),
+      practice: translations.quiz.traitLabels.activityIntent.practice(),
+      social: translations.quiz.traitLabels.activityIntent.social()
+    }
+  };
 };
 
 const chooseMostCommon = <T extends string>(values: T[], fallback: T): T => {
@@ -289,10 +299,15 @@ const chooseMostCommon = <T extends string>(values: T[], fallback: T): T => {
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? fallback;
 };
 
-export const deriveProfileTraits = (answers: QuizAnswers): ProfileTraits => {
-  const selectedOptions = quizQuestions
+export const deriveProfileTraits = (
+  answers: QuizAnswers,
+  questions: QuizQuestion[] = quizQuestions,
+  translations: I18n = LL
+): ProfileTraits => {
+  const selectedOptions = questions
     .map((question) => question.options.find((answer) => answer.id === answers[question.id]))
     .filter((answer): answer is QuizOption => Boolean(answer));
+  const labels = createTraitLabels(translations);
 
   const traitValues = <Name extends QuizTraitName>(name: Name): ProfileTraits[Name][] => {
     return selectedOptions
@@ -310,9 +325,13 @@ export const deriveProfileTraits = (answers: QuizAnswers): ProfileTraits => {
 
   return {
     ...traits,
-    quizCompleted: selectedOptions.length === quizQuestions.length,
+    quizCompleted: selectedOptions.length === questions.length,
     answersCount: selectedOptions.length,
-    totalQuestions: quizQuestions.length,
-    summary: `You seem best matched to ${labels.socialStyle[traits.socialStyle]}, ${labels.energy[traits.energy]} plans, and ${labels.activityIntent[traits.activityIntent]} activities.`
+    totalQuestions: questions.length,
+    summary: translations.quiz.summary({
+      socialStyle: labels.socialStyle[traits.socialStyle] ?? labels.socialStyle.small_group,
+      energy: labels.energy[traits.energy] ?? labels.energy.medium,
+      activityIntent: labels.activityIntent[traits.activityIntent] ?? labels.activityIntent.social
+    })
   };
 };

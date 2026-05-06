@@ -1,8 +1,10 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
-import type { ProfileTraits } from "../quiz/quizModel";
+import { useI18n } from "@/i18n/I18nProvider";
+import type { ProfileTraits } from "@/features/quiz/quizModel";
 import {
   activateInterestLocally,
+  createInterestFlowCopy,
   createInitialInterestFlowState,
   markInterestActivating,
   markInterestActivationError,
@@ -22,18 +24,20 @@ type InterestFlowContextValue = {
 const InterestFlowContext = createContext<InterestFlowContextValue | null>(null);
 
 export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState(createInitialInterestFlowState);
+  const { LL } = useI18n();
+  const copy = useMemo(() => createInterestFlowCopy(LL), [LL]);
+  const [state, setState] = useState(() => createInitialInterestFlowState(copy));
 
   const value: InterestFlowContextValue = {
     state,
     select: (interest) => {
-      setState((current) => selectInterest(current, interest));
+      setState((current) => selectInterest(current, interest, copy));
     },
     markActivating: () => {
-      setState((current) => markInterestActivating(current));
+      setState((current) => markInterestActivating(current, copy));
     },
     completeLocalActivation: (traits) => {
-      setState((current) => activateInterestLocally(current, traits));
+      setState((current) => activateInterestLocally(current, traits, copy));
     },
     failActivation: (message) => {
       setState((current) => markInterestActivationError(current, message));

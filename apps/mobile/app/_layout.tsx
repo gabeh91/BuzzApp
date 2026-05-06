@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-import { AppProviders } from "@/app/AppProviders";
+import { AppProviders } from "@/providers/AppProviders";
 import { colors } from "@/theme/tokens";
 
 const RootLayout = () => {

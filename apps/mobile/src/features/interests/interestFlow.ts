@@ -1,5 +1,7 @@
-import { createDemoMatchPreview, type DemoMatchPreview } from "../matching/demoMatch";
-import type { ProfileTraits } from "../quiz/quizModel";
+import { LL, type I18n } from "@/i18n";
+
+import { createDemoMatchPreview, type DemoMatchPreview } from "@/features/matching/demoMatch";
+import type { ProfileTraits } from "@/features/quiz/quizModel";
 
 export type BuzzInterest = {
   id: string;
@@ -19,46 +21,77 @@ export type InterestFlowState = {
   matchPreview: DemoMatchPreview | null;
 };
 
-export const createInitialInterestFlowState = (): InterestFlowState => {
+export type InterestFlowCopy = {
+  initialMessage: string;
+  selectedMessage: (interest: string) => string;
+  activatingMessage: string;
+  completeMessage: (interest: string) => string;
+  chooseBeforeActivatingMessage: string;
+};
+
+export const createInterestFlowCopy = (translations: I18n = LL): InterestFlowCopy => {
+  return {
+    initialMessage: translations.interests.activation.initial(),
+    selectedMessage: (interest) => translations.interests.activation.selected({ interest }),
+    activatingMessage: translations.interests.activation.activating(),
+    completeMessage: (interest) => translations.interests.activation.complete({ interest }),
+    chooseBeforeActivatingMessage: translations.interests.activation.chooseBeforeActivating()
+  };
+};
+
+const defaultInterestFlowCopy = createInterestFlowCopy();
+
+export const createInitialInterestFlowState = (copy: InterestFlowCopy = defaultInterestFlowCopy): InterestFlowState => {
   return {
     selectedInterest: null,
     activation: {
       status: "idle",
-      message: "Pick one interest to activate when you are open to doing it."
+      message: copy.initialMessage
     },
     matchPreview: null
   };
 };
 
-export const selectInterest = (state: InterestFlowState, interest: BuzzInterest): InterestFlowState => {
+export const selectInterest = (
+  state: InterestFlowState,
+  interest: BuzzInterest,
+  copy: InterestFlowCopy = defaultInterestFlowCopy
+): InterestFlowState => {
   return {
     ...state,
     selectedInterest: interest,
     activation: {
       status: "idle",
-      message: `${interest.name} is ready when you are.`
+      message: copy.selectedMessage(interest.name)
     },
     matchPreview: null
   };
 };
 
-export const markInterestActivating = (state: InterestFlowState): InterestFlowState => {
+export const markInterestActivating = (
+  state: InterestFlowState,
+  copy: InterestFlowCopy = defaultInterestFlowCopy
+): InterestFlowState => {
   return {
     ...state,
     activation: {
       status: "activating",
-      message: "Activating your interest..."
+      message: copy.activatingMessage
     }
   };
 };
 
-export const activateInterestLocally = (state: InterestFlowState, traits: ProfileTraits): InterestFlowState => {
+export const activateInterestLocally = (
+  state: InterestFlowState,
+  traits: ProfileTraits,
+  copy: InterestFlowCopy = defaultInterestFlowCopy
+): InterestFlowState => {
   if (!state.selectedInterest) {
     return {
       ...state,
       activation: {
         status: "error",
-        message: "Choose an interest before activating."
+        message: copy.chooseBeforeActivatingMessage
       }
     };
   }
@@ -67,7 +100,7 @@ export const activateInterestLocally = (state: InterestFlowState, traits: Profil
     ...state,
     activation: {
       status: "complete",
-      message: `${state.selectedInterest.name} is active for your demo profile.`
+      message: copy.completeMessage(state.selectedInterest.name)
     },
     matchPreview: createDemoMatchPreview({
       interestName: state.selectedInterest.name,

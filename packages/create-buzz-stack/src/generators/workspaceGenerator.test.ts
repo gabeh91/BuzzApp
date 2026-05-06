@@ -32,7 +32,7 @@ test("mobile scaffold declares Babel runtime for Metro", () => {
   assert.match(mobilePackageJson.contents, /"tsx": "latest"/);
   assert.match(
     mobilePackageJson.contents,
-    /"test": "tsx --test src\/auth\/\*\.test\.ts src\/features\/\*\/\*\.test\.ts src\/navigation\/\*\.test\.ts src\/theme\/\*\.test\.ts"/
+    /"test": "tsx --test src\/auth\/\*\.test\.ts src\/features\/\*\/\*\.test\.ts src\/i18n\/\*\.test\.ts src\/navigation\/\*\.test\.ts src\/theme\/\*\.test\.ts"/
   );
 });
 
@@ -42,16 +42,53 @@ test("mobile scaffold registers the Expo root component", () => {
   const routerLayout = files.find((file) => file.path === "apps/mobile/app/_layout.tsx");
   const onboardingRoute = files.find((file) => file.path === "apps/mobile/app/index.tsx");
   const homeRoute = files.find((file) => file.path === "apps/mobile/app/home.tsx");
+  const paths = files.map((file) => file.path);
 
   assert.ok(mobilePackageJson);
   assert.match(mobilePackageJson.contents, /"main": "expo-router\/entry"/);
   assert.match(mobilePackageJson.contents, /"expo-router": "~4\.0\.22"/);
+  assert.match(mobilePackageJson.contents, /"react-native-reanimated":/);
+  const babelConfig = files.find((file) => file.path === "apps/mobile/babel.config.js");
+  assert.ok(babelConfig);
+  assert.match(babelConfig.contents, /react-native-reanimated\/plugin/);
   assert.ok(routerLayout);
   assert.match(routerLayout.contents, /<Stack/);
+  assert.match(routerLayout.contents, /@\/providers\/AppProviders/);
+  assert.doesNotMatch(routerLayout.contents, /@\/app\/AppProviders/);
   assert.ok(onboardingRoute);
   assert.match(onboardingRoute.contents, /OnboardingScreen/);
   assert.ok(homeRoute);
   assert.match(homeRoute.contents, /BuzzHomeScreen/);
+  assert.ok(!paths.some((path) => path.startsWith("apps/mobile/src/app/")));
+});
+
+test("mobile scaffold localizes rendered copy with typesafe-i18n", () => {
+  const files = generateWorkspaceFiles(getDefaultConfig());
+  const mobilePackageJson = files.find((file) => file.path === "apps/mobile/package.json");
+  const localeFile = files.find((file) => file.path === "apps/mobile/src/i18n/en.ts");
+  const i18nIndex = files.find((file) => file.path === "apps/mobile/src/i18n/index.ts");
+  const i18nProvider = files.find((file) => file.path === "apps/mobile/src/i18n/I18nProvider.tsx");
+  const appProviders = files.find((file) => file.path === "apps/mobile/src/providers/AppProviders.tsx");
+  const onboardingScreen = files.find((file) => file.path === "apps/mobile/src/features/onboarding/OnboardingScreen.tsx");
+  const homeScreen = files.find((file) => file.path === "apps/mobile/src/features/home/BuzzHomeScreen.tsx");
+  const interestFlow = files.find((file) => file.path === "apps/mobile/src/features/interests/interestFlow.ts");
+
+  assert.ok(mobilePackageJson);
+  assert.ok(localeFile);
+  assert.ok(i18nIndex);
+  assert.ok(i18nProvider);
+  assert.ok(appProviders);
+  assert.ok(onboardingScreen);
+  assert.ok(homeScreen);
+  assert.ok(interestFlow);
+  assert.match(mobilePackageJson.contents, /"typesafe-i18n":/);
+  assert.match(i18nIndex.contents, /i18nObject/);
+  assert.match(i18nIndex.contents, /typesafe-i18n/);
+  assert.match(i18nProvider.contents, /useI18n/);
+  assert.match(appProviders.contents, /I18nProvider/);
+  assert.match(onboardingScreen.contents, /LL\.onboarding/);
+  assert.match(homeScreen.contents, /LL\.home/);
+  assert.match(interestFlow.contents, /InterestFlowCopy/);
 });
 
 test("mobile and admin scaffolds use Apollo against Supabase GraphQL", () => {
@@ -59,7 +96,7 @@ test("mobile and admin scaffolds use Apollo against Supabase GraphQL", () => {
   const mobilePackageJson = files.find((file) => file.path === "apps/mobile/package.json");
   const adminPackageJson = files.find((file) => file.path === "apps/admin/package.json");
   const mobileApp = files.find((file) => file.path === "apps/mobile/src/features/onboarding/OnboardingScreen.tsx");
-  const mobileProviders = files.find((file) => file.path === "apps/mobile/src/app/AppProviders.tsx");
+  const mobileProviders = files.find((file) => file.path === "apps/mobile/src/providers/AppProviders.tsx");
   const mobileApollo = files.find((file) => file.path === "apps/mobile/src/lib/apollo.ts");
   const mobileTsconfig = files.find((file) => file.path === "apps/mobile/tsconfig.json");
   const adminPage = files.find((file) => file.path === "apps/admin/app/page.tsx");
@@ -86,6 +123,13 @@ test("mobile and admin scaffolds use Apollo against Supabase GraphQL", () => {
   assert.match(mobileApp.contents, /useBuzzHomeQuery/);
   assert.match(mobileApp.contents, /useActivateInterestMutation/);
   assert.match(mobileApp.contents, /StyleSheet\.create/);
+  assert.match(mobileApp.contents, /react-native-reanimated/);
+  assert.match(mobileApp.contents, /useStepTransition/);
+  assert.match(mobileApp.contents, /useSharedValue/);
+  assert.match(mobileApp.contents, /useAnimatedStyle/);
+  assert.match(mobileApp.contents, /withTiming/);
+  assert.match(mobileApp.contents, /withRepeat/);
+  assert.doesNotMatch(mobileApp.contents, /Animated\.timing/);
   assert.match(mobileApp.contents, /@\/features\/quiz\/QuizProvider/);
   assert.match(mobileApp.contents, /@\/theme\/ThemeProvider/);
   assert.match(mobileApp.contents, /useBuzzTheme/);
@@ -122,6 +166,8 @@ test("mobile scaffold includes replaceable demo auth, context hooks, quiz model,
   const paths = files.map((file) => file.path);
 
   assert.ok(paths.includes("apps/mobile/src/auth/AuthProvider.tsx"));
+  assert.ok(paths.includes("apps/mobile/src/providers/AppProviders.tsx"));
+  assert.ok(!paths.some((path) => path.startsWith("apps/mobile/src/app/")));
   assert.ok(paths.includes("apps/mobile/src/auth/demoAuth.ts"));
   assert.ok(paths.includes("apps/mobile/src/features/onboarding/OnboardingProvider.tsx"));
   assert.ok(paths.includes("apps/mobile/src/features/onboarding/OnboardingScreen.tsx"));
