@@ -4,6 +4,14 @@ Buzz uses Expo, Next.js, Supabase GraphQL/Postgres/Auth/Edge Functions, optional
 
 The UI data-access default is Apollo Client over Supabase `pg_graphql`. This keeps component code in `useQuery`/`useMutation` while preserving the Supabase-first architecture.
 
+GraphQL operations live in app-local `.graphql` files and are compiled with GraphQL Code Generator:
+
+```bash
+pnpm graphql:codegen
+```
+
+Generated files are committed so clone/bootstrap/typecheck works immediately, but developers should regenerate them whenever GraphQL operations or Supabase schema fields change.
+
 GraphQL is for RLS-backed product data:
 
 - interests, cities, businesses, events, feature flags

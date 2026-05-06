@@ -11,7 +11,7 @@
     "test": "echo 'admin tests placeholder'"
   },
   "dependencies": {
-    "@apollo/client": "latest",
+    "@apollo/client": "^3.14.1",
     "@supabase/supabase-js": "latest",
     "graphql": "latest",
     "next": "14.2.20",

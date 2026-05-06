@@ -17,7 +17,7 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
     "test": "echo \\"mobile tests placeholder\\""
   },
   "dependencies": {
-    "@apollo/client": "latest",
+    "@apollo/client": "^3.14.1",
     "@babel/runtime": "7.29.2",
     "@supabase/supabase-js": "latest",
     "expo": "~52.0.0",
@@ -125,34 +125,14 @@ module.exports = config;
     },
     {
       path: "apps/mobile/App.tsx",
-      contents: `import { ApolloClient, gql, HttpLink, InMemoryCache } from "@apollo/client";
-import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
+      contents: `import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache } from "@apollo/client";
 import React, { useMemo, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
-type Interest = {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-};
+import type { BuzzHomeQuery } from "./graphql/generated";
+import { useActivateInterestMutation, useBuzzHomeQuery } from "./graphql/generated";
 
-type BuzzHomeQuery = {
-  interestsCollection?: {
-    edges: Array<{
-      node: Interest;
-    }>;
-  };
-};
-
-type ActivateInterestMutation = {
-  activateInterest?: {
-    ok?: boolean;
-    message?: string;
-    interestId?: string;
-    matchedUsers?: unknown[];
-  };
-};
+type Interest = NonNullable<NonNullable<BuzzHomeQuery["interestsCollection"]>["edges"][number]["node"]>;
 
 const fallbackInterests: Interest[] = [
   { id: "00000000-0000-0000-0000-000000000001", name: "Surfing", slug: "surfing", category: "sport" },
@@ -177,27 +157,6 @@ const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const graphqlUrl = supabaseUrl.replace(/\\/$/, "") + "/graphql/v1";
 
-const BUZZ_HOME_QUERY = gql\`
-  query BuzzHome {
-    interestsCollection(first: 20) {
-      edges {
-        node {
-          id
-          name
-          slug
-          category
-        }
-      }
-    }
-  }
-\`;
-
-const ACTIVATE_INTEREST_MUTATION = gql\`
-  mutation ActivateInterest($interestId: UUID!) {
-    activateInterest(interestId: $interestId)
-  }
-\`;
-
 function createBuzzApolloClient() {
   return new ApolloClient({
     link: new HttpLink({
@@ -214,10 +173,8 @@ function createBuzzApolloClient() {
 function BuzzMobileApp() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Home");
   const [activationMessage, setActivationMessage] = useState("Tap the button to run an Apollo GraphQL mutation.");
-  const { data, loading, error } = useQuery<BuzzHomeQuery>(BUZZ_HOME_QUERY);
-  const [activateInterest, { loading: activating }] = useMutation<ActivateInterestMutation>(
-    ACTIVATE_INTEREST_MUTATION
-  );
+  const { data, loading, error } = useBuzzHomeQuery();
+  const [activateInterest, { loading: activating }] = useActivateInterestMutation();
   const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? fallbackInterests;
   const firstInterestId = interests[0]?.id ?? fallbackInterestId;
   const connectionStatus = loading
@@ -235,7 +192,9 @@ function BuzzMobileApp() {
       });
 
       const payload = result.data?.activateInterest;
-      setActivationMessage(payload?.message ?? "GraphQL mutation completed.");
+      setActivationMessage(
+        typeof payload?.message === "string" ? payload.message : "GraphQL mutation completed."
+      );
     } catch {
       setActivationMessage("Local fallback: authentication-backed activation is ready for Supabase Auth.");
     }
@@ -319,6 +278,93 @@ export default function App() {
 `
     },
     {
+      path: "apps/mobile/graphql/operations.graphql",
+      contents: `query BuzzHome {
+  interestsCollection(first: 20) {
+    edges {
+      node {
+        id
+        name
+        slug
+        category
+      }
+    }
+  }
+}
+
+mutation ActivateInterest($interestId: UUID!) {
+  activateInterest(interestId: $interestId)
+}
+`
+    },
+    {
+      path: "apps/mobile/graphql/generated.tsx",
+      contents: `import { gql } from "@apollo/client";
+import * as Apollo from "@apollo/client";
+
+const defaultOptions = {} as const;
+
+export type BuzzHomeQuery = {
+  interestsCollection: {
+    edges: Array<{
+      node: {
+        id: string;
+        name: string;
+        slug: string;
+        category: string;
+      };
+    }>;
+  } | null;
+};
+
+export type BuzzHomeQueryVariables = Record<string, never>;
+
+export type ActivateInterestMutation = {
+  activateInterest: Record<string, unknown> | null;
+};
+
+export type ActivateInterestMutationVariables = {
+  interestId: string;
+};
+
+export const BuzzHomeDocument = gql\`
+  query BuzzHome {
+    interestsCollection(first: 20) {
+      edges {
+        node {
+          id
+          name
+          slug
+          category
+        }
+      }
+    }
+  }
+\`;
+
+export const ActivateInterestDocument = gql\`
+  mutation ActivateInterest($interestId: UUID!) {
+    activateInterest(interestId: $interestId)
+  }
+\`;
+
+export function useBuzzHomeQuery(baseOptions?: Apollo.QueryHookOptions<BuzzHomeQuery, BuzzHomeQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<BuzzHomeQuery, BuzzHomeQueryVariables>(BuzzHomeDocument, options);
+}
+
+export function useActivateInterestMutation(
+  baseOptions?: Apollo.MutationHookOptions<ActivateInterestMutation, ActivateInterestMutationVariables>
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<ActivateInterestMutation, ActivateInterestMutationVariables>(
+    ActivateInterestDocument,
+    options
+  );
+}
+`
+    },
+    {
       path: "apps/mobile/env.d.ts",
       contents: `declare const process: {
   env: {
@@ -347,7 +393,7 @@ export default function App() {
     "test": "echo \\"admin tests placeholder\\""
   },
   "dependencies": {
-    "@apollo/client": "latest",
+    "@apollo/client": "^3.14.1",
     "@supabase/supabase-js": "latest",
     "graphql": "latest",
     "next": "14.2.20",
@@ -423,43 +469,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       path: "apps/admin/app/page.tsx",
       contents: `"use client";
 
-import { ApolloClient, gql, HttpLink, InMemoryCache } from "@apollo/client";
-import { ApolloProvider, useQuery } from "@apollo/client/react";
+import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache } from "@apollo/client";
 import { useMemo } from "react";
 
-type Edge<T> = {
-  node: T;
-};
+import type { AdminDashboardQuery } from "../graphql/generated";
+import { useAdminDashboardQuery } from "../graphql/generated";
 
-type Interest = {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-};
-
-type Business = {
-  id: string;
-  name: string;
-  description?: string | null;
-};
-
-type Event = {
-  id: string;
-  title: string;
-};
-
-type AdminDashboardQuery = {
-  interestsCollection?: {
-    edges: Array<Edge<Interest>>;
-  };
-  businessesCollection?: {
-    edges: Array<Edge<Business>>;
-  };
-  eventsCollection?: {
-    edges: Array<Edge<Event>>;
-  };
-};
+type Interest = NonNullable<NonNullable<AdminDashboardQuery["interestsCollection"]>["edges"][number]["node"]>;
+type Business = NonNullable<NonNullable<AdminDashboardQuery["businessesCollection"]>["edges"][number]["node"]>;
+type Event = NonNullable<NonNullable<AdminDashboardQuery["eventsCollection"]>["edges"][number]["node"]>;
 
 const fallbackInterests: Interest[] = [
   { id: "interest-surfing", name: "Surfing", slug: "surfing", category: "sport" },
@@ -485,38 +503,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const graphqlUrl = supabaseUrl.replace(/\\/$/, "") + "/graphql/v1";
 
-const ADMIN_DASHBOARD_QUERY = gql\`
-  query AdminDashboard {
-    interestsCollection(first: 20) {
-      edges {
-        node {
-          id
-          name
-          slug
-          category
-        }
-      }
-    }
-    businessesCollection(first: 10) {
-      edges {
-        node {
-          id
-          name
-          description
-        }
-      }
-    }
-    eventsCollection(first: 10) {
-      edges {
-        node {
-          id
-          title
-        }
-      }
-    }
-  }
-\`;
-
 function createBuzzApolloClient() {
   return new ApolloClient({
     link: new HttpLink({
@@ -531,7 +517,7 @@ function createBuzzApolloClient() {
 }
 
 function AdminDashboard() {
-  const { data, loading, error } = useQuery<AdminDashboardQuery>(ADMIN_DASHBOARD_QUERY);
+  const { data, loading, error } = useAdminDashboardQuery();
   const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? fallbackInterests;
   const businesses = data?.businessesCollection?.edges.map((edge) => edge.node) ?? fallbackBusinesses;
   const events = data?.eventsCollection?.edges.map((edge) => edge.node) ?? fallbackEvents;
@@ -588,6 +574,121 @@ export default function HomePage() {
     <ApolloProvider client={client}>
       <AdminDashboard />
     </ApolloProvider>
+  );
+}
+`
+    },
+    {
+      path: "apps/admin/graphql/operations.graphql",
+      contents: `query AdminDashboard {
+  interestsCollection(first: 20) {
+    edges {
+      node {
+        id
+        name
+        slug
+        category
+      }
+    }
+  }
+  businessesCollection(first: 10) {
+    edges {
+      node {
+        id
+        name
+        description
+      }
+    }
+  }
+  eventsCollection(first: 10) {
+    edges {
+      node {
+        id
+        title
+      }
+    }
+  }
+}
+`
+    },
+    {
+      path: "apps/admin/graphql/generated.tsx",
+      contents: `import { gql } from "@apollo/client";
+import * as Apollo from "@apollo/client";
+
+const defaultOptions = {} as const;
+
+export type AdminDashboardQuery = {
+  interestsCollection: {
+    edges: Array<{
+      node: {
+        id: string;
+        name: string;
+        slug: string;
+        category: string;
+      };
+    }>;
+  } | null;
+  businessesCollection: {
+    edges: Array<{
+      node: {
+        id: string;
+        name: string;
+        description: string | null;
+      };
+    }>;
+  } | null;
+  eventsCollection: {
+    edges: Array<{
+      node: {
+        id: string;
+        title: string;
+      };
+    }>;
+  } | null;
+};
+
+export type AdminDashboardQueryVariables = Record<string, never>;
+
+export const AdminDashboardDocument = gql\`
+  query AdminDashboard {
+    interestsCollection(first: 20) {
+      edges {
+        node {
+          id
+          name
+          slug
+          category
+        }
+      }
+    }
+    businessesCollection(first: 10) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+    }
+    eventsCollection(first: 10) {
+      edges {
+        node {
+          id
+          title
+        }
+      }
+    }
+  }
+\`;
+
+export function useAdminDashboardQuery(
+  baseOptions?: Apollo.QueryHookOptions<AdminDashboardQuery, AdminDashboardQueryVariables>
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AdminDashboardQuery, AdminDashboardQueryVariables>(
+    AdminDashboardDocument,
+    options
   );
 }
 `

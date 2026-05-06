@@ -1,42 +1,14 @@
 "use client";
 
-import { ApolloClient, gql, HttpLink, InMemoryCache } from "@apollo/client";
-import { ApolloProvider, useQuery } from "@apollo/client/react";
+import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache } from "@apollo/client";
 import { useMemo } from "react";
 
-type Edge<T> = {
-  node: T;
-};
+import type { AdminDashboardQuery } from "../graphql/generated";
+import { useAdminDashboardQuery } from "../graphql/generated";
 
-type Interest = {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-};
-
-type Business = {
-  id: string;
-  name: string;
-  description?: string | null;
-};
-
-type Event = {
-  id: string;
-  title: string;
-};
-
-type AdminDashboardQuery = {
-  interestsCollection?: {
-    edges: Array<Edge<Interest>>;
-  };
-  businessesCollection?: {
-    edges: Array<Edge<Business>>;
-  };
-  eventsCollection?: {
-    edges: Array<Edge<Event>>;
-  };
-};
+type Interest = NonNullable<NonNullable<AdminDashboardQuery["interestsCollection"]>["edges"][number]["node"]>;
+type Business = NonNullable<NonNullable<AdminDashboardQuery["businessesCollection"]>["edges"][number]["node"]>;
+type Event = NonNullable<NonNullable<AdminDashboardQuery["eventsCollection"]>["edges"][number]["node"]>;
 
 const fallbackInterests: Interest[] = [
   { id: "interest-surfing", name: "Surfing", slug: "surfing", category: "sport" },
@@ -62,38 +34,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const graphqlUrl = supabaseUrl.replace(/\/$/, "") + "/graphql/v1";
 
-const ADMIN_DASHBOARD_QUERY = gql`
-  query AdminDashboard {
-    interestsCollection(first: 20) {
-      edges {
-        node {
-          id
-          name
-          slug
-          category
-        }
-      }
-    }
-    businessesCollection(first: 10) {
-      edges {
-        node {
-          id
-          name
-          description
-        }
-      }
-    }
-    eventsCollection(first: 10) {
-      edges {
-        node {
-          id
-          title
-        }
-      }
-    }
-  }
-`;
-
 function createBuzzApolloClient() {
   return new ApolloClient({
     link: new HttpLink({
@@ -108,7 +48,7 @@ function createBuzzApolloClient() {
 }
 
 function AdminDashboard() {
-  const { data, loading, error } = useQuery<AdminDashboardQuery>(ADMIN_DASHBOARD_QUERY);
+  const { data, loading, error } = useAdminDashboardQuery();
   const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? fallbackInterests;
   const businesses = data?.businessesCollection?.edges.map((edge) => edge.node) ?? fallbackBusinesses;
   const events = data?.eventsCollection?.edges.map((edge) => edge.node) ?? fallbackEvents;

@@ -1,31 +1,11 @@
-import { ApolloClient, gql, HttpLink, InMemoryCache } from "@apollo/client";
-import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
+import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache } from "@apollo/client";
 import React, { useMemo, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
-type Interest = {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-};
+import type { BuzzHomeQuery } from "./graphql/generated";
+import { useActivateInterestMutation, useBuzzHomeQuery } from "./graphql/generated";
 
-type BuzzHomeQuery = {
-  interestsCollection?: {
-    edges: Array<{
-      node: Interest;
-    }>;
-  };
-};
-
-type ActivateInterestMutation = {
-  activateInterest?: {
-    ok?: boolean;
-    message?: string;
-    interestId?: string;
-    matchedUsers?: unknown[];
-  };
-};
+type Interest = NonNullable<NonNullable<BuzzHomeQuery["interestsCollection"]>["edges"][number]["node"]>;
 
 const fallbackInterests: Interest[] = [
   { id: "00000000-0000-0000-0000-000000000001", name: "Surfing", slug: "surfing", category: "sport" },
@@ -50,27 +30,6 @@ const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const graphqlUrl = supabaseUrl.replace(/\/$/, "") + "/graphql/v1";
 
-const BUZZ_HOME_QUERY = gql`
-  query BuzzHome {
-    interestsCollection(first: 20) {
-      edges {
-        node {
-          id
-          name
-          slug
-          category
-        }
-      }
-    }
-  }
-`;
-
-const ACTIVATE_INTEREST_MUTATION = gql`
-  mutation ActivateInterest($interestId: UUID!) {
-    activateInterest(interestId: $interestId)
-  }
-`;
-
 function createBuzzApolloClient() {
   return new ApolloClient({
     link: new HttpLink({
@@ -87,10 +46,8 @@ function createBuzzApolloClient() {
 function BuzzMobileApp() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Home");
   const [activationMessage, setActivationMessage] = useState("Tap the button to run an Apollo GraphQL mutation.");
-  const { data, loading, error } = useQuery<BuzzHomeQuery>(BUZZ_HOME_QUERY);
-  const [activateInterest, { loading: activating }] = useMutation<ActivateInterestMutation>(
-    ACTIVATE_INTEREST_MUTATION
-  );
+  const { data, loading, error } = useBuzzHomeQuery();
+  const [activateInterest, { loading: activating }] = useActivateInterestMutation();
   const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? fallbackInterests;
   const firstInterestId = interests[0]?.id ?? fallbackInterestId;
   const connectionStatus = loading
@@ -108,7 +65,9 @@ function BuzzMobileApp() {
       });
 
       const payload = result.data?.activateInterest;
-      setActivationMessage(payload?.message ?? "GraphQL mutation completed.");
+      setActivationMessage(
+        typeof payload?.message === "string" ? payload.message : "GraphQL mutation completed."
+      );
     } catch {
       setActivationMessage("Local fallback: authentication-backed activation is ready for Supabase Auth.");
     }

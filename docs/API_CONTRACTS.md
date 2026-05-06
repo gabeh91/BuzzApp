@@ -8,6 +8,28 @@ ${SUPABASE_URL}/graphql/v1
 
 Use Supabase GraphQL for ordinary RLS-backed reads and mutations. Keep AI, Stripe, push provider calls, webhook handling, and any service-role operations inside Supabase Edge Functions or backend services.
 
+GraphQL operation types and Apollo hooks are generated from committed `.graphql` documents:
+
+```bash
+pnpm graphql:codegen
+```
+
+Current operation files:
+
+```txt
+apps/mobile/graphql/operations.graphql
+apps/admin/graphql/operations.graphql
+```
+
+Generated hook modules:
+
+```txt
+apps/mobile/graphql/generated.tsx
+apps/admin/graphql/generated.tsx
+```
+
+UI code should import generated hooks such as `useBuzzHomeQuery`, `useActivateInterestMutation`, and `useAdminDashboardQuery` instead of hand-writing operation result types.
+
 The starter GraphQL query shape is:
 
 ```graphql

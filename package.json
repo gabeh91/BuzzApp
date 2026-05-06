@@ -17,6 +17,8 @@
     "env:validate": "tsx packages/create-buzz-stack/src/index.ts env validate",
     "check:prereqs": "tsx packages/create-buzz-stack/src/index.ts doctor",
     "check:env": "tsx packages/create-buzz-stack/src/index.ts env validate",
+    "graphql:codegen": "graphql-codegen --config codegen.ts",
+    "graphql:codegen:watch": "graphql-codegen --config codegen.ts --watch",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
@@ -43,13 +45,17 @@
     "mobile:build:prod": "bash scripts/mobile/build-prod.sh"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^7.0.0",
+    "@graphql-codegen/typescript": "^6.0.0",
+    "@graphql-codegen/typescript-operations": "^6.0.0",
+    "@graphql-codegen/typescript-react-apollo": "^4.4.2",
     "@types/node": "latest",
     "concurrently": "latest",
     "create-buzz-stack": "workspace:*",
     "eslint": "latest",
     "prettier": "latest",
-    "turbo": "latest",
     "tsx": "latest",
+    "turbo": "latest",
     "typescript": "latest",
     "zod": "latest"
   }

@@ -1,0 +1,29 @@
+query AdminDashboard {
+  interestsCollection(first: 20) {
+    edges {
+      node {
+        id
+        name
+        slug
+        category
+      }
+    }
+  }
+  businessesCollection(first: 10) {
+    edges {
+      node {
+        id
+        name
+        description
+      }
+    }
+  }
+  eventsCollection(first: 10) {
+    edges {
+      node {
+        id
+        title
+      }
+    }
+  }
+}
