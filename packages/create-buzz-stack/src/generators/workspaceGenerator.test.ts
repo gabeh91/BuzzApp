@@ -84,6 +84,8 @@ test("mobile scaffold localizes rendered copy with typesafe-i18n", () => {
   assert.match(mobilePackageJson.contents, /"typesafe-i18n":/);
   assert.match(i18nIndex.contents, /i18nObject/);
   assert.match(i18nIndex.contents, /typesafe-i18n/);
+  assert.match(i18nIndex.contents, /ensurePluralRules/);
+  assert.match(i18nIndex.contents, /BuzzPluralRulesFallback/);
   assert.match(i18nProvider.contents, /useI18n/);
   assert.match(appProviders.contents, /I18nProvider/);
   assert.match(onboardingScreen.contents, /LL\.onboarding/);

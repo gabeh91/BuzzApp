@@ -339,12 +339,48 @@ export const baseLocale = "en";
 export const locales = ["en"] as const;
 
 export type AppLocale = (typeof locales)[number];
+type PluralRulesLike = {
+  select: (value: number) => Intl.LDMLPluralRule;
+};
+type IntlWithOptionalPluralRules = typeof Intl & {
+  PluralRules?: new (locale?: string | string[]) => PluralRulesLike;
+};
 
 export const translations = {
   en
 } as const;
 
+const ensurePluralRules = () => {
+  const globalObject = globalThis as typeof globalThis & {
+    Intl?: IntlWithOptionalPluralRules;
+  };
+
+  if (!globalObject.Intl) {
+    Object.defineProperty(globalObject, "Intl", {
+      configurable: true,
+      value: {}
+    });
+  }
+
+  if (typeof globalObject.Intl.PluralRules === "function") {
+    return;
+  }
+
+  class BuzzPluralRulesFallback implements PluralRulesLike {
+    select(value: number): Intl.LDMLPluralRule {
+      return value === 1 ? "one" : "other";
+    }
+  }
+
+  Object.defineProperty(globalObject.Intl, "PluralRules", {
+    configurable: true,
+    value: BuzzPluralRulesFallback
+  });
+};
+
 export const createI18n = (locale: AppLocale = baseLocale) => {
+  ensurePluralRules();
+
   return i18nObject(locale, translations[locale]);
 };
 
@@ -396,6 +432,35 @@ test("typesafe-i18n exposes the base mobile locale", () => {
   assert.deepEqual(locales, ["en"]);
   assert.equal(LL.brand.name(), "Buzz");
   assert.equal(LL.home.titleActivated({ interest: "Surfing" }), "You activated Surfing.");
+});
+`
+    },
+    {
+      path: "apps/mobile/src/i18n/i18nNativeRuntime.test.ts",
+      contents: `import assert from "node:assert/strict";
+import test from "node:test";
+
+test("i18n module evaluates when Intl.PluralRules is unavailable", async () => {
+  const originalPluralRules = Intl.PluralRules;
+
+  try {
+    Object.defineProperty(Intl, "PluralRules", {
+      configurable: true,
+      value: undefined
+    });
+
+    const uncachedModulePath = "./index.ts?without-plural-rules";
+    const i18n = await import(uncachedModulePath);
+    const LL = i18n.createI18n("en");
+
+    assert.equal(LL.brand.name(), "Buzz");
+    assert.equal(LL.home.titleActivated({ interest: "Surfing" }), "You activated Surfing.");
+  } finally {
+    Object.defineProperty(Intl, "PluralRules", {
+      configurable: true,
+      value: originalPluralRules
+    });
+  }
 });
 `
     },
