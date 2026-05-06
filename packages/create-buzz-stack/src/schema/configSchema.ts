@@ -63,6 +63,67 @@ export const configSchema = z.object({
 
 export type BuzzStackConfig = z.infer<typeof configSchema>;
 
+const DEFAULT_CONFIG = {
+  projectName: "buzz",
+  packageManager: "pnpm",
+  nodeVersion: "22",
+  features: {
+    mobile: true,
+    admin: true,
+    apiPlaceholder: true,
+    workerPlaceholder: true,
+    githubActions: true,
+    railway: false,
+    docker: true,
+    supabase: true,
+    edgeFunctions: true,
+    turborepo: true
+  },
+  ci: {
+    provider: "github-actions",
+    environments: ["development", "staging", "production"],
+    productionRequiresApproval: true
+  },
+  hosting: {
+    provider: null
+  },
+  railway: {
+    enabled: false,
+    projectName: "buzz",
+    environments: {
+      development: "development",
+      staging: "staging",
+      production: "production"
+    },
+    services: {
+      admin: "buzz-admin",
+      api: "buzz-api",
+      worker: "buzz-worker"
+    }
+  },
+  mobile: {
+    appName: "Buzz",
+    ios: {
+      devBundleId: "com.buzz.dev",
+      stagingBundleId: "com.buzz.staging",
+      prodBundleId: "com.buzz.app"
+    },
+    android: {
+      devPackage: "com.buzz.dev",
+      stagingPackage: "com.buzz.staging",
+      prodPackage: "com.buzz.app"
+    }
+  },
+  localDev: {
+    runBootstrapAfterInit: true,
+    useMockAi: true,
+    disableStripe: true,
+    disablePush: true,
+    disableSentry: true,
+    disablePostHog: true
+  }
+} satisfies BuzzStackConfig;
+
 export function getDefaultConfig(): BuzzStackConfig {
-  return configSchema.parse({});
+  return configSchema.parse(DEFAULT_CONFIG);
 }

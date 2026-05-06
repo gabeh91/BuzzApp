@@ -118,7 +118,8 @@ function generateBaseRootFiles(config: BuzzStackConfig): GeneratedFile[] {
     "declaration": true,
     "sourceMap": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "ignoreDeprecations": "6.0"
   }
 }
 `
@@ -142,6 +143,7 @@ build/
 .expo/
 .expo-shared/
 coverage/
+*.tsbuildinfo
 
 ios/Pods/
 android/.gradle/

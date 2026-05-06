@@ -244,17 +244,40 @@ export default function App(): JSX.Element {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
-    "plugins": [{ "name": "next" }]
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true
   },
-  "include": ["**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
 `
     },
     {
-      path: "apps/admin/next.config.ts",
-      contents: `import type { NextConfig } from "next";
+      path: "apps/admin/next-env.d.ts",
+      contents: `/// <reference types="next" />
+/// <reference types="next/image-types/global" />
 
-const nextConfig: NextConfig = {};
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/building-your-application/configuring/typescript for more information.
+`
+    },
+    {
+      path: "apps/admin/next.config.mjs",
+      contents: `/** @type {import("next").NextConfig} */
+const nextConfig = {};
 
 export default nextConfig;
 `

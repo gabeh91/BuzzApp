@@ -15,6 +15,7 @@ build/
 .expo/
 .expo-shared/
 coverage/
+*.tsbuildinfo
 
 ios/Pods/
 android/.gradle/
