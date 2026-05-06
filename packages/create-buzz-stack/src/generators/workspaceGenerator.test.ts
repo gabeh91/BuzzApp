@@ -28,3 +28,14 @@ test("mobile scaffold declares Babel runtime for Metro", () => {
   assert.ok(mobilePackageJson);
   assert.match(mobilePackageJson.contents, /"@babel\/runtime": "7\.29\.2"/);
 });
+
+test("mobile scaffold registers the Expo root component", () => {
+  const files = generateWorkspaceFiles(getDefaultConfig());
+  const mobilePackageJson = files.find((file) => file.path === "apps/mobile/package.json");
+  const mobileEntry = files.find((file) => file.path === "apps/mobile/index.ts");
+
+  assert.ok(mobilePackageJson);
+  assert.match(mobilePackageJson.contents, /"main": "index\.ts"/);
+  assert.ok(mobileEntry);
+  assert.match(mobileEntry.contents, /registerRootComponent\(App\)/);
+});

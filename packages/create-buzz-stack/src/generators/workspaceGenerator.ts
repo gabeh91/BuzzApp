@@ -9,7 +9,7 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
   "name": "mobile",
   "version": "0.1.0",
   "private": true,
-  "main": "App.tsx",
+  "main": "index.ts",
   "scripts": {
     "start": "expo start",
     "lint": "echo \\"mobile lint placeholder\\"",
@@ -28,6 +28,15 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
     "typescript": "latest"
   }
 }
+`
+    },
+    {
+      path: "apps/mobile/index.ts",
+      contents: `import { registerRootComponent } from "expo";
+
+import App from "./App";
+
+registerRootComponent(App);
 `
     },
     {

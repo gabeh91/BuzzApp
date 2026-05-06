@@ -2,7 +2,7 @@
   "name": "mobile",
   "version": "0.1.0",
   "private": true,
-  "main": "App.tsx",
+  "main": "index.ts",
   "scripts": {
     "start": "expo start",
     "lint": "echo 'mobile lint placeholder'",
