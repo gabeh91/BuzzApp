@@ -17,6 +17,7 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
     "test": "echo \\"mobile tests placeholder\\""
   },
   "dependencies": {
+    "@babel/runtime": "7.29.2",
     "@supabase/supabase-js": "latest",
     "expo": "~52.0.0",
     "react": "18.3.1",

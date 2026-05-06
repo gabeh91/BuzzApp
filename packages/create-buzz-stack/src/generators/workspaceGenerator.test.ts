@@ -20,3 +20,11 @@ test("mobile scaffold includes Expo public env typings", () => {
   assert.match(mobileEnvTypes.contents, /EXPO_PUBLIC_SUPABASE_URL/);
   assert.doesNotMatch(mobileEnvTypes.contents, /SUPABASE_SERVICE_ROLE_KEY/);
 });
+
+test("mobile scaffold declares Babel runtime for Metro", () => {
+  const files = generateWorkspaceFiles(getDefaultConfig());
+  const mobilePackageJson = files.find((file) => file.path === "apps/mobile/package.json");
+
+  assert.ok(mobilePackageJson);
+  assert.match(mobilePackageJson.contents, /"@babel\/runtime": "7\.29\.2"/);
+});
