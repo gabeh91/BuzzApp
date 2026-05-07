@@ -10,7 +10,9 @@ const babelConfigSource = readFileSync("babel.config.js", "utf8");
 
 test("mobile config enables Reanimated for native transitions", () => {
   assert.ok(packageJson.dependencies?.["react-native-reanimated"]);
-  assert.match(babelConfigSource, /react-native-reanimated\/plugin/);
+  assert.ok(packageJson.dependencies?.["react-native-worklets"]);
+  assert.match(babelConfigSource, /babel-preset-expo/);
+  assert.doesNotMatch(babelConfigSource, /react-native-reanimated\/plugin/);
 });
 
 test("onboarding presentation drives visible animated transitions", () => {

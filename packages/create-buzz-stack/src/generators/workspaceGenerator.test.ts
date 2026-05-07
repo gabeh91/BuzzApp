@@ -46,11 +46,14 @@ test("mobile scaffold registers the Expo root component", () => {
 
   assert.ok(mobilePackageJson);
   assert.match(mobilePackageJson.contents, /"main": "expo-router\/entry"/);
-  assert.match(mobilePackageJson.contents, /"expo-router": "~4\.0\.22"/);
+  assert.match(mobilePackageJson.contents, /"expo": "~54\.0\.34"/);
+  assert.match(mobilePackageJson.contents, /"@expo\/metro-runtime": "~6\.1\.2"/);
+  assert.match(mobilePackageJson.contents, /"expo-router": "~6\.0\.23"/);
   assert.match(mobilePackageJson.contents, /"react-native-reanimated":/);
+  assert.match(mobilePackageJson.contents, /"react-native-worklets": "0\.5\.1"/);
   const babelConfig = files.find((file) => file.path === "apps/mobile/babel.config.js");
   assert.ok(babelConfig);
-  assert.match(babelConfig.contents, /react-native-reanimated\/plugin/);
+  assert.doesNotMatch(babelConfig.contents, /react-native-reanimated\/plugin/);
   assert.ok(routerLayout);
   assert.match(routerLayout.contents, /<Stack/);
   assert.match(routerLayout.contents, /@\/providers\/AppProviders/);

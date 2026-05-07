@@ -19,25 +19,27 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
   "dependencies": {
     "@apollo/client": "^3.14.1",
     "@babel/runtime": "7.29.2",
+    "@expo/metro-runtime": "~6.1.2",
     "@supabase/supabase-js": "latest",
-    "expo": "~52.0.0",
-    "expo-constants": "~17.0.8",
-    "expo-linking": "~7.0.5",
-    "expo-router": "~4.0.22",
-    "expo-status-bar": "~2.0.1",
+    "expo": "~54.0.34",
+    "expo-constants": "~18.0.13",
+    "expo-linking": "~8.0.12",
+    "expo-router": "~6.0.23",
+    "expo-status-bar": "~3.0.9",
     "graphql": "latest",
-    "react": "18.3.1",
-    "react-native": "0.76.3",
-    "react-native-reanimated": "~3.16.1",
-    "react-native-safe-area-context": "4.12.0",
-    "react-native-screens": "~4.4.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-reanimated": "~4.1.7",
+    "react-native-safe-area-context": "5.6.2",
+    "react-native-screens": "~4.16.0",
+    "react-native-worklets": "0.5.1",
     "typesafe-i18n": "^5.27.1"
   },
   "devDependencies": {
     "@types/node": "latest",
-    "@types/react": "latest",
+    "@types/react": "^19.1.17",
     "tsx": "latest",
-    "typescript": "latest"
+    "typescript": "^5.9.3"
   }
 }
 `
@@ -48,8 +50,7 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
   api.cache(true);
 
   return {
-    presets: ["babel-preset-expo"],
-    plugins: ["react-native-reanimated/plugin"]
+    presets: ["babel-preset-expo"]
   };
 };
 `
@@ -60,7 +61,6 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["src/*"],
@@ -136,9 +136,10 @@ const workspaceRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [workspaceRoot];
+config.watchFolders = Array.from(new Set([...(config.watchFolders ?? []), workspaceRoot]));
 
 config.resolver.nodeModulesPaths = [
+  ...(config.resolver.nodeModulesPaths ?? []),
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules")
 ];
