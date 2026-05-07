@@ -1,16 +1,13 @@
-import { useRouter } from "expo-router";
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
-import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 
-export const BuzzHomeScreen = () => {
-  const router = useRouter();
+export const HomeScreen = () => {
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const { LL } = useI18n();
@@ -45,15 +42,6 @@ export const BuzzHomeScreen = () => {
           <Text style={styles.panelBody}>{match?.headline ?? LL.home.emptyPlan()}</Text>
           <Text style={styles.panelBody}>{match?.reason ?? traits.summary}</Text>
         </View>
-
-        <Pressable
-          onPress={() => {
-            router.replace(routes.onboarding);
-          }}
-          style={styles.secondaryAction}
-        >
-          <Text style={styles.secondaryActionText}>{LL.home.reviewOnboarding()}</Text>
-        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -135,17 +123,6 @@ const createStyles = (theme: BuzzTheme) => {
       color: colors.brand,
       fontSize: fontSizes.base,
       lineHeight: lineHeights.tight
-    },
-    secondaryAction: {
-      alignItems: "center",
-      borderRadius: radii.lg,
-      borderWidth: borderWidths.hairline,
-      borderColor: colors.border,
-      padding: spacing[4]
-    },
-    secondaryActionText: {
-      color: colors.text,
-      fontWeight: "900"
     }
   });
 };

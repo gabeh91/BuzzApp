@@ -1,8 +1,10 @@
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
+  type SharedValue,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -87,17 +89,8 @@ const getInterestsFromGraphql = (data: ReturnType<typeof useBuzzHomeQuery>["data
   return data?.interestsCollection?.edges.map((edge) => edge.node).filter(isBuzzInterest) ?? fallbackInterests;
 };
 
-const useStepTransition = (transitionKey: string) => {
-  const entrance = useSharedValue(0);
+const useAmbientMotion = (scrollY: SharedValue<number>) => {
   const ambient = useSharedValue(0);
-
-  useEffect(() => {
-    entrance.value = 0;
-    entrance.value = withTiming(1, {
-      duration: 420,
-      easing: Easing.out(Easing.cubic)
-    });
-  }, [entrance, transitionKey]);
 
   useEffect(() => {
     ambient.value = withRepeat(
@@ -116,63 +109,146 @@ const useStepTransition = (transitionKey: string) => {
     );
   }, [ambient]);
 
-  const stepStyle = useAnimatedStyle(() => {
-    return {
-      opacity: entrance.value,
-      transform: [
-        {
-          translateY: 18 * (1 - entrance.value)
-        },
-        {
-          scale: 0.985 + entrance.value * 0.015
-        }
-      ]
-    };
-  });
-
   const skyStyle = useAnimatedStyle(() => {
+    const skyParallaxY = scrollY.value * 0.34;
+
     return {
       transform: [
         {
           translateX: -18 * ambient.value
         },
         {
-          translateY: 16 * ambient.value
+          translateY: 16 * ambient.value - skyParallaxY
         }
       ]
     };
   });
 
   const goldStyle = useAnimatedStyle(() => {
+    const goldParallaxY = scrollY.value * 0.18;
+
     return {
       transform: [
         {
           translateX: 22 * ambient.value
         },
         {
-          translateY: -14 * ambient.value
+          translateY: -14 * ambient.value - goldParallaxY
         }
       ]
     };
   });
 
   return {
-    stepStyle,
     skyStyle,
     goldStyle
   };
 };
 
-const ProgressBar = ({ current, total }: { current: number; total: number }) => {
+const useContentSlideTransition = (transitionIndex: number) => {
+  const previousIndex = useRef(transitionIndex);
+  const translateX = useSharedValue(0);
+
+  useEffect(() => {
+    const direction = transitionIndex >= previousIndex.current ? 1 : -1;
+    previousIndex.current = transitionIndex;
+    translateX.value = direction * 34;
+    translateX.value = withTiming(0, {
+      duration: 240,
+      easing: Easing.out(Easing.cubic)
+    });
+  }, [previousIndex, transitionIndex, translateX]);
+
+  const cardStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: translateX.value
+        }
+      ]
+    };
+  });
+
+  return {
+    cardStyle
+  };
+};
+
+const useAnimatedProgress = (current: number, total: number) => {
+  const progress = useSharedValue(total > 0 ? current / total : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(total > 0 ? current / total : 0, {
+      duration: 260,
+      easing: Easing.out(Easing.cubic)
+    });
+  }, [current, progress, total]);
+
+  const progressFillStyle = useAnimatedStyle(() => {
+    return {
+      width: `${Math.min(Math.max(progress.value, 0), 1) * 100}%`
+    };
+  });
+
+  return {
+    progressFillStyle
+  };
+};
+
+const useHeaderProgressTransition = (isQuizStep: boolean) => {
+  const quizMode = useSharedValue(isQuizStep ? 1 : 0);
+
+  useEffect(() => {
+    quizMode.value = withTiming(isQuizStep ? 1 : 0, {
+      duration: 260,
+      easing: Easing.out(Easing.cubic)
+    });
+  }, [isQuizStep, quizMode]);
+
+  const flowProgressStyle = useAnimatedStyle(() => {
+    return {
+      opacity: 1 - quizMode.value,
+      transform: [
+        {
+          translateY: -12 * quizMode.value
+        }
+      ]
+    };
+  });
+
+  const quizProgressStyle = useAnimatedStyle(() => {
+    return {
+      opacity: quizMode.value,
+      transform: [
+        {
+          translateY: 12 * (1 - quizMode.value)
+        }
+      ]
+    };
+  });
+
+  return {
+    flowProgressStyle,
+    quizProgressStyle
+  };
+};
+
+type ProgressBarProps = {
+  current: number;
+  total: number;
+  label: string;
+};
+
+const ProgressBar = ({ current, total, label }: ProgressBarProps) => {
   const { styles } = useOnboardingTheme();
-  const { LL } = useI18n();
+  const { progressFillStyle } = useAnimatedProgress(current, total);
 
   return (
     <View style={styles.progressGroup}>
       <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${Math.round((current / total) * 100)}%` }]} />
+        <Animated.View style={[styles.progressFill, progressFillStyle]} />
       </View>
-      <Text style={styles.progressLabel}>{LL.onboarding.progress({ current, total })}</Text>
+      <Text style={styles.progressLabel}>{label}</Text>
     </View>
   );
 };
@@ -205,14 +281,67 @@ const SecondaryButton = ({ label, disabled, onPress }: { label: string; disabled
   );
 };
 
-const AmbientBackground = () => {
+const AmbientBackground = ({ scrollY }: { scrollY: SharedValue<number> }) => {
   const { styles } = useOnboardingTheme();
-  const transition = useStepTransition("ambient");
+  const transition = useAmbientMotion(scrollY);
 
   return (
     <View pointerEvents="none" style={styles.ambientRoot}>
       <Animated.View style={[styles.ambientSky, transition.skyStyle]} />
       <Animated.View style={[styles.ambientGold, transition.goldStyle]} />
+    </View>
+  );
+};
+
+const FixedOnboardingHeader = ({
+  cityName,
+  flowProgress,
+  quizProgress
+}: {
+  cityName: string;
+  flowProgress: { current: number; total: number };
+  quizProgress: { current: number; total: number } | undefined;
+}) => {
+  const { styles } = useOnboardingTheme();
+  const { LL } = useI18n();
+  const isQuizStep = Boolean(quizProgress);
+  const lastQuizProgress = useRef(quizProgress);
+  const { flowProgressStyle, quizProgressStyle } = useHeaderProgressTransition(isQuizStep);
+
+  useEffect(() => {
+    if (quizProgress) {
+      lastQuizProgress.current = quizProgress;
+    }
+  }, [quizProgress]);
+
+  const visibleQuizProgress = quizProgress ?? lastQuizProgress.current;
+  const flowProgressLabel = LL.common.progress.step({
+    current: flowProgress.current,
+    total: flowProgress.total
+  });
+  const quizProgressLabel = visibleQuizProgress
+    ? LL.common.progress.question({
+        current: visibleQuizProgress.current,
+        total: visibleQuizProgress.total
+      })
+    : undefined;
+
+  return (
+    <View style={styles.fixedHeader}>
+      <View style={styles.headerRow}>
+        <Text style={styles.logo}>{LL.brand.name()}</Text>
+        <Text style={styles.envLabel}>{cityName}</Text>
+      </View>
+      <View style={styles.headerProgressSlot}>
+        <Animated.View style={[styles.flowProgressLayer, flowProgressStyle]}>
+          <ProgressBar current={flowProgress.current} total={flowProgress.total} label={flowProgressLabel} />
+        </Animated.View>
+        {visibleQuizProgress ? (
+          <Animated.View pointerEvents="none" style={[styles.quizProgressLayer, quizProgressStyle]}>
+            <ProgressBar current={visibleQuizProgress.current} total={visibleQuizProgress.total} label={quizProgressLabel ?? ""} />
+          </Animated.View>
+        ) : null}
+      </View>
     </View>
   );
 };
@@ -262,7 +391,6 @@ const QuizContent = () => {
 
   return (
     <View style={styles.contentStack}>
-      <ProgressBar current={quiz.progress.current} total={quiz.progress.total} />
       <Text style={styles.quizPrompt}>{quiz.activeQuestion.prompt}</Text>
       <View style={styles.optionsList}>
         {quiz.activeQuestion.options.map((option) => {
@@ -418,9 +546,17 @@ const OnboardingExperience = () => {
   const [activateInterest, { loading: activating }] = useActivateInterestMutation();
   const interests = getInterestsFromGraphql(data);
   const selectedInterest = interestFlow.state.selectedInterest;
-  const transitionKey = onboarding.state.step.id;
-  const transition = useStepTransition(transitionKey);
+  const transitionIndex =
+    onboarding.state.index * (quiz.progress.total + 1) + (onboarding.state.step.id === "quiz" ? quiz.activeQuestionIndex : 0);
+  const transition = useContentSlideTransition(transitionIndex);
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    }
+  });
   const stepCopy = LL.onboarding.steps[onboarding.state.step.id];
+  const quizProgress = onboarding.state.step.id === "quiz" ? quiz.progress : undefined;
 
   const activateSelectedInterest = async () => {
     if (!selectedInterest) {
@@ -499,31 +635,28 @@ const OnboardingExperience = () => {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <AmbientBackground />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Animated.View style={[styles.layout, transition.stepStyle]}>
-          <View style={styles.headerStack}>
-            <View style={styles.headerRow}>
-              <Text style={styles.logo}>{LL.brand.name()}</Text>
-              <Text style={styles.envLabel}>{user.cityName}</Text>
+      <FixedOnboardingHeader cityName={user.cityName} flowProgress={onboarding.state.progress} quizProgress={quizProgress} />
+      <View style={styles.stage}>
+        <AmbientBackground scrollY={scrollY} />
+        <Animated.ScrollView onScroll={scrollHandler} scrollEventThrottle={16} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.layout}>
+            <View style={styles.cardRail}>
+              <Animated.View style={[styles.mainCard, transition.cardStyle]}>
+                <View style={styles.titleStack}>
+                  <Text style={styles.eyebrow}>{stepCopy.eyebrow()}</Text>
+                  <Text style={styles.title}>{stepCopy.title()}</Text>
+                </View>
+                <StepContent interests={interests} loading={loading} error={error} />
+              </Animated.View>
             </View>
-            <ProgressBar current={onboarding.state.progress.current} total={onboarding.state.progress.total} />
-          </View>
 
-          <View style={styles.mainCard}>
-            <View style={styles.titleStack}>
-              <Text style={styles.eyebrow}>{stepCopy.eyebrow()}</Text>
-              <Text style={styles.title}>{stepCopy.title()}</Text>
+            <View style={styles.buttonStack}>
+              <PrimaryButton label={primaryLabel} disabled={primaryDisabled} onPress={handlePrimary} />
+              <SecondaryButton label={LL.common.back()} disabled={onboarding.isFirstStep && onboarding.state.step.id !== "quiz"} onPress={handleBack} />
             </View>
-            <StepContent interests={interests} loading={loading} error={error} />
           </View>
-
-          <View style={styles.buttonStack}>
-            <PrimaryButton label={primaryLabel} disabled={primaryDisabled} onPress={handlePrimary} />
-            <SecondaryButton label={LL.common.back()} disabled={onboarding.isFirstStep && onboarding.state.step.id !== "quiz"} onPress={handleBack} />
-          </View>
-        </Animated.View>
-      </ScrollView>
+        </Animated.ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -549,18 +682,22 @@ const createStyles = (theme: BuzzTheme) => {
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 22,
-    paddingTop: 18
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 22
+  },
+  stage: {
+    flex: 1,
+    position: "relative"
   },
   layout: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "space-between",
     gap: 22
   },
   ambientRoot: {
     position: "absolute",
-    inset: 0,
-    overflow: "hidden"
+    inset: 0
   },
   ambientSky: {
     position: "absolute",
@@ -580,8 +717,15 @@ const createStyles = (theme: BuzzTheme) => {
     borderRadius: 130,
     backgroundColor: colors.warningSoft
   },
-  headerStack: {
-    gap: 18
+  fixedHeader: {
+    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 16,
+    gap: 18,
+    backgroundColor: colors.background,
+    borderBottomWidth: borderWidths.hairline,
+    borderBottomColor: colors.overlay,
+    zIndex: 1
   },
   headerRow: {
     flexDirection: "row",
@@ -604,6 +748,16 @@ const createStyles = (theme: BuzzTheme) => {
   },
   progressGroup: {
     gap: 8
+  },
+  headerProgressSlot: {
+    height: 38,
+    overflow: "hidden"
+  },
+  flowProgressLayer: {
+    ...StyleSheet.absoluteFillObject
+  },
+  quizProgressLayer: {
+    ...StyleSheet.absoluteFillObject
   },
   progressTrack: {
     height: 8,
@@ -630,6 +784,10 @@ const createStyles = (theme: BuzzTheme) => {
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     ...shadows.card
+  },
+  cardRail: {
+    flex: 1,
+    justifyContent: "center"
   },
   titleStack: {
     gap: 10

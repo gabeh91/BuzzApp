@@ -1,7 +1,7 @@
-import { BuzzHomeScreen } from "@/features/home/BuzzHomeScreen";
+import { HomeScreen } from "@/features/home/HomeScreen";
 
 const HomeRoute = () => {
-  return <BuzzHomeScreen />;
+  return <HomeScreen />;
 };
 
 export default HomeRoute;

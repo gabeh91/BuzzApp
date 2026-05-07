@@ -6,10 +6,13 @@ const en = {
   },
   common: {
     back: "Back",
-    continue: "Continue"
+    continue: "Continue",
+    progress: {
+      step: "Step {current:number} of {total:number}",
+      question: "Question {current:number} of {total:number}"
+    }
   },
   onboarding: {
-    progress: "Step {current:number} of {total:number}",
     actions: {
       finishQuiz: "Finish quiz",
       nextQuestion: "Next question",

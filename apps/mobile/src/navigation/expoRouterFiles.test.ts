@@ -30,5 +30,5 @@ test("mobile app exposes Expo Router layout, onboarding, and home routes", () =>
   assert.match(layoutSource, /@\/providers\/AppProviders/);
   assert.doesNotMatch(layoutSource, /@\/app\/AppProviders/);
   assert.match(readFileSync("app/index.tsx", "utf8"), /OnboardingScreen/);
-  assert.match(readFileSync("app/home.tsx", "utf8"), /BuzzHomeScreen/);
+  assert.match(readFileSync("app/home.tsx", "utf8"), /HomeScreen/);
 });

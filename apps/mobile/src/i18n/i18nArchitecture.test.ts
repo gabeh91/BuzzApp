@@ -31,7 +31,7 @@ test("mobile app exposes a typed typesafe-i18n hook and provider", () => {
 test("rendered mobile screens consume localized copy through the typed hook", () => {
   const appProvidersSource = readProjectFile("src/providers/AppProviders.tsx");
   const onboardingSource = readProjectFile("src/features/onboarding/OnboardingScreen.tsx");
-  const homeSource = readProjectFile("src/features/home/BuzzHomeScreen.tsx");
+  const homeSource = readProjectFile("src/features/home/HomeScreen.tsx");
   const interestFlowSource = readProjectFile("src/features/interests/interestFlow.ts");
 
   assert.match(appProvidersSource, /I18nProvider/);
