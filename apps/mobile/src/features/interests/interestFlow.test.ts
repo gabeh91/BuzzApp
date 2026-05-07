@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 import type { BuzzAuthUser } from "@/auth/auth.types";
@@ -85,4 +86,39 @@ test("completeBackendActivation stores the persisted activation and first backen
   assert.equal(activated.matchPreview?.score, 0.82);
   assert.equal(activated.matchPreview?.displayName, "Sam");
   assert.equal(activated.matchPreview?.reason, "Sam also activated Surfing.");
+});
+
+const readOptionalSource = (path: string): string => {
+  return existsSync(path) ? readFileSync(path, "utf8") : "";
+};
+
+test("accept match edge function authenticates the profile, accepts the candidate, and creates an activity group", () => {
+  const source = readFileSync("../../supabase/functions/accept-match/index.ts", "utf8");
+
+  assert.match(source, /resolveCurrentProfile/);
+  assert.match(source, /match_candidates/);
+  assert.match(source, /status:\s*"accepted"/);
+  assert.match(source, /activity_groups/);
+  assert.match(source, /activity_group_members/);
+  assert.match(source, /activityGroupId/);
+});
+
+test("decline match edge function authenticates the profile and does not create a group", () => {
+  const source = readFileSync("../../supabase/functions/decline-match/index.ts", "utf8");
+
+  assert.match(source, /resolveCurrentProfile/);
+  assert.match(source, /match_candidates/);
+  assert.match(source, /status:\s*"declined"/);
+  assert.doesNotMatch(source, /activity_groups/);
+  assert.doesNotMatch(source, /activity_group_members/);
+});
+
+test("mobile match action client calls accept and decline Edge Functions with local-only bypass headers", () => {
+  const source = readOptionalSource("src/lib/functions.ts");
+
+  assert.match(source, /accept-match/);
+  assert.match(source, /decline-match/);
+  assert.match(source, /functions\/v1/);
+  assert.match(source, /x-buzz-local-bypass/);
+  assert.match(source, /appEnv === "local"/);
 });
