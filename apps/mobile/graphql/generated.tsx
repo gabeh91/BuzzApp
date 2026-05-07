@@ -4071,6 +4071,23 @@ export type UpsertBuzzProfileMutationVariables = Exact<{
 
 export type UpsertBuzzProfileMutation = { upsertBuzzProfile: Record<string, unknown> | null };
 
+export type GroupMessagesQueryVariables = Exact<{
+  groupId: string;
+}>;
+
+
+export type GroupMessagesQuery = { groupMessagesCollection: { edges: Array<{ node: { id: string, activityGroupId: string, senderId: string, body: string, messageType: string, moderationStatus: string, createdAt: string } }> } | null };
+
+export type SendGroupMessageMutationVariables = Exact<{
+  activityGroupId: string;
+  senderId: string;
+  body: string;
+  moderationStatus: string;
+}>;
+
+
+export type SendGroupMessageMutation = { insertIntoGroupMessagesCollection: { records: Array<{ id: string, activityGroupId: string, senderId: string, body: string, messageType: string, moderationStatus: string, createdAt: string }> } | null };
+
 
 export const BuzzHomeDocument = gql`
     query BuzzHome {
@@ -4193,3 +4210,106 @@ export function useUpsertBuzzProfileMutation(baseOptions?: ApolloReactHooks.Muta
 export type UpsertBuzzProfileMutationHookResult = ReturnType<typeof useUpsertBuzzProfileMutation>;
 export type UpsertBuzzProfileMutationResult = ApolloReactCommon.MutationResult<UpsertBuzzProfileMutation>;
 export type UpsertBuzzProfileMutationOptions = ApolloReactCommon.BaseMutationOptions<UpsertBuzzProfileMutation, UpsertBuzzProfileMutationVariables>;
+export const GroupMessagesDocument = gql`
+    query GroupMessages($groupId: UUID!) {
+  groupMessagesCollection(
+    first: 50
+    filter: {activityGroupId: {eq: $groupId}}
+    orderBy: [{createdAt: AscNullsLast}]
+  ) {
+    edges {
+      node {
+        id
+        activityGroupId
+        senderId
+        body
+        messageType
+        moderationStatus
+        createdAt
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGroupMessagesQuery__
+ *
+ * To run a query within a React component, call `useGroupMessagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGroupMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGroupMessagesQuery({
+ *   variables: {
+ *      groupId: // value for 'groupId'
+ *   },
+ * });
+ */
+export function useGroupMessagesQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GroupMessagesQuery, GroupMessagesQueryVariables> & ({ variables: GroupMessagesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GroupMessagesQuery, GroupMessagesQueryVariables>(GroupMessagesDocument, options);
+      }
+export function useGroupMessagesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GroupMessagesQuery, GroupMessagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GroupMessagesQuery, GroupMessagesQueryVariables>(GroupMessagesDocument, options);
+        }
+// @ts-ignore
+export function useGroupMessagesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<GroupMessagesQuery, GroupMessagesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GroupMessagesQuery, GroupMessagesQueryVariables>;
+export function useGroupMessagesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GroupMessagesQuery, GroupMessagesQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<GroupMessagesQuery | undefined, GroupMessagesQueryVariables>;
+export function useGroupMessagesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<GroupMessagesQuery, GroupMessagesQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<GroupMessagesQuery, GroupMessagesQueryVariables>(GroupMessagesDocument, options);
+        }
+export type GroupMessagesQueryHookResult = ReturnType<typeof useGroupMessagesQuery>;
+export type GroupMessagesLazyQueryHookResult = ReturnType<typeof useGroupMessagesLazyQuery>;
+export type GroupMessagesSuspenseQueryHookResult = ReturnType<typeof useGroupMessagesSuspenseQuery>;
+export type GroupMessagesQueryResult = ApolloReactCommon.QueryResult<GroupMessagesQuery, GroupMessagesQueryVariables>;
+export const SendGroupMessageDocument = gql`
+    mutation SendGroupMessage($activityGroupId: UUID!, $senderId: UUID!, $body: String!, $moderationStatus: String!) {
+  insertIntoGroupMessagesCollection(
+    objects: [{activityGroupId: $activityGroupId, senderId: $senderId, body: $body, messageType: "text", moderationStatus: $moderationStatus}]
+  ) {
+    records {
+      id
+      activityGroupId
+      senderId
+      body
+      messageType
+      moderationStatus
+      createdAt
+    }
+  }
+}
+    `;
+export type SendGroupMessageMutationFn = ApolloReactCommon.MutationFunction<SendGroupMessageMutation, SendGroupMessageMutationVariables>;
+
+/**
+ * __useSendGroupMessageMutation__
+ *
+ * To run a mutation, you first call `useSendGroupMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendGroupMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendGroupMessageMutation, { data, loading, error }] = useSendGroupMessageMutation({
+ *   variables: {
+ *      activityGroupId: // value for 'activityGroupId'
+ *      senderId: // value for 'senderId'
+ *      body: // value for 'body'
+ *      moderationStatus: // value for 'moderationStatus'
+ *   },
+ * });
+ */
+export function useSendGroupMessageMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SendGroupMessageMutation, SendGroupMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SendGroupMessageMutation, SendGroupMessageMutationVariables>(SendGroupMessageDocument, options);
+      }
+export type SendGroupMessageMutationHookResult = ReturnType<typeof useSendGroupMessageMutation>;
+export type SendGroupMessageMutationResult = ApolloReactCommon.MutationResult<SendGroupMessageMutation>;
+export type SendGroupMessageMutationOptions = ApolloReactCommon.BaseMutationOptions<SendGroupMessageMutation, SendGroupMessageMutationVariables>;

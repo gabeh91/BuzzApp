@@ -1,6 +1,12 @@
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { useGroupMessagesQuery, useSendGroupMessageMutation } from "@graphql/generated";
+import { useBuzzAuth } from "@/auth/AuthProvider";
+import { ChatComposer } from "@/features/chat/ChatComposer";
+import { createChatDraft } from "@/features/chat/chatModel";
+import { MessageList, type ChatMessage } from "@/features/chat/MessageList";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
@@ -45,11 +51,19 @@ const createGroupSummary = ({
 
 export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const router = useRouter();
+  const { user } = useBuzzAuth();
   const { state } = useInterestFlow();
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const match = state.matchPreview;
+  const isLocalGroup = groupId.startsWith("local-");
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
+  const { data, refetch } = useGroupMessagesQuery({
+    variables: { groupId },
+    skip: isLocalGroup
+  });
+  const [sendGroupMessage, { loading: sendingMessage }] = useSendGroupMessageMutation();
   const groupInput: Parameters<typeof createGroupSummary>[0] = {
     groupId,
     fallbackInterest: LL.home.fallbackInterest()
@@ -68,6 +82,44 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   }
 
   const group = createGroupSummary(groupInput);
+  const remoteMessages: ChatMessage[] =
+    data?.groupMessagesCollection?.edges.map(({ node }) => ({
+      id: node.id,
+      body: node.body,
+      createdAt: node.createdAt,
+      isOwnMessage: node.senderId === user.id,
+      moderationStatus: node.moderationStatus
+    })) ?? [];
+  const messages = isLocalGroup ? localMessages : remoteMessages;
+
+  const handleSendMessage = async (body: string) => {
+    const draft = createChatDraft(body);
+    if (!draft.canSend) return;
+
+    if (isLocalGroup) {
+      setLocalMessages((current) => [
+        ...current,
+        {
+          id: `local-message-${current.length + 1}`,
+          body: draft.body,
+          createdAt: new Date().toISOString(),
+          isOwnMessage: true,
+          moderationStatus: draft.moderationStatus
+        }
+      ]);
+      return;
+    }
+
+    await sendGroupMessage({
+      variables: {
+        activityGroupId: groupId,
+        body: draft.body,
+        moderationStatus: draft.moderationStatus,
+        senderId: user.id
+      }
+    });
+    await refetch();
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -94,6 +146,18 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
             <Text style={styles.detailTitle}>{LL.groups.nextStep()}</Text>
             <Text style={styles.detailBody}>{LL.groups.nextStepBody()}</Text>
           </View>
+        </View>
+
+        <View style={styles.chatPanel}>
+          <MessageList emptyLabel={LL.chat.empty()} messages={messages} />
+          <ChatComposer
+            blockedLabel={LL.chat.blocked()}
+            disabled={sendingMessage}
+            onSend={handleSendMessage}
+            placeholder={LL.chat.composerPlaceholder()}
+            sendLabel={LL.chat.send()}
+            sendingLabel={LL.chat.sending()}
+          />
         </View>
 
         <Pressable
@@ -167,6 +231,12 @@ const createStyles = (theme: BuzzTheme) => {
       lineHeight: lineHeights.body
     },
     panel: {
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: radii.xl,
+      gap: spacing[5],
+      padding: spacing[5]
+    },
+    chatPanel: {
       backgroundColor: colors.surfaceMuted,
       borderRadius: radii.xl,
       gap: spacing[5],

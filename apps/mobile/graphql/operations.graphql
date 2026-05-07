@@ -30,3 +30,47 @@ mutation UpsertBuzzProfile(
     quizTraits: $quizTraits
   )
 }
+
+query GroupMessages($groupId: UUID!) {
+  groupMessagesCollection(
+    first: 50
+    filter: { activityGroupId: { eq: $groupId } }
+    orderBy: [{ createdAt: AscNullsLast }]
+  ) {
+    edges {
+      node {
+        id
+        activityGroupId
+        senderId
+        body
+        messageType
+        moderationStatus
+        createdAt
+      }
+    }
+  }
+}
+
+mutation SendGroupMessage($activityGroupId: UUID!, $senderId: UUID!, $body: String!, $moderationStatus: String!) {
+  insertIntoGroupMessagesCollection(
+    objects: [
+      {
+        activityGroupId: $activityGroupId
+        senderId: $senderId
+        body: $body
+        messageType: "text"
+        moderationStatus: $moderationStatus
+      }
+    ]
+  ) {
+    records {
+      id
+      activityGroupId
+      senderId
+      body
+      messageType
+      moderationStatus
+      createdAt
+    }
+  }
+}

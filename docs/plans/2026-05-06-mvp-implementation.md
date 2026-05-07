@@ -339,7 +339,7 @@ pnpm --filter mobile typecheck
 
 ## Phase 4: Activity Agreement And Group Creation
 
-> **Current handoff:** Completed through Task 4.1 (`feat(mvp): accept and decline match candidates`). Continue from Task 4.2.
+> **Current handoff:** Completed through Task 5.1 (`feat(mobile): add group chat messaging`). Continue from Task 5.2.
 
 ### Task 4.1: Implement Accept And Decline Match Actions
 

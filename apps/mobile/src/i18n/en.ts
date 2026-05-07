@@ -121,6 +121,13 @@ const en = {
     emptyMatch: "Your first group will appear after you accept a suggested plan.",
     backHome: "Back home"
   },
+  chat: {
+    empty: "No messages yet.",
+    composerPlaceholder: "Message the group",
+    send: "Send",
+    sending: "Sending",
+    blocked: "Keep it respectful so the plan stays easy to join."
+  },
   interests: {
     activation: {
       initial: "Pick one interest to activate when you are open to doing it.",
