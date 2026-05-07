@@ -15,7 +15,7 @@ import Animated, {
 import { useActivateInterestMutation, useBuzzHomeQuery, useUpsertBuzzProfileMutation } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
-import type { BuzzInterest } from "@/features/interests/interestFlow";
+import { isBackendActivationResult, shouldActivateInterestThroughSupabase, type BuzzInterest } from "@/features/interests/interestFlow";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { createBuzzProfilePersistenceInput, shouldPersistProfileToSupabase } from "@/features/quiz/profilePersistence";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -593,16 +593,26 @@ const OnboardingExperience = () => {
     interestFlow.markActivating();
 
     try {
-      await activateInterest({
-        variables: {
-          interestId: selectedInterest.id
+      if (shouldActivateInterestThroughSupabase(user)) {
+        const response = await activateInterest({
+          variables: {
+            interestId: selectedInterest.id
+          }
+        });
+
+        if (!isBackendActivationResult(response.data?.activateInterest)) {
+          throw new Error("Activation response was invalid");
         }
-      });
+
+        interestFlow.completeBackendActivation(response.data.activateInterest);
+      } else {
+        interestFlow.completeLocalActivation(quiz.traits);
+      }
     } catch {
-      // Demo mode still shows the local product loop when auth-backed GraphQL writes are unavailable.
+      interestFlow.failActivation(LL.interests.activation.failed());
+      return;
     }
 
-    interestFlow.completeLocalActivation(quiz.traits);
     onboarding.next();
   };
 

@@ -4,11 +4,13 @@ import { useI18n } from "@/i18n/I18nProvider";
 import type { ProfileTraits } from "@/features/quiz/quizModel";
 import {
   activateInterestLocally,
+  completeBackendActivation,
   createInterestFlowCopy,
   createInitialInterestFlowState,
   markInterestActivating,
   markInterestActivationError,
   selectInterest,
+  type BackendActivationResult,
   type BuzzInterest,
   type InterestFlowState
 } from "./interestFlow";
@@ -18,6 +20,7 @@ type InterestFlowContextValue = {
   select: (interest: BuzzInterest) => void;
   markActivating: () => void;
   completeLocalActivation: (traits: ProfileTraits) => void;
+  completeBackendActivation: (result: BackendActivationResult) => void;
   failActivation: (message: string) => void;
 };
 
@@ -38,6 +41,9 @@ export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
     },
     completeLocalActivation: (traits) => {
       setState((current) => activateInterestLocally(current, traits, copy));
+    },
+    completeBackendActivation: (result) => {
+      setState((current) => completeBackendActivation(current, result, copy));
     },
     failActivation: (message) => {
       setState((current) => markInterestActivationError(current, message));

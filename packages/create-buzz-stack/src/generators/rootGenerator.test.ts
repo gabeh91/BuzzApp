@@ -21,5 +21,8 @@ test("root scaffold configures GraphQL codegen for Apollo hooks", () => {
   assert.match(codegenConfig.contents, /apps\/admin\/graphql\/generated\.tsx/);
   assert.match(codegenConfig.contents, /typescript-react-apollo/);
   assert.match(codegenConfig.contents, /apolloReactHooksImportFrom: "@apollo\/client"/);
-  assert.doesNotMatch(codegenConfig.contents, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(codegenConfig.contents, /const supabaseSchemaKey =/);
+  assert.match(codegenConfig.contents, /process\.env\.SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(codegenConfig.contents, /rootLocalEnv\.SUPABASE_SERVICE_ROLE_KEY/);
+  assert.doesNotMatch(codegenConfig.contents, /mobileLocalEnv\.SUPABASE_SERVICE_ROLE_KEY/);
 });

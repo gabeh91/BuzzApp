@@ -1,6 +1,7 @@
 import { LL, type I18n } from "@/i18n";
 
 import { createDemoMatchPreview, type DemoMatchPreview } from "@/features/matching/demoMatch";
+import type { BuzzAuthUser } from "@/auth/auth.types";
 import type { ProfileTraits } from "@/features/quiz/quizModel";
 
 export type BuzzInterest = {
@@ -13,6 +14,8 @@ export type BuzzInterest = {
 export type InterestActivationState = {
   status: "idle" | "activating" | "complete" | "error";
   message: string;
+  activationId?: string;
+  source?: "local" | "supabase";
 };
 
 export type InterestFlowState = {
@@ -27,6 +30,22 @@ export type InterestFlowCopy = {
   activatingMessage: string;
   completeMessage: (interest: string) => string;
   chooseBeforeActivatingMessage: string;
+};
+
+export type BackendMatchCandidate = {
+  id: string;
+  displayName: string;
+  reason: string;
+  suggestedPlan: string;
+  score: number;
+};
+
+export type BackendActivationResult = {
+  ok: boolean;
+  activationId: string;
+  interestId: string;
+  interestName: string;
+  matchCandidates: BackendMatchCandidate[];
 };
 
 export const createInterestFlowCopy = (translations: I18n = LL): InterestFlowCopy => {
@@ -100,12 +119,61 @@ export const activateInterestLocally = (
     ...state,
     activation: {
       status: "complete",
-      message: copy.completeMessage(state.selectedInterest.name)
+      message: copy.completeMessage(state.selectedInterest.name),
+      source: "local"
     },
     matchPreview: createDemoMatchPreview({
       interestName: state.selectedInterest.name,
       traits
     })
+  };
+};
+
+export const shouldActivateInterestThroughSupabase = (user: BuzzAuthUser): boolean => {
+  return user.authSource === "supabase";
+};
+
+export const isBackendActivationResult = (value: unknown): value is BackendActivationResult => {
+  const result = value as Partial<BackendActivationResult>;
+
+  return Boolean(result.ok && result.activationId && result.interestId && result.interestName && Array.isArray(result.matchCandidates));
+};
+
+export const completeBackendActivation = (
+  state: InterestFlowState,
+  result: BackendActivationResult,
+  copy: InterestFlowCopy = defaultInterestFlowCopy
+): InterestFlowState => {
+  if (!state.selectedInterest) {
+    return {
+      ...state,
+      activation: {
+        status: "error",
+        message: copy.chooseBeforeActivatingMessage
+      }
+    };
+  }
+
+  const firstCandidate = result.matchCandidates[0];
+
+  return {
+    ...state,
+    activation: {
+      status: "complete",
+      message: copy.completeMessage(state.selectedInterest.name),
+      activationId: result.activationId,
+      source: "supabase"
+    },
+    matchPreview: firstCandidate
+      ? {
+          displayName: firstCandidate.displayName,
+          interestName: result.interestName,
+          headline: `${firstCandidate.displayName} is also open to ${result.interestName}`,
+          reason: firstCandidate.reason,
+          suggestedPlan: firstCandidate.suggestedPlan,
+          isDemo: false
+        }
+      : null
   };
 };
 

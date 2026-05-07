@@ -79,3 +79,18 @@ test("supabase scaffold includes authenticated profile persistence function migr
   assert.match(migration.contents, /grant execute on function public\."upsertBuzzProfile"/);
   assert.doesNotMatch(migration.contents, /grant execute on function public\."upsertBuzzProfile"[\s\S]*to anon/);
 });
+
+test("supabase scaffold includes backend interest activation matching migration", () => {
+  const files = generateSupabaseFiles();
+  const migration = files.find((file) => file.path === "supabase/migrations/000008_mvp_activation_matching.sql");
+
+  assert.ok(migration);
+  assert.match(migration.contents, /create or replace function public\."activateInterest"/);
+  assert.match(migration.contents, /interest_activations_active_unique_idx/);
+  assert.match(migration.contents, /match_candidates_activation_user_unique_idx/);
+  assert.match(migration.contents, /current_activation_id uuid/);
+  assert.doesNotMatch(migration.contents, /declare[\s\S]*\n  activation_id uuid/);
+  assert.match(migration.contents, /'matchCandidates'/);
+  assert.match(migration.contents, /grant execute on function public\."activateInterest"\(uuid\) to authenticated/);
+  assert.doesNotMatch(migration.contents, /grant execute on function public\."activateInterest"\(uuid\) to anon/);
+});

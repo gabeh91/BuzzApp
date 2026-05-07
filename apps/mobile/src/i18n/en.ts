@@ -110,7 +110,8 @@ const en = {
       selected: "{interest:string} is ready when you are.",
       activating: "Activating your interest...",
       complete: "{interest:string} is active. Buzz will use it to shape your next suggestion.",
-      chooseBeforeActivating: "Choose an interest before activating."
+      chooseBeforeActivating: "Choose an interest before activating.",
+      failed: "We could not activate that interest yet. Try again in a moment."
     }
   },
   quiz: {

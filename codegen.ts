@@ -41,6 +41,8 @@ const supabaseAnonKey =
   mobileLocalEnv.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
   "";
 
+const supabaseSchemaKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? rootLocalEnv.SUPABASE_SERVICE_ROLE_KEY ?? supabaseAnonKey;
+
 const graphqlUrl = `${supabaseUrl.replace(/\/$/, "")}/graphql/v1`;
 
 const sharedApolloConfig = {
@@ -68,8 +70,8 @@ const config: CodegenConfig = {
     {
       [graphqlUrl]: {
         headers: {
-          apikey: supabaseAnonKey,
-          authorization: supabaseAnonKey ? `Bearer ${supabaseAnonKey}` : ""
+          apikey: supabaseSchemaKey,
+          authorization: supabaseSchemaKey ? `Bearer ${supabaseSchemaKey}` : ""
         }
       }
     }
