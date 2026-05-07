@@ -1,14 +1,14 @@
 export type BuzzAuthMode = "demo" | "supabase";
 
-export type BuzzUser = {
+export type BuzzAuthUser = {
   id: string;
   displayName: string;
   cityId: string;
   cityName: string;
-  isDemo: boolean;
+  authSource: BuzzAuthMode;
 };
 
 export type BuzzAuthState = {
   mode: BuzzAuthMode;
-  user: BuzzUser;
+  user: BuzzAuthUser;
 };

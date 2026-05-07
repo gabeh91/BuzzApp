@@ -1,14 +1,16 @@
 import { createContext, useContext, type ReactNode } from "react";
 
 import type { BuzzAuthState } from "./auth.types";
-import { createDemoBuzzUser } from "./demoAuth";
+import { createDemoBuzzUser, type DemoAuthEnv } from "./demoAuth";
 
 const BuzzAuthContext = createContext<BuzzAuthState | null>(null);
 
-export const createBuzzAuthState = (): BuzzAuthState => {
+export const createBuzzAuthState = (env: DemoAuthEnv = process.env): BuzzAuthState => {
+  const user = createDemoBuzzUser(env);
+
   return {
-    mode: "demo",
-    user: createDemoBuzzUser(process.env)
+    mode: user.authSource,
+    user
   };
 };
 
