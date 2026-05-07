@@ -102,7 +102,24 @@ const en = {
     suggestedNextStep: "Suggested next step",
     emptyPlan: "No suggested plan yet.",
     reviewOnboarding: "Review onboarding",
-    fallbackInterest: "your next interest"
+    fallbackInterest: "your next interest",
+    acceptPlan: "Accept plan",
+    declinePlan: "Pass for now",
+    acceptingPlan: "Accepting...",
+    declinedPlan: "Plan passed for now.",
+    matchActionFailed: "We could not update that plan yet. Try again in a moment."
+  },
+  groups: {
+    eyebrow: "Activity group",
+    title: "{interest:string} group",
+    formingStatus: "Forming",
+    formingBody: "A small plan is taking shape around this activity.",
+    matchedWith: "Matched with {name:string}",
+    suggestedPlan: "Suggested plan",
+    nextStep: "Next step",
+    nextStepBody: "Choose a simple time, place, and first step that feels easy to say yes to.",
+    emptyMatch: "Your first group will appear after you accept a suggested plan.",
+    backHome: "Back home"
   },
   interests: {
     activation: {

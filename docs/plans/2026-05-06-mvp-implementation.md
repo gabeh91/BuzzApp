@@ -339,7 +339,7 @@ pnpm --filter mobile typecheck
 
 ## Phase 4: Activity Agreement And Group Creation
 
-> **Current handoff:** Completed through Task 3.2 (`feat(mvp): generate deterministic match candidates`). Continue from Task 4.1.
+> **Current handoff:** Completed through Task 4.1 (`feat(mvp): accept and decline match candidates`). Continue from Task 4.2.
 
 ### Task 4.1: Implement Accept And Decline Match Actions
 

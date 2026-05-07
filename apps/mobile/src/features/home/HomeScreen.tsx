@@ -1,21 +1,75 @@
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
+import { runMatchAction } from "@/lib/functions";
+import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 
+type MatchActionStatus = "idle" | "accepting" | "declining" | "declined" | "error";
+
 export const HomeScreen = () => {
+  const router = useRouter();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const { LL } = useI18n();
   const { user } = useBuzzAuth();
   const { traits } = useQuiz();
   const { state } = useInterestFlow();
+  const [matchActionStatus, setMatchActionStatus] = useState<MatchActionStatus>("idle");
   const selectedInterestName = state.selectedInterest?.name ?? LL.home.fallbackInterest();
   const match = state.matchPreview;
+  const isAccepting = matchActionStatus === "accepting";
+  const isDeclining = matchActionStatus === "declining";
+
+  const handleAcceptPlan = async () => {
+    if (!match) return;
+
+    setMatchActionStatus("accepting");
+
+    if (match.source === "local") {
+      router.push(routes.group(`local-${match.id}`));
+      return;
+    }
+
+    try {
+      const result = await runMatchAction({
+        action: "accept",
+        matchCandidateId: match.id,
+        profileId: user.id
+      });
+      router.push(routes.group(result.activityGroupId ?? match.id));
+    } catch {
+      setMatchActionStatus("error");
+    }
+  };
+
+  const handleDeclinePlan = async () => {
+    if (!match) return;
+
+    setMatchActionStatus("declining");
+
+    if (match.source === "local") {
+      setMatchActionStatus("declined");
+      return;
+    }
+
+    try {
+      await runMatchAction({
+        action: "decline",
+        matchCandidateId: match.id,
+        profileId: user.id
+      });
+      setMatchActionStatus("declined");
+    } catch {
+      setMatchActionStatus("error");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -41,6 +95,18 @@ export const HomeScreen = () => {
           <Text style={styles.panelTitle}>{LL.home.suggestedNextStep()}</Text>
           <Text style={styles.panelBody}>{match?.headline ?? LL.home.emptyPlan()}</Text>
           <Text style={styles.panelBody}>{match?.reason ?? traits.summary}</Text>
+          {match ? (
+            <View style={styles.actionRow}>
+              <Pressable accessibilityRole="button" disabled={isAccepting || isDeclining} onPress={handleAcceptPlan} style={styles.primaryAction}>
+                <Text style={styles.primaryActionText}>{isAccepting ? LL.home.acceptingPlan() : LL.home.acceptPlan()}</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" disabled={isAccepting || isDeclining} onPress={handleDeclinePlan} style={styles.secondaryAction}>
+                <Text style={styles.secondaryActionText}>{LL.home.declinePlan()}</Text>
+              </Pressable>
+            </View>
+          ) : null}
+          {matchActionStatus === "declined" ? <Text style={styles.feedback}>{LL.home.declinedPlan()}</Text> : null}
+          {matchActionStatus === "error" ? <Text style={styles.feedback}>{LL.home.matchActionFailed()}</Text> : null}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -122,6 +188,43 @@ const createStyles = (theme: BuzzTheme) => {
     panelBody: {
       color: colors.brand,
       fontSize: fontSizes.base,
+      lineHeight: lineHeights.tight
+    },
+    actionRow: {
+      flexDirection: "row",
+      gap: spacing[3]
+    },
+    primaryAction: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceInverse,
+      borderRadius: radii.full,
+      flex: 1,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3]
+    },
+    primaryActionText: {
+      color: colors.textInverse,
+      fontSize: fontSizes.sm,
+      fontWeight: "900"
+    },
+    secondaryAction: {
+      alignItems: "center",
+      borderColor: colors.brand,
+      borderRadius: radii.full,
+      borderWidth: borderWidths.hairline,
+      flex: 1,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3]
+    },
+    secondaryActionText: {
+      color: colors.brand,
+      fontSize: fontSizes.sm,
+      fontWeight: "900"
+    },
+    feedback: {
+      color: colors.brand,
+      fontSize: fontSizes.sm,
+      fontWeight: "800",
       lineHeight: lineHeights.tight
     }
   });
