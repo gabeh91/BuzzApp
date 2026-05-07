@@ -1,6 +1,5 @@
 export type OnboardingStepId =
   | "welcome"
-  | "city"
   | "intent"
   | "howItWorks"
   | "profile"
@@ -25,7 +24,6 @@ export type OnboardingState = {
 
 export const onboardingStepIds: OnboardingStepId[] = [
   "welcome",
-  "city",
   "intent",
   "howItWorks",
   "profile",

@@ -51,11 +51,6 @@ const en = {
         title: "A softer way to find your people in a new city.",
         body: "Start with what you actually want to do. Buzz turns interests into low-pressure reasons to meet."
       },
-      city: {
-        eyebrow: "Launch city",
-        title: "Melbourne first, city-by-city after that.",
-        body: "Keeping the first launch focused makes matching more relevant and keeps the local experience intentional."
-      },
       intent: {
         eyebrow: "Your intent",
         title: "Tell Buzz why you are here.",

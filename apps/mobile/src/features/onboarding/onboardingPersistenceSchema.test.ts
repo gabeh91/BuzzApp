@@ -3,8 +3,11 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const migrationPath = "../../supabase/migrations/000006_mvp_profile_quiz_matching.sql";
+const profileFunctionMigrationPath = "../../supabase/migrations/000007_mvp_profile_persistence.sql";
 
 const readMigration = () => (existsSync(migrationPath) ? readFileSync(migrationPath, "utf8") : "");
+const readProfileFunctionMigration = () =>
+  existsSync(profileFunctionMigrationPath) ? readFileSync(profileFunctionMigrationPath, "utf8") : "";
 
 test("mvp profile persistence migration stores quiz state and match visibility fields", () => {
   const migrationSource = readMigration();
@@ -45,4 +48,20 @@ test("mvp chat migration adds message moderation state", () => {
   assert.match(migrationSource, /group_messages_message_type_check/);
   assert.match(migrationSource, /group_messages_moderation_status_check/);
   assert.match(migrationSource, /create index if not exists group_messages_activity_created_idx/);
+});
+
+test("mvp profile persistence function is exposed through authenticated GraphQL only", () => {
+  const migrationSource = readProfileFunctionMigration();
+
+  assert.match(migrationSource, /create or replace function public\."upsertBuzzProfile"/);
+  assert.match(migrationSource, /"userId" uuid/);
+  assert.match(migrationSource, /"quizAnswers" jsonb/);
+  assert.match(migrationSource, /"quizTraits" jsonb/);
+  assert.match(migrationSource, /current_user_id uuid := auth\.uid\(\)/);
+  assert.match(migrationSource, /if current_user_id is null then/);
+  assert.match(migrationSource, /if current_user_id <> "userId" then/);
+  assert.match(migrationSource, /insert into public\.profiles/);
+  assert.match(migrationSource, /on conflict \(id\) do update/);
+  assert.match(migrationSource, /grant execute on function public\."upsertBuzzProfile"/);
+  assert.doesNotMatch(migrationSource, /grant execute on function public\."upsertBuzzProfile"[\s\S]*to anon/);
 });

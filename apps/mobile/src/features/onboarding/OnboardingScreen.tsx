@@ -12,11 +12,12 @@ import Animated, {
   withTiming
 } from "react-native-reanimated";
 
-import { useActivateInterestMutation, useBuzzHomeQuery } from "@graphql/generated";
+import { useActivateInterestMutation, useBuzzHomeQuery, useUpsertBuzzProfileMutation } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import type { BuzzInterest } from "@/features/interests/interestFlow";
 import { useQuiz } from "@/features/quiz/QuizProvider";
+import { createBuzzProfilePersistenceInput, shouldPersistProfileToSupabase } from "@/features/quiz/profilePersistence";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
@@ -544,6 +545,7 @@ const OnboardingExperience = () => {
   const interestFlow = useInterestFlow();
   const { data, loading, error } = useBuzzHomeQuery();
   const [activateInterest, { loading: activating }] = useActivateInterestMutation();
+  const [upsertBuzzProfile] = useUpsertBuzzProfileMutation();
   const interests = getInterestsFromGraphql(data);
   const selectedInterest = interestFlow.state.selectedInterest;
   const transitionIndex =
@@ -557,6 +559,30 @@ const OnboardingExperience = () => {
   });
   const stepCopy = LL.onboarding.steps[onboarding.state.step.id];
   const quizProgress = onboarding.state.step.id === "quiz" ? quiz.progress : undefined;
+
+  const persistQuizProfile = async () => {
+    const input = createBuzzProfilePersistenceInput({
+      user,
+      answers: quiz.answers,
+      traits: quiz.traits
+    });
+
+    quiz.markProfileSaving(input);
+
+    if (!shouldPersistProfileToSupabase(user)) {
+      quiz.markProfilePersisted(input);
+      return;
+    }
+
+    try {
+      await upsertBuzzProfile({
+        variables: input
+      });
+      quiz.markProfilePersisted(input);
+    } catch (caught) {
+      quiz.markProfilePersistenceFailed(input, caught instanceof Error ? caught.message : undefined);
+    }
+  };
 
   const activateSelectedInterest = async () => {
     if (!selectedInterest) {
@@ -608,6 +634,7 @@ const OnboardingExperience = () => {
 
     if (onboarding.state.step.id === "quiz") {
       if (quiz.isLastQuestion) {
+        void persistQuizProfile();
         onboarding.next();
         return;
       }

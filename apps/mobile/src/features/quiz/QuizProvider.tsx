@@ -2,16 +2,27 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from "re
 
 import { useI18n } from "@/i18n/I18nProvider";
 
+import type { BuzzProfilePersistenceInput } from "./profilePersistence";
 import { createQuizQuestions, deriveProfileTraits, type ProfileTraits, type QuizAnswers, type QuizQuestion } from "./quizModel";
+
+type QuizProfilePersistenceState = {
+  status: "idle" | "saving" | "saved" | "failed";
+  lastInput?: BuzzProfilePersistenceInput;
+  errorMessage?: string;
+};
 
 type QuizContextValue = {
   answers: QuizAnswers;
   activeQuestion: QuizQuestion;
   activeQuestionIndex: number;
   traits: ProfileTraits;
+  profilePersistence: QuizProfilePersistenceState;
   answerQuestion: (questionId: string, optionId: string) => void;
   nextQuestion: () => void;
   previousQuestion: () => void;
+  markProfileSaving: (input: BuzzProfilePersistenceInput) => void;
+  markProfilePersisted: (input: BuzzProfilePersistenceInput) => void;
+  markProfilePersistenceFailed: (input: BuzzProfilePersistenceInput, errorMessage?: string) => void;
   hasAnsweredActiveQuestion: boolean;
   isLastQuestion: boolean;
   progress: {
@@ -27,6 +38,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   const quizQuestions = useMemo(() => createQuizQuestions(LL), [LL]);
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
+  const [profilePersistence, setProfilePersistence] = useState<QuizProfilePersistenceState>({ status: "idle" });
   const activeQuestion = quizQuestions[activeQuestionIndex] ?? quizQuestions[0];
   const traits = deriveProfileTraits(answers, quizQuestions, LL);
 
@@ -39,6 +51,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
     activeQuestion,
     activeQuestionIndex,
     traits,
+    profilePersistence,
     answerQuestion: (questionId, optionId) => {
       setAnswers((current) => ({
         ...current,
@@ -50,6 +63,19 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
     },
     previousQuestion: () => {
       setActiveQuestionIndex((current) => Math.max(current - 1, 0));
+    },
+    markProfileSaving: (input) => {
+      setProfilePersistence({ status: "saving", lastInput: input });
+    },
+    markProfilePersisted: (input) => {
+      setProfilePersistence({ status: "saved", lastInput: input });
+    },
+    markProfilePersistenceFailed: (input, errorMessage) => {
+      setProfilePersistence({
+        status: "failed",
+        lastInput: input,
+        ...(errorMessage ? { errorMessage } : {})
+      });
     },
     hasAnsweredActiveQuestion: Boolean(answers[activeQuestion.id]),
     isLastQuestion: activeQuestionIndex === quizQuestions.length - 1,

@@ -14,3 +14,19 @@ query BuzzHome {
 mutation ActivateInterest($interestId: UUID!) {
   activateInterest(interestId: $interestId)
 }
+
+mutation UpsertBuzzProfile(
+  $userId: UUID!
+  $displayName: String!
+  $cityId: UUID!
+  $quizAnswers: JSON!
+  $quizTraits: JSON!
+) {
+  upsertBuzzProfile(
+    userId: $userId
+    displayName: $displayName
+    cityId: $cityId
+    quizAnswers: $quizAnswers
+    quizTraits: $quizTraits
+  )
+}

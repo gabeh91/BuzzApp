@@ -6,7 +6,7 @@ import { createInitialOnboardingState, goBack, goNext, onboardingSteps } from ".
 test("onboarding includes warm intro steps before the quiz starts", () => {
   assert.deepEqual(
     onboardingSteps.map((step) => step.id),
-    ["welcome", "city", "intent", "howItWorks", "profile", "quizIntro", "quiz", "interests", "activation", "matchPreview"]
+    ["welcome", "intent", "howItWorks", "profile", "quizIntro", "quiz", "interests", "activation", "matchPreview"]
   );
 
   assert.ok(onboardingSteps.findIndex((step) => step.id === "quizIntro") < onboardingSteps.findIndex((step) => step.id === "quiz"));
@@ -15,12 +15,12 @@ test("onboarding includes warm intro steps before the quiz starts", () => {
 test("onboarding state advances and retreats without leaking step indexes into screens", () => {
   const initial = createInitialOnboardingState();
   const afterWelcome = goNext(initial);
-  const afterCity = goNext(afterWelcome);
+  const afterIntent = goNext(afterWelcome);
 
   assert.equal(initial.step.id, "welcome");
-  assert.equal(afterWelcome.step.id, "city");
-  assert.equal(afterCity.step.id, "intent");
-  assert.equal(goBack(afterCity).step.id, "city");
+  assert.equal(afterWelcome.step.id, "intent");
+  assert.equal(afterIntent.step.id, "howItWorks");
+  assert.equal(goBack(afterIntent).step.id, "intent");
   assert.equal(goBack(initial).step.id, "welcome");
 });
 

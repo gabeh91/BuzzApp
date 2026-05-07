@@ -108,10 +108,16 @@ export type ActivityGroups = Node & {
   city?: Maybe<Cities>;
   cityId?: Maybe<Scalars['UUID']['output']>;
   createdAt: Scalars['Datetime']['output'];
+  createdBy?: Maybe<Scalars['UUID']['output']>;
   groupMessagesCollection?: Maybe<GroupMessagesConnection>;
   id: Scalars['UUID']['output'];
+  interest?: Maybe<Interests>;
+  interestId?: Maybe<Scalars['UUID']['output']>;
+  matchCandidatesCollection?: Maybe<MatchCandidatesConnection>;
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
+  profiles?: Maybe<Profiles>;
+  status: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
 
@@ -137,6 +143,17 @@ export type ActivityGroupsGroupMessagesCollectionArgs = {
   orderBy?: InputMaybe<Array<GroupMessagesOrderBy>>;
 };
 
+
+export type ActivityGroupsMatchCandidatesCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<MatchCandidatesFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<MatchCandidatesOrderBy>>;
+};
+
 export type ActivityGroupsConnection = {
   edges: Array<ActivityGroupsEdge>;
   pageInfo: PageInfo;
@@ -159,19 +176,25 @@ export type ActivityGroupsFilter = {
   and?: InputMaybe<Array<ActivityGroupsFilter>>;
   cityId?: InputMaybe<UuidFilter>;
   createdAt?: InputMaybe<DatetimeFilter>;
+  createdBy?: InputMaybe<UuidFilter>;
   id?: InputMaybe<UuidFilter>;
+  interestId?: InputMaybe<UuidFilter>;
   nodeId?: InputMaybe<IdFilter>;
   /** Negates a filter */
   not?: InputMaybe<ActivityGroupsFilter>;
   /** Returns true if at least one of its inner filters is true, otherwise returns false */
   or?: InputMaybe<Array<ActivityGroupsFilter>>;
+  status?: InputMaybe<StringFilter>;
   title?: InputMaybe<StringFilter>;
 };
 
 export type ActivityGroupsInsertInput = {
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  createdBy?: InputMaybe<Scalars['UUID']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
+  interestId?: InputMaybe<Scalars['UUID']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -185,14 +208,20 @@ export type ActivityGroupsInsertResponse = {
 export type ActivityGroupsOrderBy = {
   cityId?: InputMaybe<OrderByDirection>;
   createdAt?: InputMaybe<OrderByDirection>;
+  createdBy?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
+  interestId?: InputMaybe<OrderByDirection>;
+  status?: InputMaybe<OrderByDirection>;
   title?: InputMaybe<OrderByDirection>;
 };
 
 export type ActivityGroupsUpdateInput = {
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  createdBy?: InputMaybe<Scalars['UUID']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
+  interestId?: InputMaybe<Scalars['UUID']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1213,6 +1242,8 @@ export type GroupMessages = Node & {
   body: Scalars['String']['output'];
   createdAt: Scalars['Datetime']['output'];
   id: Scalars['UUID']['output'];
+  messageType: Scalars['String']['output'];
+  moderationStatus: Scalars['String']['output'];
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
   sender?: Maybe<Profiles>;
@@ -1243,6 +1274,8 @@ export type GroupMessagesFilter = {
   body?: InputMaybe<StringFilter>;
   createdAt?: InputMaybe<DatetimeFilter>;
   id?: InputMaybe<UuidFilter>;
+  messageType?: InputMaybe<StringFilter>;
+  moderationStatus?: InputMaybe<StringFilter>;
   nodeId?: InputMaybe<IdFilter>;
   /** Negates a filter */
   not?: InputMaybe<GroupMessagesFilter>;
@@ -1256,6 +1289,8 @@ export type GroupMessagesInsertInput = {
   body?: InputMaybe<Scalars['String']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
+  messageType?: InputMaybe<Scalars['String']['input']>;
+  moderationStatus?: InputMaybe<Scalars['String']['input']>;
   senderId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
@@ -1271,6 +1306,8 @@ export type GroupMessagesOrderBy = {
   body?: InputMaybe<OrderByDirection>;
   createdAt?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
+  messageType?: InputMaybe<OrderByDirection>;
+  moderationStatus?: InputMaybe<OrderByDirection>;
   senderId?: InputMaybe<OrderByDirection>;
 };
 
@@ -1279,6 +1316,8 @@ export type GroupMessagesUpdateInput = {
   body?: InputMaybe<Scalars['String']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
+  messageType?: InputMaybe<Scalars['String']['input']>;
+  moderationStatus?: InputMaybe<Scalars['String']['input']>;
   senderId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
@@ -1416,6 +1455,7 @@ export type InterestActivationsUpdateResponse = {
 };
 
 export type Interests = Node & {
+  activityGroupsCollection?: Maybe<ActivityGroupsConnection>;
   category: Scalars['String']['output'];
   createdAt: Scalars['Datetime']['output'];
   eventInterestsCollection?: Maybe<EventInterestsConnection>;
@@ -1426,6 +1466,17 @@ export type Interests = Node & {
   nodeId: Scalars['ID']['output'];
   slug: Scalars['String']['output'];
   userInterestsCollection?: Maybe<UserInterestsConnection>;
+};
+
+
+export type InterestsActivityGroupsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivityGroupsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivityGroupsOrderBy>>;
 };
 
 
@@ -1534,6 +1585,8 @@ export type InterestsUpdateResponse = {
 export type MatchCandidates = Node & {
   activation?: Maybe<InterestActivations>;
   activationId: Scalars['UUID']['output'];
+  activityGroup?: Maybe<ActivityGroups>;
+  activityGroupId?: Maybe<Scalars['UUID']['output']>;
   createdAt: Scalars['Datetime']['output'];
   id: Scalars['UUID']['output'];
   matchedUser?: Maybe<Profiles>;
@@ -1541,7 +1594,10 @@ export type MatchCandidates = Node & {
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
   reason?: Maybe<Scalars['String']['output']>;
+  respondedAt?: Maybe<Scalars['Datetime']['output']>;
   score: Scalars['BigFloat']['output'];
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
 };
 
 export type MatchCandidatesConnection = {
@@ -1563,6 +1619,7 @@ export type MatchCandidatesEdge = {
 
 export type MatchCandidatesFilter = {
   activationId?: InputMaybe<UuidFilter>;
+  activityGroupId?: InputMaybe<UuidFilter>;
   /** Returns true only if all its inner filters are true, otherwise returns false */
   and?: InputMaybe<Array<MatchCandidatesFilter>>;
   createdAt?: InputMaybe<DatetimeFilter>;
@@ -1574,16 +1631,23 @@ export type MatchCandidatesFilter = {
   /** Returns true if at least one of its inner filters is true, otherwise returns false */
   or?: InputMaybe<Array<MatchCandidatesFilter>>;
   reason?: InputMaybe<StringFilter>;
+  respondedAt?: InputMaybe<DatetimeFilter>;
   score?: InputMaybe<BigFloatFilter>;
+  source?: InputMaybe<StringFilter>;
+  status?: InputMaybe<StringFilter>;
 };
 
 export type MatchCandidatesInsertInput = {
   activationId?: InputMaybe<Scalars['UUID']['input']>;
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   matchedUserId?: InputMaybe<Scalars['UUID']['input']>;
   reason?: InputMaybe<Scalars['String']['input']>;
+  respondedAt?: InputMaybe<Scalars['Datetime']['input']>;
   score?: InputMaybe<Scalars['BigFloat']['input']>;
+  source?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MatchCandidatesInsertResponse = {
@@ -1595,20 +1659,28 @@ export type MatchCandidatesInsertResponse = {
 
 export type MatchCandidatesOrderBy = {
   activationId?: InputMaybe<OrderByDirection>;
+  activityGroupId?: InputMaybe<OrderByDirection>;
   createdAt?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
   matchedUserId?: InputMaybe<OrderByDirection>;
   reason?: InputMaybe<OrderByDirection>;
+  respondedAt?: InputMaybe<OrderByDirection>;
   score?: InputMaybe<OrderByDirection>;
+  source?: InputMaybe<OrderByDirection>;
+  status?: InputMaybe<OrderByDirection>;
 };
 
 export type MatchCandidatesUpdateInput = {
   activationId?: InputMaybe<Scalars['UUID']['input']>;
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   matchedUserId?: InputMaybe<Scalars['UUID']['input']>;
   reason?: InputMaybe<Scalars['String']['input']>;
+  respondedAt?: InputMaybe<Scalars['Datetime']['input']>;
   score?: InputMaybe<Scalars['BigFloat']['input']>;
+  source?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MatchCandidatesUpdateResponse = {
@@ -1749,6 +1821,7 @@ export type Mutation = {
   updateSpatialRefSysCollection: SpatialRefSysUpdateResponse;
   /** Updates zero or more records in the `UserInterests` collection */
   updateUserInterestsCollection: UserInterestsUpdateResponse;
+  upsertBuzzProfile?: Maybe<Scalars['JSON']['output']>;
 };
 
 
@@ -2201,6 +2274,16 @@ export type MutationUpdateUserInterestsCollectionArgs = {
   set: UserInterestsUpdateInput;
 };
 
+
+/** The root type for creating and mutating data */
+export type MutationUpsertBuzzProfileArgs = {
+  cityId: Scalars['UUID']['input'];
+  displayName: Scalars['String']['input'];
+  quizAnswers: Scalars['JSON']['input'];
+  quizTraits: Scalars['JSON']['input'];
+  userId: Scalars['UUID']['input'];
+};
+
 export type Node = {
   /** Retrieves a record by `ID` */
   nodeId: Scalars['ID']['output'];
@@ -2233,6 +2316,7 @@ export type PageInfo = {
 
 export type Profiles = Node & {
   activityGroupMembersCollection?: Maybe<ActivityGroupMembersConnection>;
+  activityGroupsCollection?: Maybe<ActivityGroupsConnection>;
   aiProfileSummariesCollection?: Maybe<AiProfileSummariesConnection>;
   bio?: Maybe<Scalars['String']['output']>;
   blocksCollection?: Maybe<BlocksConnection>;
@@ -2244,12 +2328,17 @@ export type Profiles = Node & {
   groupMessagesCollection?: Maybe<GroupMessagesConnection>;
   id: Scalars['UUID']['output'];
   interestActivationsCollection?: Maybe<InterestActivationsConnection>;
+  lastActiveAt: Scalars['Datetime']['output'];
   matchCandidatesCollection?: Maybe<MatchCandidatesConnection>;
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
+  quizAnswers: Scalars['JSON']['output'];
+  quizTraits: Scalars['JSON']['output'];
   reportsCollection?: Maybe<ReportsConnection>;
+  settled: Scalars['Boolean']['output'];
   updatedAt: Scalars['Datetime']['output'];
   userInterestsCollection?: Maybe<UserInterestsConnection>;
+  visible: Scalars['Boolean']['output'];
 };
 
 
@@ -2261,6 +2350,17 @@ export type ProfilesActivityGroupMembersCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<ActivityGroupMembersOrderBy>>;
+};
+
+
+export type ProfilesActivityGroupsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivityGroupsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivityGroupsOrderBy>>;
 };
 
 
@@ -2376,12 +2476,15 @@ export type ProfilesFilter = {
   createdAt?: InputMaybe<DatetimeFilter>;
   displayName?: InputMaybe<StringFilter>;
   id?: InputMaybe<UuidFilter>;
+  lastActiveAt?: InputMaybe<DatetimeFilter>;
   nodeId?: InputMaybe<IdFilter>;
   /** Negates a filter */
   not?: InputMaybe<ProfilesFilter>;
   /** Returns true if at least one of its inner filters is true, otherwise returns false */
   or?: InputMaybe<Array<ProfilesFilter>>;
+  settled?: InputMaybe<BooleanFilter>;
   updatedAt?: InputMaybe<DatetimeFilter>;
+  visible?: InputMaybe<BooleanFilter>;
 };
 
 export type ProfilesInsertInput = {
@@ -2390,7 +2493,12 @@ export type ProfilesInsertInput = {
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
+  lastActiveAt?: InputMaybe<Scalars['Datetime']['input']>;
+  quizAnswers?: InputMaybe<Scalars['JSON']['input']>;
+  quizTraits?: InputMaybe<Scalars['JSON']['input']>;
+  settled?: InputMaybe<Scalars['Boolean']['input']>;
   updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  visible?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type ProfilesInsertResponse = {
@@ -2406,7 +2514,10 @@ export type ProfilesOrderBy = {
   createdAt?: InputMaybe<OrderByDirection>;
   displayName?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
+  lastActiveAt?: InputMaybe<OrderByDirection>;
+  settled?: InputMaybe<OrderByDirection>;
   updatedAt?: InputMaybe<OrderByDirection>;
+  visible?: InputMaybe<OrderByDirection>;
 };
 
 export type ProfilesUpdateInput = {
@@ -2415,7 +2526,12 @@ export type ProfilesUpdateInput = {
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
+  lastActiveAt?: InputMaybe<Scalars['Datetime']['input']>;
+  quizAnswers?: InputMaybe<Scalars['JSON']['input']>;
+  quizTraits?: InputMaybe<Scalars['JSON']['input']>;
+  settled?: InputMaybe<Scalars['Boolean']['input']>;
   updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  visible?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type ProfilesUpdateResponse = {

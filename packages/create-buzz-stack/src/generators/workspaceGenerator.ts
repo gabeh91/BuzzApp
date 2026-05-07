@@ -258,11 +258,6 @@ const en = {
         title: "A softer way to find your people in a new city.",
         body: "Start with what you actually want to do. Buzz turns interests into low-pressure reasons to meet."
       },
-      city: {
-        eyebrow: "Launch city",
-        title: "Melbourne first, city-by-city after that.",
-        body: "Keeping the first launch focused makes matching more relevant and keeps the local experience intentional."
-      },
       intent: {
         eyebrow: "Your intent",
         title: "Tell Buzz why you are here.",
@@ -1107,7 +1102,6 @@ test("theme includes typography, spacing, borders, radii, and shadows", () => {
       path: "apps/mobile/src/features/onboarding/onboardingFlow.ts",
       contents: `export type OnboardingStepId =
   | "welcome"
-  | "city"
   | "intent"
   | "howItWorks"
   | "profile"
@@ -1135,7 +1129,6 @@ export type OnboardingState = {
 
 export const onboardingSteps: OnboardingStep[] = [
   ["welcome", "Welcome to Buzz", "A softer way to find your people in a new city.", "Start with what you actually want to do."],
-  ["city", "Launch city", "Melbourne first, city-by-city after that.", "A focused city makes matching more relevant."],
   ["intent", "Your intent", "Tell Buzz why you are here.", "The activity comes first; friendship may follow."],
   ["howItWorks", "How it works", "Pick interests, activate one, then meet around a plan.", "No cold friend-swiping."],
   ["profile", "Profile basics", "Create a lightweight local profile.", "Add just enough context for Buzz to shape your first suggestions."],
@@ -1224,7 +1217,7 @@ import { createInitialOnboardingState, goNext, onboardingSteps } from "./onboard
 test("onboarding includes intro steps before the quiz starts", () => {
   assert.ok(onboardingSteps.findIndex((step) => step.id === "quizIntro") < onboardingSteps.findIndex((step) => step.id === "quiz"));
   assert.equal(createInitialOnboardingState().step.id, "welcome");
-  assert.equal(goNext(createInitialOnboardingState()).step.id, "city");
+  assert.equal(goNext(createInitialOnboardingState()).step.id, "intent");
 });
 `
     },
