@@ -11,7 +11,7 @@ export function registerBootstrapCommand(program: Command): void {
     .option("--force-env", "Overwrite existing env files", false)
     .option("--skip-install", "Skip dependency install", false)
     .option("--skip-supabase", "Skip Supabase startup", false)
-    .option("--skip-db-reset", "Skip database reset", false)
+    .option("--skip-db-reset", "Skip local database migration application", false)
     .option("--skip-smoke", "Skip smoke checks", false)
     .action(async (options) => {
       try {

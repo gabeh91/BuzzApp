@@ -44,6 +44,7 @@ function generateBaseRootFiles(config: BuzzStackConfig): GeneratedFile[] {
     "format:check": "prettier --check .",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
+    "supabase:migrate": "supabase migration up",
     "supabase:reset": "supabase db reset",
     "supabase:types": "bash scripts/db/generate-types.sh",
     "supabase:validate": "bash scripts/ci/validate-migrations.sh",

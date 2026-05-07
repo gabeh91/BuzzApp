@@ -12,6 +12,7 @@ test("root scaffold configures GraphQL codegen for Apollo hooks", () => {
   assert.ok(packageJson);
   assert.match(packageJson.contents, /"graphql:codegen": "graphql-codegen --config codegen\.ts"/);
   assert.match(packageJson.contents, /"graphql:codegen:watch": "graphql-codegen --config codegen\.ts --watch"/);
+  assert.match(packageJson.contents, /"supabase:migrate": "supabase migration up"/);
   assert.match(packageJson.contents, /"@graphql-codegen\/cli": "latest"/);
   assert.match(packageJson.contents, /"@graphql-codegen\/typescript-react-apollo": "latest"/);
 

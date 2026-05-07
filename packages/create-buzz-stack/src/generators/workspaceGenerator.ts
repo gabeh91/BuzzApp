@@ -738,7 +738,7 @@ const createStyles = (theme: BuzzTheme) => {
     {
       path: "apps/mobile/graphql/operations.graphql",
       contents: `query BuzzHome {
-  interestsCollection(first: 20) {
+  interestsCollection(first: 50) {
     edges {
       node {
         id
@@ -787,7 +787,7 @@ export type ActivateInterestMutationVariables = {
 
 export const BuzzHomeDocument = gql\`
   query BuzzHome {
-    interestsCollection(first: 20) {
+    interestsCollection(first: 50) {
       edges {
         node {
           id
@@ -1871,7 +1871,7 @@ export default function HomePage() {
     {
       path: "apps/admin/graphql/operations.graphql",
       contents: `query AdminDashboard {
-  interestsCollection(first: 20) {
+  interestsCollection(first: 50) {
     edges {
       node {
         id
@@ -1942,7 +1942,7 @@ export type AdminDashboardQueryVariables = Record<string, never>;
 
 export const AdminDashboardDocument = gql\`
   query AdminDashboard {
-    interestsCollection(first: 20) {
+    interestsCollection(first: 50) {
       edges {
         node {
           id

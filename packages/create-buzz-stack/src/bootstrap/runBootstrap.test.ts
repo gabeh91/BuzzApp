@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { readMarker } from "../utils/marker.ts";
+import { applyLocalSupabaseMigrations } from "./applyLocalSupabaseMigrations.ts";
 import { validateRailwayConfig } from "./validateRailwayConfig.ts";
 
 test("validateRailwayConfig reports disabled when Railway is not enabled", async () => {
@@ -33,4 +34,24 @@ test("validateRailwayConfig reports disabled when Railway is not enabled", async
 
   const result = await validateRailwayConfig(directory, marker);
   assert.equal(result, "disabled");
+});
+
+test("applyLocalSupabaseMigrations applies pending migrations without resetting the database", async () => {
+  const calls: Array<{ command: string; args: string[]; cwd: string }> = [];
+
+  await applyLocalSupabaseMigrations("/tmp/buzz", {
+    dryRun: false,
+    runner: async (command, args, options) => {
+      calls.push({ command, args, cwd: options.cwd });
+      return { stdout: "", stderr: "", exitCode: 0 };
+    }
+  });
+
+  assert.deepEqual(calls, [
+    {
+      command: "supabase",
+      args: ["migration", "up"],
+      cwd: "/tmp/buzz"
+    }
+  ]);
 });

@@ -146,9 +146,11 @@ test("mobile and admin scaffolds use Apollo against Supabase GraphQL", () => {
   assert.ok(mobileOperations);
   assert.match(mobileOperations.contents, /query BuzzHome/);
   assert.match(mobileOperations.contents, /mutation ActivateInterest/);
+  assert.match(mobileOperations.contents, /interestsCollection\(first: 50\)/);
   assert.ok(mobileGenerated);
   assert.match(mobileGenerated.contents, /useBuzzHomeQuery/);
   assert.match(mobileGenerated.contents, /useActivateInterestMutation/);
+  assert.match(mobileGenerated.contents, /interestsCollection\(first: 50\)/);
   assert.match(mobileGenerated.contents, /import \* as Apollo from "@apollo\/client"/);
   assert.doesNotMatch(mobileGenerated.contents, /import type \* as Apollo/);
 
@@ -160,8 +162,10 @@ test("mobile and admin scaffolds use Apollo against Supabase GraphQL", () => {
   assert.doesNotMatch(adminPage.contents, /gql`/);
   assert.ok(adminOperations);
   assert.match(adminOperations.contents, /query AdminDashboard/);
+  assert.match(adminOperations.contents, /interestsCollection\(first: 50\)/);
   assert.ok(adminGenerated);
   assert.match(adminGenerated.contents, /useAdminDashboardQuery/);
+  assert.match(adminGenerated.contents, /interestsCollection\(first: 50\)/);
   assert.match(adminGenerated.contents, /import \* as Apollo from "@apollo\/client"/);
   assert.doesNotMatch(adminGenerated.contents, /import type \* as Apollo/);
 });

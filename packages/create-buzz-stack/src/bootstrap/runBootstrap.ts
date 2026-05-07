@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import { logger } from "../utils/logger.js";
 import { readMarker } from "../utils/marker.js";
+import { applyLocalSupabaseMigrations } from "./applyLocalSupabaseMigrations.js";
 import { ensureLocalEnvFiles } from "./ensureLocalEnvFiles.js";
 import { ensureSupabaseRunning } from "./ensureSupabaseRunning.js";
 import { hydrateLocalSupabaseEnv } from "./hydrateLocalSupabaseEnv.js";
@@ -42,6 +43,12 @@ export async function runBootstrap(
 
   if (!options.skipSupabase) {
     await ensureSupabaseRunning(options.cwd);
+  }
+
+  if (!options.skipSupabase && !options.skipDbReset) {
+    await applyLocalSupabaseMigrations(options.cwd, { dryRun: options.dryRun });
+  } else if (options.skipDbReset) {
+    logger.info("Skipping local Supabase migration application");
   }
 
   await hydrateLocalSupabaseEnv(options.cwd, {
