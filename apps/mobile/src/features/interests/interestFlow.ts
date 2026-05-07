@@ -1,6 +1,7 @@
 import { LL, type I18n } from "@/i18n";
 
-import { createDemoMatchPreview, type DemoMatchPreview } from "@/features/matching/demoMatch";
+import { createDemoMatchPreview } from "@/features/matching/demoMatch";
+import type { MatchCandidatePreview } from "@/features/matching/matchCandidate.types";
 import type { BuzzAuthUser } from "@/auth/auth.types";
 import type { ProfileTraits } from "@/features/quiz/quizModel";
 
@@ -21,7 +22,7 @@ export type InterestActivationState = {
 export type InterestFlowState = {
   selectedInterest: BuzzInterest | null;
   activation: InterestActivationState;
-  matchPreview: DemoMatchPreview | null;
+  matchPreview: MatchCandidatePreview | null;
 };
 
 export type InterestFlowCopy = {
@@ -171,7 +172,10 @@ export const completeBackendActivation = (
           headline: `${firstCandidate.displayName} is also open to ${result.interestName}`,
           reason: firstCandidate.reason,
           suggestedPlan: firstCandidate.suggestedPlan,
-          isDemo: false
+          score: firstCandidate.score,
+          id: firstCandidate.id,
+          isDemo: false,
+          source: "supabase"
         }
       : null
   };

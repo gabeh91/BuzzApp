@@ -80,6 +80,9 @@ test("completeBackendActivation stores the persisted activation and first backen
   assert.equal(activated.activation.activationId, "00000000-0000-0000-0000-000000000501");
   assert.equal(activated.activation.source, "supabase");
   assert.equal(activated.matchPreview?.isDemo, false);
+  assert.equal(activated.matchPreview?.source, "supabase");
+  assert.equal(activated.matchPreview?.id, "00000000-0000-0000-0000-000000000601");
+  assert.equal(activated.matchPreview?.score, 0.82);
   assert.equal(activated.matchPreview?.displayName, "Sam");
   assert.equal(activated.matchPreview?.reason, "Sam also activated Surfing.");
 });

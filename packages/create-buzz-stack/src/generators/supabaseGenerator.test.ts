@@ -94,3 +94,23 @@ test("supabase scaffold includes backend interest activation matching migration"
   assert.match(migration.contents, /grant execute on function public\."activateInterest"\(uuid\) to authenticated/);
   assert.doesNotMatch(migration.contents, /grant execute on function public\."activateInterest"\(uuid\) to anon/);
 });
+
+test("supabase scaffold includes deterministic candidate scoring and demo match fixtures", () => {
+  const files = generateSupabaseFiles();
+  const seedSql = files.find((file) => file.path === "supabase/seed.sql");
+  const migration = files.find((file) => file.path === "supabase/migrations/000009_mvp_deterministic_candidates.sql");
+
+  assert.ok(seedSql);
+  assert.ok(migration);
+  assert.match(migration.contents, /current_profile\.quiz_traits->>'socialStyle'/);
+  assert.match(migration.contents, /least\(\s*0\.94/);
+  assert.match(migration.contents, /order by matched_profile\.match_score desc/);
+
+  for (const source of [seedSql.contents, migration.contents]) {
+    assert.match(source, /00000000-0000-0000-0000-000000000201/);
+    assert.match(source, /Sam Rivera/);
+    assert.match(source, /00000000-0000-0000-0000-000000000202/);
+    assert.match(source, /Mia Chen/);
+    assert.match(source, /insert into public\.interest_activations/);
+  }
+});
