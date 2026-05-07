@@ -1,0 +1,26 @@
+insert into public.interests (name, slug, category)
+values
+  ('Cooking Classes', 'cooking-classes', 'food'),
+  ('Gym / Fitness', 'gym-fitness', 'fitness'),
+  ('Golf', 'golf', 'sport'),
+  ('Knitting', 'knitting', 'creative'),
+  ('Chess', 'chess', 'social'),
+  ('Walking', 'walking', 'fitness'),
+  ('Hackathons', 'hackathons', 'learning'),
+  ('Book Clubs', 'book-clubs', 'social'),
+  ('Wine Clubs', 'wine-clubs', 'food'),
+  ('Pottery Classes', 'pottery-classes', 'creative'),
+  ('Rock Climbing', 'rock-climbing', 'fitness'),
+  ('Soccer', 'soccer', 'sport'),
+  ('Archery', 'archery', 'sport'),
+  ('Basketball', 'basketball', 'sport'),
+  ('Netball', 'netball', 'sport'),
+  ('Volleyball', 'volleyball', 'sport'),
+  ('Ultimate Frisbee', 'ultimate-frisbee', 'sport'),
+  ('Touch Rugby', 'touch-rugby', 'sport'),
+  ('Pickleball', 'pickleball', 'sport'),
+  ('Yoga', 'yoga', 'fitness'),
+  ('Photography Walks', 'photography-walks', 'creative'),
+  ('Trivia Nights', 'trivia-nights', 'social'),
+  ('Gardening', 'gardening', 'lifestyle')
+on conflict (slug) do nothing;

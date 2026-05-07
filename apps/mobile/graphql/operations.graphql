@@ -1,5 +1,5 @@
 query BuzzHome {
-  interestsCollection(first: 20) {
+  interestsCollection(first: 50) {
     edges {
       node {
         id

@@ -3940,7 +3940,7 @@ export type AdminDashboardQuery = { interestsCollection: { edges: Array<{ node: 
 
 export const AdminDashboardDocument = gql`
     query AdminDashboard {
-  interestsCollection(first: 20) {
+  interestsCollection(first: 50) {
     edges {
       node {
         id

@@ -3947,7 +3947,7 @@ export type ActivateInterestMutation = { activateInterest: Record<string, unknow
 
 export const BuzzHomeDocument = gql`
     query BuzzHome {
-  interestsCollection(first: 20) {
+  interestsCollection(first: 50) {
     edges {
       node {
         id
