@@ -7,7 +7,7 @@
       "@/*": ["src/*"],
       "@graphql/*": ["graphql/*"]
     },
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }
