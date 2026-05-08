@@ -107,6 +107,8 @@ const en = {
     readyBody: "Complete onboarding to unlock your first suggested plan.",
     suggestedNextStep: "Suggested next step",
     emptyPlan: "No suggested plan yet.",
+    waitingForCandidateTitle: "Explore your best-fit suburbs",
+    waitingForCandidateBody: "Keep {interest:string} active while Buzz looks for a real compatible plan.",
     reviewOnboarding: "Review onboarding",
     fallbackInterest: "your next interest",
     acceptPlan: "Accept plan",

@@ -14,6 +14,7 @@ import { runMatchAction } from "@/lib/functions";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
+import { createHomePlanCopy } from "./homePlanCopy";
 
 type MatchActionStatus = "idle" | "accepting" | "declining" | "declined" | "error";
 
@@ -51,6 +52,13 @@ export const HomeScreen = () => {
   const shouldShowLandingPlan = isCityFeatureEnabled(cityContext, "landing_plan");
   const isAccepting = matchActionStatus === "accepting";
   const isDeclining = matchActionStatus === "declining";
+  const planCopy = createHomePlanCopy({
+    activationComplete: state.activation.status === "complete",
+    interestName: selectedInterestName,
+    match,
+    traitsSummary: traits.summary,
+    copy: LL.home
+  });
 
   const getLandingPlanStatusLabel = (status: LandingPlanItemStatus) => {
     if (status === "completed") {
@@ -118,21 +126,15 @@ export const HomeScreen = () => {
 
         <View style={styles.heroCard}>
           <Text style={styles.eyebrow}>{LL.home.firstPlan()}</Text>
-          <Text style={styles.title}>
-            {match ? LL.home.titleActivated({ interest: selectedInterestName }) : LL.home.titleReady()}
-          </Text>
-          <Text style={styles.body}>
-            {match
-              ? LL.home.activatedBody()
-              : LL.home.readyBody()}
-          </Text>
+          <Text style={styles.title}>{planCopy.title}</Text>
+          <Text style={styles.body}>{planCopy.body}</Text>
         </View>
 
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>{LL.home.suggestedNextStep()}</Text>
-          <Text style={styles.panelBody}>{match?.headline ?? LL.home.emptyPlan()}</Text>
-          <Text style={styles.panelBody}>{match?.reason ?? traits.summary}</Text>
-          {match ? (
+          <Text style={styles.panelBody}>{planCopy.suggestedTitle}</Text>
+          <Text style={styles.panelBody}>{planCopy.suggestedBody}</Text>
+          {planCopy.canActOnMatch ? (
             <View style={styles.actionRow}>
               <Pressable accessibilityRole="button" disabled={isAccepting || isDeclining} onPress={handleAcceptPlan} style={styles.primaryAction}>
                 <Text style={styles.primaryActionText}>{isAccepting ? LL.home.acceptingPlan() : LL.home.acceptPlan()}</Text>
