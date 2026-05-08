@@ -6,6 +6,7 @@ import { useBuzzAuth } from "@/auth/AuthProvider";
 import { createCityContextFallback, isCityFeatureEnabled } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { createLandingPlan, type LandingPlanItemStatus } from "@/features/landingPlan/landingPlan";
+import { createSettlingProgress } from "@/features/progress/settlingProgress";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { runMatchAction } from "@/lib/functions";
@@ -32,6 +33,14 @@ export const HomeScreen = () => {
     traits,
     selectedInterests: state.selectedInterest ? [state.selectedInterest.name] : [],
     topSuburbs: cityContext.activeSuburbs.slice(0, 3)
+  });
+  const settlingProgress = createSettlingProgress({
+    attendanceConfirmed: false,
+    feedbackCompleted: false,
+    groupJoined: matchActionStatus === "accepting",
+    interestActivated: state.activation.status === "complete",
+    quizCompleted: traits.quizCompleted,
+    suburbFitViewed: cityContext.activeSuburbs.length > 0
   });
   const shouldShowLandingPlan = isCityFeatureEnabled(cityContext, "landing_plan");
   const isAccepting = matchActionStatus === "accepting";
@@ -159,6 +168,16 @@ export const HomeScreen = () => {
             </View>
           </View>
         ) : null}
+
+        <View style={styles.progressPanel}>
+          <Text style={styles.eyebrow}>{LL.home.settlingProgress.eyebrow()}</Text>
+          <Text style={styles.panelTitle}>{LL.home.settlingProgress.title({ percent: settlingProgress.percent })}</Text>
+          <Text style={styles.panelBody}>
+            {settlingProgress.nextStep
+              ? LL.home.settlingProgress.nextStep({ step: settlingProgress.nextStep.label })
+              : LL.home.settlingProgress.complete()}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -234,6 +253,12 @@ const createStyles = (theme: BuzzTheme) => {
       borderColor: colors.border,
       borderRadius: radii.xl,
       borderWidth: borderWidths.hairline,
+      gap: spacing[3],
+      padding: spacing[5]
+    },
+    progressPanel: {
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: radii.xl,
       gap: spacing[3],
       padding: spacing[5]
     },

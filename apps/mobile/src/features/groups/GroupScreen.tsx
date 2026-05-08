@@ -65,6 +65,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const isLocalGroup = groupId.startsWith("local-");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [attendanceFeedback, setAttendanceFeedback] = useState<string | null>(null);
   const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<ActivityPlanConfirmationStatus>("pending");
   const { data } = useGroupMessagesQuery({
@@ -200,6 +201,14 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     setInviteLink(createGroupInviteLink({ origin: "https://buzz.local", token }));
   };
 
+  const confirmAttendance = () => {
+    setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
+  };
+
+  const postPlanSafety = () => {
+    setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -295,6 +304,22 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
               <Text selectable style={styles.inviteLink}>{inviteLink}</Text>
             </View>
           ) : null}
+        </View>
+
+        <View style={styles.attendancePanel}>
+          <View style={styles.detailStack}>
+            <Text style={styles.detailTitle}>{LL.groups.attendance.title()}</Text>
+            <Text style={styles.detailBody}>{LL.groups.attendance.body()}</Text>
+          </View>
+          <View style={styles.safetyActions}>
+            <Pressable accessibilityRole="button" onPress={confirmAttendance} style={styles.safetyAction}>
+              <Text style={styles.safetyActionText}>{LL.groups.attendance.confirmAttendance()}</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={postPlanSafety} style={styles.safetyAction}>
+              <Text style={styles.safetyActionText}>{LL.groups.attendance.postPlanSafety()}</Text>
+            </Pressable>
+          </View>
+          {attendanceFeedback ? <Text style={styles.safetyFeedback}>{attendanceFeedback}</Text> : null}
         </View>
 
         <View style={styles.chatPanel}>
@@ -476,6 +501,12 @@ const createStyles = (theme: BuzzTheme) => {
       borderColor: colors.border,
       borderRadius: radii.xl,
       borderWidth: borderWidths.hairline,
+      gap: spacing[4],
+      padding: spacing[5]
+    },
+    attendancePanel: {
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: radii.xl,
       gap: spacing[4],
       padding: spacing[5]
     },

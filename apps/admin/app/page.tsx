@@ -1,7 +1,7 @@
 "use client";
 
 import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache } from "@apollo/client";
-import { useMemo } from "react";
+import { useMemo, type ReactElement } from "react";
 
 import type { AdminDashboardQuery } from "../graphql/generated";
 import { useAdminDashboardQuery } from "../graphql/generated";
@@ -9,6 +9,13 @@ import { useAdminDashboardQuery } from "../graphql/generated";
 type Interest = NonNullable<NonNullable<AdminDashboardQuery["interestsCollection"]>["edges"][number]["node"]>;
 type Business = NonNullable<NonNullable<AdminDashboardQuery["businessesCollection"]>["edges"][number]["node"]>;
 type Event = NonNullable<NonNullable<AdminDashboardQuery["eventsCollection"]>["edges"][number]["node"]>;
+type CitySetting = NonNullable<NonNullable<AdminDashboardQuery["citySettingsCollection"]>["edges"][number]["node"]>;
+type Report = NonNullable<NonNullable<AdminDashboardQuery["reportsCollection"]>["edges"][number]["node"]>;
+type ActivityGroup = NonNullable<
+  NonNullable<AdminDashboardQuery["activityGroupsCollection"]>["edges"][number]["node"]
+>;
+type Reliability = NonNullable<NonNullable<AdminDashboardQuery["userReliabilityCollection"]>["edges"][number]["node"]>;
+type StarterPlan = NonNullable<NonNullable<AdminDashboardQuery["starterPlansCollection"]>["edges"][number]["node"]>;
 
 const fallbackInterests: Interest[] = [
   { id: "interest-surfing", name: "Surfing", slug: "surfing", category: "sport" },
@@ -28,6 +35,11 @@ const fallbackEvents: Event[] = [
   { id: "event-climbing-night", title: "Climbing Night" },
   { id: "event-board-game-social", title: "Board Game Social" }
 ];
+const fallbackCitySettings: CitySetting[] = [];
+const fallbackReports: Report[] = [];
+const fallbackActivityGroups: ActivityGroup[] = [];
+const fallbackReliability: Reliability[] = [];
+const fallbackStarterPlans: StarterPlan[] = [];
 
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? "local";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
@@ -47,11 +59,16 @@ function createBuzzApolloClient() {
   });
 }
 
-function AdminDashboard() {
+function AdminDashboard(): ReactElement {
   const { data, loading, error } = useAdminDashboardQuery();
   const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? fallbackInterests;
   const businesses = data?.businessesCollection?.edges.map((edge) => edge.node) ?? fallbackBusinesses;
   const events = data?.eventsCollection?.edges.map((edge) => edge.node) ?? fallbackEvents;
+  const citySettings = data?.citySettingsCollection?.edges.map((edge) => edge.node) ?? fallbackCitySettings;
+  const reports = data?.reportsCollection?.edges.map((edge) => edge.node) ?? fallbackReports;
+  const activityGroups = data?.activityGroupsCollection?.edges.map((edge) => edge.node) ?? fallbackActivityGroups;
+  const reliability = data?.userReliabilityCollection?.edges.map((edge) => edge.node) ?? fallbackReliability;
+  const starterPlans = data?.starterPlansCollection?.edges.map((edge) => edge.node) ?? fallbackStarterPlans;
   const connectionStatus = loading
     ? "Loading city data"
     : error
@@ -93,11 +110,86 @@ function AdminDashboard() {
           ))}
         </ul>
       </section>
+      <section>
+        <h2>City config</h2>
+        {citySettings.length > 0 ? (
+          <ul>
+            {citySettings.map((setting) => (
+              <li key={setting.cityId}>
+                {String(setting.matchingRadiusKm)} km radius, groups {setting.defaultGroupSizeMin}-
+                {setting.defaultGroupSizeMax}, {setting.activationExpiryHours}h activation expiry
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>City settings will appear after the local city config seed is available.</p>
+        )}
+      </section>
+      <section>
+        <h2>Reports</h2>
+        {reports.length > 0 ? (
+          <ul>
+            {reports.map((report) => (
+              <li key={report.id}>
+                {report.reason}{" "}
+                <span style={{ color: "#667" }}>
+                  ({report.category}, {report.status}, {report.createdAt})
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No safety reports are waiting for review.</p>
+        )}
+      </section>
+      <section>
+        <h2>Groups</h2>
+        {activityGroups.length > 0 ? (
+          <ul>
+            {activityGroups.map((group) => (
+              <li key={group.id}>
+                {group.title} <span style={{ color: "#667" }}>({group.status})</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No activity groups have been created yet.</p>
+        )}
+      </section>
+      <section>
+        <h2>Attendance</h2>
+        {reliability.length > 0 ? (
+          <ul>
+            {reliability.map((record) => (
+              <li key={record.userId}>
+                {record.attendedCount} attended, {record.noShowCount} no-shows, {record.feedbackCount} feedback
+                <span style={{ color: "#667" }}> ({String(record.reliabilityScore)} score)</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No attendance or reliability records have been created yet.</p>
+        )}
+      </section>
+      <section>
+        <h2>Starter plans</h2>
+        {starterPlans.length > 0 ? (
+          <ul>
+            {starterPlans.map((plan) => (
+              <li key={plan.id}>
+                {plan.title} <span style={{ color: "#667" }}>({plan.status})</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No starter plan placeholders have been created yet.</p>
+        )}
+      </section>
     </main>
   );
 }
 
-export default function HomePage() {
+export default function HomePage(): ReactElement {
   const client = useMemo(() => createBuzzApolloClient(), []);
 
   return (

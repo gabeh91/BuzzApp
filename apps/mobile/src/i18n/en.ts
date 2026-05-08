@@ -120,6 +120,12 @@ const en = {
       next: "Next",
       done: "Done",
       pending: "Soon"
+    },
+    settlingProgress: {
+      eyebrow: "Progress",
+      title: "{percent:number}% settled",
+      complete: "Your first loop is complete.",
+      nextStep: "Next: {step:string}"
     }
   },
   groups: {
@@ -152,6 +158,14 @@ const en = {
       joinTitle: "Join this Buzz group",
       joinBody: "Open Buzz to review the group invite before joining.",
       missingToken: "This invite link is missing a token."
+    },
+    attendance: {
+      title: "Attendance",
+      body: "Confirm what happened after the plan so Buzz can improve reliability.",
+      confirmAttendance: "Confirm attendance",
+      attendanceConfirmed: "Attendance confirmed.",
+      postPlanSafety: "Post-plan safety check",
+      safetyCompleted: "Post-plan check completed."
     },
     safety: {
       title: "Safety",

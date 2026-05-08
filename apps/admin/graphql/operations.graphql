@@ -26,4 +26,64 @@ query AdminDashboard {
       }
     }
   }
+  citySettingsCollection(first: 10) {
+    edges {
+      node {
+        cityId
+        matchingRadiusKm
+        defaultGroupSizeMin
+        defaultGroupSizeMax
+        activationExpiryHours
+        requiresInvite
+        isWaitlistEnabled
+      }
+    }
+  }
+  reportsCollection(first: 10) {
+    edges {
+      node {
+        id
+        category
+        status
+        reason
+        activityGroupId
+        createdAt
+      }
+    }
+  }
+  activityGroupsCollection(first: 10) {
+    edges {
+      node {
+        id
+        title
+        status
+        createdAt
+      }
+    }
+  }
+  userReliabilityCollection(first: 10) {
+    edges {
+      node {
+        userId
+        attendedCount
+        noShowCount
+        cancelledLateCount
+        feedbackCount
+        reliabilityScore
+        updatedAt
+      }
+    }
+  }
+  starterPlansCollection(first: 10) {
+    edges {
+      node {
+        id
+        title
+        status
+        minGroupSize
+        maxGroupSize
+        createdAt
+      }
+    }
+  }
 }
