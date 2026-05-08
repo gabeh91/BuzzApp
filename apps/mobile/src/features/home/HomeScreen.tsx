@@ -13,6 +13,7 @@ import {
   createLandingPlan,
   type LandingPlanItemStatus,
 } from "@/features/landingPlan/landingPlan";
+import { useSettlingProgressState } from "@/features/progress/SettlingProgressProvider";
 import { createSettlingProgress } from "@/features/progress/settlingProgress";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -42,6 +43,8 @@ export const HomeScreen = () => {
   });
   const { traits } = useQuiz();
   const { state } = useInterestFlow();
+  const { markGroupJoined, state: settlingProgressState } =
+    useSettlingProgressState();
   const [matchActionStatus, setMatchActionStatus] =
     useState<MatchActionStatus>("idle");
   const selectedInterestName =
@@ -61,9 +64,10 @@ export const HomeScreen = () => {
     topSuburbs,
   });
   const settlingProgress = createSettlingProgress({
-    attendanceConfirmed: false,
-    feedbackCompleted: false,
-    groupJoined: matchActionStatus === "accepting",
+    attendanceConfirmed: settlingProgressState.attendanceConfirmed,
+    feedbackCompleted: settlingProgressState.feedbackCompleted,
+    groupJoined:
+      settlingProgressState.groupJoined || matchActionStatus === "accepting",
     interestActivated: state.activation.status === "complete",
     quizCompleted: traits.quizCompleted,
     suburbFitViewed: cityContext.activeSuburbs.length > 0,
@@ -98,6 +102,7 @@ export const HomeScreen = () => {
     if (!match) return;
 
     setMatchActionStatus("accepting");
+    markGroupJoined();
 
     if (match.source === "local") {
       router.push(routes.group(`local-${match.id}`));

@@ -5,6 +5,7 @@ import { useMemo, type ReactNode } from "react";
 import { BuzzAuthProvider } from "@/auth/AuthProvider";
 import { InterestFlowProvider } from "@/features/interests/InterestFlowProvider";
 import { OnboardingProvider } from "@/features/onboarding/OnboardingProvider";
+import { SettlingProgressProvider } from "@/features/progress/SettlingProgressProvider";
 import { QuizProvider } from "@/features/quiz/QuizProvider";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { createBuzzApolloClient } from "@/lib/apollo";
@@ -17,7 +18,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
     "Metropolis-Bold": require("../../assets/fonts/Metropolis-Bold.otf"),
     "Metropolis-ExtraBold": require("../../assets/fonts/Metropolis-ExtraBold.otf"),
     "Menlo-Regular": require("../../assets/fonts/Menlo-Regular.ttf"),
-    "Menlo-Bold": require("../../assets/fonts/Menlo-Bold.ttf")
+    "Menlo-Bold": require("../../assets/fonts/Menlo-Bold.ttf"),
   });
 
   if (!fontsLoaded) {
@@ -31,7 +32,11 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
           <BuzzAuthProvider>
             <OnboardingProvider>
               <QuizProvider>
-                <InterestFlowProvider>{children}</InterestFlowProvider>
+                <InterestFlowProvider>
+                  <SettlingProgressProvider>
+                    {children}
+                  </SettlingProgressProvider>
+                </InterestFlowProvider>
               </QuizProvider>
             </OnboardingProvider>
           </BuzzAuthProvider>

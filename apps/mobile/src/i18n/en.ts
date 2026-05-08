@@ -173,6 +173,7 @@ const en = {
       attendanceConfirmed: "Attendance confirmed.",
       attendanceFailed: "We could not confirm attendance yet. Try again in a moment.",
       postPlanSafety: "Post-plan safety check",
+      feedbackFailed: "We could not save that check yet. Try again in a moment.",
       safetyCompleted: "Post-plan check completed."
     },
     safety: {

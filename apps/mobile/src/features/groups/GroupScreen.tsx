@@ -21,13 +21,14 @@ import {
   createDefaultActivityPlan,
   type ActivityPlanConfirmationStatus,
 } from "@/features/plans/activityPlan";
+import { useSettlingProgressState } from "@/features/progress/SettlingProgressProvider";
 import {
   canShowExactLocation,
   createBlockPayload,
   createReportDraft,
 } from "@/features/safety/safetyActions";
 import { useI18n } from "@/i18n/I18nProvider";
-import { runAttendanceAction } from "@/lib/functions";
+import { runAttendanceAction, runFeedbackAction } from "@/lib/functions";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
@@ -84,9 +85,12 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     null,
   );
   const [attendanceSubmitting, setAttendanceSubmitting] = useState(false);
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] =
     useState<ActivityPlanConfirmationStatus>("pending");
+  const { markAttendanceConfirmed, markFeedbackCompleted, markGroupJoined } =
+    useSettlingProgressState();
   const { data } = useGroupMessagesQuery({
     variables: { groupId },
     skip: isLocalGroup,
@@ -231,7 +235,10 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   };
 
   const confirmAttendance = async () => {
+    markGroupJoined();
+
     if (isLocalGroup) {
+      markAttendanceConfirmed();
       setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
       return;
     }
@@ -243,6 +250,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
         activityGroupId: group.id,
         profileId: user.id,
       });
+      markAttendanceConfirmed();
       setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
     } catch {
       setAttendanceFeedback(LL.groups.attendance.attendanceFailed());
@@ -251,8 +259,30 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     }
   };
 
-  const postPlanSafety = () => {
-    setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
+  const postPlanSafety = async () => {
+    markGroupJoined();
+
+    if (isLocalGroup) {
+      markFeedbackCompleted();
+      setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
+      return;
+    }
+
+    setFeedbackSubmitting(true);
+
+    try {
+      await runFeedbackAction({
+        activityGroupId: group.id,
+        feltSafe: true,
+        profileId: user.id,
+      });
+      markFeedbackCompleted();
+      setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
+    } catch {
+      setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
+    } finally {
+      setFeedbackSubmitting(false);
+    }
   };
 
   return (
@@ -406,6 +436,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
             variant="neutral"
           />
           <Button
+            disabled={feedbackSubmitting}
             label={LL.groups.attendance.postPlanSafety()}
             onPress={postPlanSafety}
             style={styles.safetyAction}
