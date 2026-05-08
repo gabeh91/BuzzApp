@@ -8,6 +8,7 @@ import { ChatComposer } from "@/features/chat/ChatComposer";
 import { createChatDraft } from "@/features/chat/chatModel";
 import { MessageList, type ChatMessage } from "@/features/chat/MessageList";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
+import { canShowExactLocation, createBlockPayload, createReportDraft } from "@/features/safety/safetyActions";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
@@ -59,6 +60,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const match = state.matchPreview;
   const isLocalGroup = groupId.startsWith("local-");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
+  const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
   const { data, refetch } = useGroupMessagesQuery({
     variables: { groupId },
     skip: isLocalGroup
@@ -82,6 +84,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   }
 
   const group = createGroupSummary(groupInput);
+  const exactLocationVisible = canShowExactLocation(false);
   const remoteMessages: ChatMessage[] =
     data?.groupMessagesCollection?.edges.map(({ node }) => ({
       id: node.id,
@@ -121,6 +124,40 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     await refetch();
   };
 
+  const handlePrepareReport = () => {
+    const draft = createReportDraft({
+      activityGroupId: group.id,
+      category: "unsafe",
+      reason: "Group safety check",
+      reporterId: user.id
+    });
+
+    setSafetyFeedback(draft.canSubmit ? LL.groups.safety.reportReady() : LL.groups.safety.reportUnavailable());
+  };
+
+  const handlePrepareBlock = () => {
+    if (!match) {
+      setSafetyFeedback(LL.groups.safety.blockUnavailable());
+      return;
+    }
+
+    const payload = createBlockPayload({
+      activityGroupId: group.id,
+      blockedId: match.id,
+      blockerId: user.id
+    });
+
+    setSafetyFeedback(
+      payload.source === "group"
+        ? LL.groups.safety.blockReady({ name: match.displayName })
+        : LL.groups.safety.blockUnavailable()
+    );
+  };
+
+  const handlePrepareLeave = () => {
+    setSafetyFeedback(LL.groups.safety.leaveReady());
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -146,6 +183,27 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
             <Text style={styles.detailTitle}>{LL.groups.nextStep()}</Text>
             <Text style={styles.detailBody}>{LL.groups.nextStepBody()}</Text>
           </View>
+        </View>
+
+        <View style={styles.safetyPanel}>
+          <View style={styles.detailStack}>
+            <Text style={styles.detailTitle}>{LL.groups.safety.title()}</Text>
+            <Text style={styles.detailBody}>
+              {exactLocationVisible ? LL.groups.safety.locationVisible() : LL.groups.safety.locationHidden()}
+            </Text>
+          </View>
+          <View style={styles.safetyActions}>
+            <Pressable accessibilityRole="button" onPress={handlePrepareReport} style={styles.safetyAction}>
+              <Text style={styles.safetyActionText}>{LL.groups.safety.report()}</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={handlePrepareBlock} style={styles.safetyAction}>
+              <Text style={styles.safetyActionText}>{LL.groups.safety.block()}</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={handlePrepareLeave} style={styles.safetyAction}>
+              <Text style={styles.safetyActionText}>{LL.groups.safety.leave()}</Text>
+            </Pressable>
+          </View>
+          {safetyFeedback ? <Text style={styles.safetyFeedback}>{safetyFeedback}</Text> : null}
         </View>
 
         <View style={styles.chatPanel}>
@@ -240,6 +298,39 @@ const createStyles = (theme: BuzzTheme) => {
       borderRadius: radii.xl,
       gap: spacing[5],
       padding: spacing[5]
+    },
+    safetyPanel: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radii.xl,
+      borderWidth: borderWidths.hairline,
+      gap: spacing[4],
+      padding: spacing[5]
+    },
+    safetyActions: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing[3]
+    },
+    safetyAction: {
+      alignItems: "center",
+      borderColor: colors.border,
+      borderRadius: radii.sm,
+      borderWidth: borderWidths.hairline,
+      minWidth: 88,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2]
+    },
+    safetyActionText: {
+      color: colors.text,
+      fontSize: fontSizes.sm,
+      fontWeight: "900"
+    },
+    safetyFeedback: {
+      color: colors.textMuted,
+      fontSize: fontSizes.sm,
+      fontWeight: "800",
+      lineHeight: lineHeights.tight
     },
     panelLabel: {
       color: colors.brand,

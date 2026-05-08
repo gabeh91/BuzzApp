@@ -126,7 +126,20 @@ const en = {
     nextStep: "Next step",
     nextStepBody: "Choose a simple time, place, and first step that feels easy to say yes to.",
     emptyMatch: "Your first group will appear after you accept a suggested plan.",
-    backHome: "Back home"
+    backHome: "Back home",
+    safety: {
+      title: "Safety",
+      locationHidden: "Exact location stays hidden until a confirmed public plan is ready.",
+      locationVisible: "Exact location is visible for this confirmed plan.",
+      report: "Report",
+      block: "Block",
+      leave: "Leave group",
+      reportReady: "Report draft ready for review.",
+      reportUnavailable: "Add a reason before a report can be submitted.",
+      blockReady: "{name:string} can be blocked before more matching.",
+      blockUnavailable: "Block becomes available when a matched member is attached.",
+      leaveReady: "You can leave this group before the plan is confirmed."
+    }
   },
   chat: {
     empty: "No messages yet.",
