@@ -171,6 +171,7 @@ const en = {
       body: "Confirm what happened after the plan so Buzz can improve reliability.",
       confirmAttendance: "Confirm attendance",
       attendanceConfirmed: "Attendance confirmed.",
+      attendanceFailed: "We could not confirm attendance yet. Try again in a moment.",
       postPlanSafety: "Post-plan safety check",
       safetyCompleted: "Post-plan check completed."
     },

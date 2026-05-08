@@ -9,9 +9,26 @@ export type MatchActionResult = {
   activityGroupId?: string;
 };
 
+export type AttendanceActionResult = {
+  ok: boolean;
+  activityGroupId: string;
+  attendanceStatus: "attended";
+  rsvpStatus: "confirmed";
+  attendanceConfirmedAt?: string;
+};
+
 export type CreateMatchActionRequestInput = {
   action: MatchAction;
   matchCandidateId: string;
+  accessToken?: string;
+  profileId?: string;
+  appEnv?: string;
+  supabaseAnonKey?: string;
+  supabaseUrl?: string;
+};
+
+export type CreateAttendanceActionRequestInput = {
+  activityGroupId: string;
   accessToken?: string;
   profileId?: string;
   appEnv?: string;
@@ -113,6 +130,41 @@ export const createMatchActionRequest = ({
   };
 };
 
+export const createAttendanceActionRequest = ({
+  activityGroupId,
+  accessToken,
+  profileId,
+  appEnv = defaultAppEnv,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl
+}: CreateAttendanceActionRequestInput): MatchActionRequest => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json"
+  };
+
+  if (supabaseAnonKey) {
+    headers.apikey = supabaseAnonKey;
+  }
+
+  if (accessToken) {
+    headers.authorization = `Bearer ${accessToken}`;
+  }
+
+  if (appEnv === "local" && profileId) {
+    headers["x-buzz-local-bypass"] = "true";
+    headers["x-buzz-profile-id"] = profileId;
+  }
+
+  return {
+    url: createBuzzFunctionUrl("record-attendance", supabaseUrl),
+    init: {
+      body: JSON.stringify({ activityGroupId }),
+      headers,
+      method: "POST"
+    }
+  };
+};
+
 export const runMatchAction = async (
   input: CreateMatchActionRequestInput,
   fetcher: typeof fetch = fetch
@@ -133,6 +185,32 @@ export const runMatchAction = async (
 
   if (body.activityGroupId) {
     result.activityGroupId = body.activityGroupId;
+  }
+
+  return result;
+};
+
+export const runAttendanceAction = async (
+  input: CreateAttendanceActionRequestInput,
+  fetcher: typeof fetch = fetch
+): Promise<AttendanceActionResult> => {
+  const request = createAttendanceActionRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as Partial<AttendanceActionResult> & { error?: string };
+
+  if (!response.ok || !body.ok || !body.activityGroupId || body.attendanceStatus !== "attended" || body.rsvpStatus !== "confirmed") {
+    throw new Error(body.error ?? "Unable to confirm attendance");
+  }
+
+  const result: AttendanceActionResult = {
+    ok: true,
+    activityGroupId: body.activityGroupId,
+    attendanceStatus: "attended",
+    rsvpStatus: "confirmed"
+  };
+
+  if (body.attendanceConfirmedAt) {
+    result.attendanceConfirmedAt = body.attendanceConfirmedAt;
   }
 
   return result;

@@ -14,6 +14,7 @@ import { createGroupInviteLink, createInviteDraft } from "@/features/invites/inv
 import { createDefaultActivityPlan, type ActivityPlanConfirmationStatus } from "@/features/plans/activityPlan";
 import { canShowExactLocation, createBlockPayload, createReportDraft } from "@/features/safety/safetyActions";
 import { useI18n } from "@/i18n/I18nProvider";
+import { runAttendanceAction } from "@/lib/functions";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
@@ -66,6 +67,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [attendanceFeedback, setAttendanceFeedback] = useState<string | null>(null);
+  const [attendanceSubmitting, setAttendanceSubmitting] = useState(false);
   const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<ActivityPlanConfirmationStatus>("pending");
   const { data } = useGroupMessagesQuery({
@@ -201,8 +203,25 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     setInviteLink(createGroupInviteLink({ origin: "https://buzz.local", token }));
   };
 
-  const confirmAttendance = () => {
-    setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
+  const confirmAttendance = async () => {
+    if (isLocalGroup) {
+      setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
+      return;
+    }
+
+    setAttendanceSubmitting(true);
+
+    try {
+      await runAttendanceAction({
+        activityGroupId: group.id,
+        profileId: user.id
+      });
+      setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
+    } catch {
+      setAttendanceFeedback(LL.groups.attendance.attendanceFailed());
+    } finally {
+      setAttendanceSubmitting(false);
+    }
   };
 
   const postPlanSafety = () => {
@@ -312,7 +331,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
             <Text style={styles.detailBody}>{LL.groups.attendance.body()}</Text>
           </View>
           <View style={styles.safetyActions}>
-            <Pressable accessibilityRole="button" onPress={confirmAttendance} style={styles.safetyAction}>
+            <Pressable accessibilityRole="button" disabled={attendanceSubmitting} onPress={confirmAttendance} style={styles.safetyAction}>
               <Text style={styles.safetyActionText}>{LL.groups.attendance.confirmAttendance()}</Text>
             </Pressable>
             <Pressable accessibilityRole="button" onPress={postPlanSafety} style={styles.safetyAction}>
