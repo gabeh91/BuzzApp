@@ -283,3 +283,27 @@ export const getTopSuburbNamesForTraits = ({
 
   return [...scoredNames, ...fallbackFill].slice(0, limit);
 };
+
+export const getTopSuburbMatchesForTraits = ({
+  fallbackNames,
+  limit = 3,
+  suburbs = defaultMelbourneSuburbProfiles,
+  traits
+}: {
+  fallbackNames: string[];
+  limit?: number;
+  suburbs?: SuburbTagProfile[];
+  traits: ProfileTraits;
+}): SuburbMatch[] => {
+  const scoredMatches = scoreSuburbsForTraits({ limit, suburbs, traits });
+  const fallbackMatches = fallbackNames
+    .filter((name) => !scoredMatches.some((match) => match.name === name))
+    .map((name) => ({
+      id: name.toLowerCase().replaceAll(/\s+/g, "-"),
+      name,
+      reasons: ["Recommended city fit based on your onboarding profile."],
+      score: 0
+    }));
+
+  return [...scoredMatches, ...fallbackMatches].slice(0, limit);
+};

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getTopSuburbNamesForTraits, scoreSuburbsForTraits, type SuburbTagProfile } from "./suburbMatching";
+import { getTopSuburbMatchesForTraits, getTopSuburbNamesForTraits, scoreSuburbsForTraits, type SuburbTagProfile } from "./suburbMatching";
 import type { ProfileTraits } from "@/features/quiz/quizModel";
 
 const traits: ProfileTraits = {
@@ -128,4 +128,16 @@ test("getTopSuburbNamesForTraits falls back to configured suburb names when no s
     }),
     ["Fitzroy", "Brunswick", "South Yarra"]
   );
+});
+
+test("getTopSuburbMatchesForTraits returns visible suburb reasons with fallback names", () => {
+  const matches = getTopSuburbMatchesForTraits({
+    fallbackNames: ["Fitzroy", "Brunswick", "South Yarra"],
+    suburbs: [],
+    traits
+  });
+
+  assert.deepEqual(matches.map((match) => match.name), ["Fitzroy", "Brunswick", "South Yarra"]);
+  assert.equal(matches[0]?.score, 0);
+  assert.match(matches[0]?.reasons.join(" ") ?? "", /recommended city fit/i);
 });

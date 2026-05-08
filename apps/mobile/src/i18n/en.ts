@@ -121,6 +121,11 @@ const en = {
       done: "Done",
       pending: "Soon"
     },
+    suburbFit: {
+      title: "Best-fit suburbs",
+      body: "Top areas to explore from your city and lifestyle answers.",
+      fallbackReason: "Recommended city fit based on your onboarding profile."
+    },
     settlingProgress: {
       eyebrow: "Progress",
       title: "{percent:number}% settled",

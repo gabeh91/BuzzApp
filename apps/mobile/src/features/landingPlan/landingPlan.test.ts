@@ -49,9 +49,12 @@ test("home screen renders the deterministic landing plan checklist", () => {
   const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
 
   assert.match(homeSource, /createLandingPlan/);
-  assert.match(homeSource, /getTopSuburbNamesForTraits/);
+  assert.match(homeSource, /getTopSuburbMatchesForTraits/);
+  assert.match(homeSource, /topSuburbMatches\.map/);
+  assert.match(homeSource, /LL\.home\.suburbFit\.title/);
   assert.match(homeSource, /landingPlan\.items/);
   assert.match(homeSource, /LL\.home\.landingPlan/);
   assert.match(translationsSource, /landingPlan:/);
+  assert.match(translationsSource, /suburbFit:/);
   assert.match(translationsSource, /first30Days/);
 });

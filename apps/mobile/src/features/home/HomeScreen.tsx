@@ -4,7 +4,7 @@ import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "rea
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { createCityContextFallback, isCityFeatureEnabled } from "@/features/city/cityContext";
-import { getTopSuburbNamesForTraits } from "@/features/city/suburbMatching";
+import { getTopSuburbMatchesForTraits } from "@/features/city/suburbMatching";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { createLandingPlan, type LandingPlanItemStatus } from "@/features/landingPlan/landingPlan";
 import { createSettlingProgress } from "@/features/progress/settlingProgress";
@@ -29,10 +29,11 @@ export const HomeScreen = () => {
   const [matchActionStatus, setMatchActionStatus] = useState<MatchActionStatus>("idle");
   const selectedInterestName = state.selectedInterest?.name ?? LL.home.fallbackInterest();
   const match = state.matchPreview;
-  const topSuburbs = getTopSuburbNamesForTraits({
+  const topSuburbMatches = getTopSuburbMatchesForTraits({
     fallbackNames: cityContext.activeSuburbs,
     traits
   });
+  const topSuburbs = topSuburbMatches.map((suburb) => suburb.name);
   const landingPlan = createLandingPlan({
     cityContext,
     traits,
@@ -149,6 +150,23 @@ export const HomeScreen = () => {
           <View style={styles.landingPanel}>
             <Text style={styles.eyebrow}>{LL.home.landingPlan.eyebrow()}</Text>
             <Text style={styles.panelTitle}>{LL.home.landingPlan.first30Days({ city: cityContext.city.name })}</Text>
+            <View style={styles.suburbFitBlock}>
+              <Text style={styles.suburbFitTitle}>{LL.home.suburbFit.title()}</Text>
+              <Text style={styles.suburbFitBody}>{LL.home.suburbFit.body()}</Text>
+              <View style={styles.suburbFitList}>
+                {topSuburbMatches.map((suburb, index) => (
+                  <View key={suburb.id} style={styles.suburbFitRow}>
+                    <Text style={styles.suburbFitRank}>{index + 1}</Text>
+                    <View style={styles.suburbFitCopy}>
+                      <Text style={styles.suburbFitName}>{suburb.name}</Text>
+                      <Text style={styles.suburbFitReason}>
+                        {suburb.reasons[0] ?? LL.home.suburbFit.fallbackReason()}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
             <View style={styles.planList}>
               {landingPlan.items.slice(0, 6).map((item) => (
                 <View key={`${item.weekNumber}-${item.sortOrder}-${item.itemType}`} style={styles.planItem}>
@@ -275,6 +293,55 @@ const createStyles = (theme: BuzzTheme) => {
     panelBody: {
       color: colors.brand,
       fontSize: fontSizes.base,
+      lineHeight: lineHeights.tight
+    },
+    suburbFitBlock: {
+      gap: spacing[3],
+      paddingTop: spacing[1]
+    },
+    suburbFitTitle: {
+      color: colors.text,
+      fontSize: fontSizes.lg,
+      fontWeight: "900"
+    },
+    suburbFitBody: {
+      color: colors.textMuted,
+      fontSize: fontSizes.sm,
+      lineHeight: lineHeights.tight
+    },
+    suburbFitList: {
+      gap: spacing[2]
+    },
+    suburbFitRow: {
+      alignItems: "flex-start",
+      flexDirection: "row",
+      gap: spacing[3]
+    },
+    suburbFitRank: {
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: radii.full,
+      color: colors.brand,
+      fontSize: fontSizes.xs,
+      fontWeight: "900",
+      height: 28,
+      lineHeight: 28,
+      overflow: "hidden",
+      textAlign: "center",
+      width: 28
+    },
+    suburbFitCopy: {
+      flex: 1,
+      gap: spacing[1]
+    },
+    suburbFitName: {
+      color: colors.text,
+      fontSize: fontSizes.base,
+      fontWeight: "900",
+      lineHeight: lineHeights.tight
+    },
+    suburbFitReason: {
+      color: colors.textMuted,
+      fontSize: fontSizes.sm,
       lineHeight: lineHeights.tight
     },
     actionRow: {
