@@ -7,7 +7,9 @@ import { useBuzzAuth } from "@/auth/AuthProvider";
 import { ChatComposer } from "@/features/chat/ChatComposer";
 import { createChatDraft } from "@/features/chat/chatModel";
 import { MessageList, type ChatMessage } from "@/features/chat/MessageList";
+import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
+import { createDefaultActivityPlan, type ActivityPlanConfirmationStatus } from "@/features/plans/activityPlan";
 import { canShowExactLocation, createBlockPayload, createReportDraft } from "@/features/safety/safetyActions";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
@@ -61,6 +63,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const isLocalGroup = groupId.startsWith("local-");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
+  const [confirmationStatus, setConfirmationStatus] = useState<ActivityPlanConfirmationStatus>("pending");
   const { data, refetch } = useGroupMessagesQuery({
     variables: { groupId },
     skip: isLocalGroup
@@ -84,6 +87,12 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   }
 
   const group = createGroupSummary(groupInput);
+  const cityContext = createCityContextFallback({ cityId: user.cityId, cityName: user.cityName });
+  const activityPlan = createDefaultActivityPlan({
+    cityContext,
+    interestName: group.interestName,
+    matchSuggestion: group.suggestedPlan ?? LL.groups.nextStepBody()
+  });
   const exactLocationVisible = canShowExactLocation(false);
   const remoteMessages: ChatMessage[] =
     data?.groupMessagesCollection?.edges.map(({ node }) => ({
@@ -122,6 +131,18 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
       }
     });
     await refetch();
+  };
+
+  const getConfirmationStatusCopy = () => {
+    if (confirmationStatus === "confirmed") {
+      return LL.groups.planCard.confirmed();
+    }
+
+    if (confirmationStatus === "needs_changes") {
+      return LL.groups.planCard.needsChanges();
+    }
+
+    return LL.groups.planCard.pending();
   };
 
   const handlePrepareReport = () => {
@@ -183,6 +204,39 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
             <Text style={styles.detailTitle}>{LL.groups.nextStep()}</Text>
             <Text style={styles.detailBody}>{LL.groups.nextStepBody()}</Text>
           </View>
+        </View>
+
+        <View style={styles.planCard}>
+          <Text style={styles.detailTitle}>{LL.groups.planCard.title()}</Text>
+          <Text style={styles.planCardTitle}>{activityPlan.title}</Text>
+          <View style={styles.planMetaRow}>
+            <Text style={styles.planMeta}>{LL.groups.planCard.timing({ timing: activityPlan.suggestedTiming })}</Text>
+            <Text style={styles.planMeta}>{LL.groups.planCard.capacity({ min: activityPlan.capacityMin, max: activityPlan.capacityMax })}</Text>
+          </View>
+          <Text style={styles.detailBody}>{LL.groups.planCard.location({ location: activityPlan.publicLocationName })}</Text>
+          <Text style={styles.detailBody}>{activityPlan.matchSuggestion}</Text>
+          <Text style={styles.planSafety}>{activityPlan.safetyGuidance}</Text>
+          <View style={styles.confirmationActions}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setConfirmationStatus("confirmed");
+              }}
+              style={styles.confirmationAction}
+            >
+              <Text style={styles.safetyActionText}>{LL.groups.planCard.confirm()}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setConfirmationStatus("needs_changes");
+              }}
+              style={styles.confirmationAction}
+            >
+              <Text style={styles.safetyActionText}>{LL.groups.planCard.requestChanges()}</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.safetyFeedback}>{getConfirmationStatusCopy()}</Text>
         </View>
 
         <View style={styles.safetyPanel}>
@@ -298,6 +352,54 @@ const createStyles = (theme: BuzzTheme) => {
       borderRadius: radii.xl,
       gap: spacing[5],
       padding: spacing[5]
+    },
+    planCard: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radii.xl,
+      borderWidth: borderWidths.hairline,
+      gap: spacing[3],
+      padding: spacing[5]
+    },
+    planCardTitle: {
+      color: colors.text,
+      fontSize: fontSizes.xl,
+      fontWeight: "900",
+      lineHeight: lineHeights.title
+    },
+    planMetaRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing[2]
+    },
+    planMeta: {
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: radii.sm,
+      color: colors.brand,
+      fontSize: fontSizes.sm,
+      fontWeight: "800",
+      overflow: "hidden",
+      paddingHorizontal: spacing[2],
+      paddingVertical: spacing[1]
+    },
+    planSafety: {
+      color: colors.textMuted,
+      fontSize: fontSizes.sm,
+      fontWeight: "800",
+      lineHeight: lineHeights.tight
+    },
+    confirmationActions: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing[3]
+    },
+    confirmationAction: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: radii.sm,
+      minWidth: 128,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2]
     },
     safetyPanel: {
       backgroundColor: colors.surface,

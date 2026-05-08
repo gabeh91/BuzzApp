@@ -127,6 +127,17 @@ const en = {
     nextStepBody: "Choose a simple time, place, and first step that feels easy to say yes to.",
     emptyMatch: "Your first group will appear after you accept a suggested plan.",
     backHome: "Back home",
+    planCard: {
+      title: "Plan card",
+      timing: "Timing: {timing:string}",
+      location: "Location: {location:string}",
+      capacity: "Capacity: {min:number}-{max:number}",
+      confirm: "Confirm",
+      requestChanges: "Request changes",
+      pending: "Waiting for group confirmation.",
+      confirmed: "Plan confirmed.",
+      needsChanges: "Changes requested before confirming."
+    },
     safety: {
       title: "Safety",
       locationHidden: "Exact location stays hidden until a confirmed public plan is ready.",
