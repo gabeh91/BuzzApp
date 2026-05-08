@@ -7,7 +7,7 @@
     "start": "expo start",
     "lint": "echo 'mobile lint placeholder'",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/auth/*.test.ts src/features/*/*.test.ts src/i18n/*.test.ts src/navigation/*.test.ts src/theme/*.test.ts"
+    "test": "tsx --test src/auth/*.test.ts src/features/*/*.test.ts src/i18n/*.test.ts src/lib/*.test.ts src/navigation/*.test.ts src/theme/*.test.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.14.1",

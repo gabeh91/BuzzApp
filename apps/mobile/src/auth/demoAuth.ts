@@ -9,12 +9,20 @@ const demoDefaults = {
   cityName: "Melbourne"
 };
 
+const resolveAuthSource = (env: DemoAuthEnv): BuzzAuthUser["authSource"] => {
+  return env.EXPO_PUBLIC_APP_ENV === "local" &&
+    env.EXPO_PUBLIC_AUTH_MODE === "supabase" &&
+    env.EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN
+    ? "supabase"
+    : "demo";
+};
+
 export const createDemoBuzzUser = (env: DemoAuthEnv): BuzzAuthUser => {
   return {
     id: env.EXPO_PUBLIC_DEMO_USER_ID ?? demoDefaults.userId,
     displayName: env.EXPO_PUBLIC_DEMO_DISPLAY_NAME ?? demoDefaults.displayName,
     cityId: env.EXPO_PUBLIC_DEMO_CITY_ID ?? demoDefaults.cityId,
     cityName: env.EXPO_PUBLIC_DEMO_CITY_NAME ?? demoDefaults.cityName,
-    authSource: "demo"
+    authSource: resolveAuthSource(env)
   };
 };

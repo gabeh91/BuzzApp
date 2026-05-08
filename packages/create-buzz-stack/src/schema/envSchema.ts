@@ -10,5 +10,7 @@ export const localRootEnvSchema = z.object({
 export const mobileEnvSchema = z.object({
   EXPO_PUBLIC_APP_ENV: z.string().min(1),
   EXPO_PUBLIC_SUPABASE_URL: z.string().min(1),
-  EXPO_PUBLIC_SUPABASE_ANON_KEY: z.string().optional()
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
+  EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN: z.string().optional(),
+  EXPO_PUBLIC_AUTH_MODE: z.enum(["demo", "supabase"]).optional()
 });

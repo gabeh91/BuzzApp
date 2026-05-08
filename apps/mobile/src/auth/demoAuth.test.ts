@@ -42,3 +42,29 @@ test("createBuzzAuthState derives mode from the replaceable user auth source", (
   assert.equal(state.user.displayName, "Noor");
   assert.equal("isDemo" in state.user, false);
 });
+
+test("createBuzzAuthState can opt into Supabase-backed local activation with a user token", () => {
+  const state = createBuzzAuthState({
+    EXPO_PUBLIC_APP_ENV: "local",
+    EXPO_PUBLIC_AUTH_MODE: "supabase",
+    EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN: "local-user-token",
+    EXPO_PUBLIC_DEMO_USER_ID: "00000000-0000-0000-0000-000000000404",
+    EXPO_PUBLIC_DEMO_CITY_ID: "00000000-0000-0000-0000-000000000001",
+    EXPO_PUBLIC_DEMO_DISPLAY_NAME: "Gabe"
+  });
+
+  assert.equal(state.mode, "supabase");
+  assert.equal(state.user.authSource, "supabase");
+  assert.equal(state.user.id, "00000000-0000-0000-0000-000000000404");
+});
+
+test("createBuzzAuthState keeps Supabase token override local-only", () => {
+  const state = createBuzzAuthState({
+    EXPO_PUBLIC_APP_ENV: "production",
+    EXPO_PUBLIC_AUTH_MODE: "supabase",
+    EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN: "local-user-token"
+  });
+
+  assert.equal(state.mode, "demo");
+  assert.equal(state.user.authSource, "demo");
+});

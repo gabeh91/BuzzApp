@@ -32,7 +32,7 @@ test("mobile scaffold declares Babel runtime for Metro", () => {
   assert.match(mobilePackageJson.contents, /"tsx": "latest"/);
   assert.match(
     mobilePackageJson.contents,
-    /"test": "tsx --test src\/auth\/\*\.test\.ts src\/features\/\*\/\*\.test\.ts src\/i18n\/\*\.test\.ts src\/navigation\/\*\.test\.ts src\/theme\/\*\.test\.ts"/
+    /"test": "tsx --test src\/auth\/\*\.test\.ts src\/features\/\*\/\*\.test\.ts src\/i18n\/\*\.test\.ts src\/lib\/\*\.test\.ts src\/navigation\/\*\.test\.ts src\/theme\/\*\.test\.ts"/
   );
 });
 
@@ -125,6 +125,8 @@ test("mobile and admin scaffolds use Apollo against Supabase GraphQL", () => {
   assert.match(mobileProviders.contents, /ApolloProvider/);
   assert.ok(mobileApollo);
   assert.match(mobileApollo.contents, /\/graphql\/v1/);
+  assert.match(mobileApollo.contents, /EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN/);
+  assert.match(mobileApollo.contents, /createBuzzApolloHeaders/);
   assert.match(mobileApp.contents, /useBuzzHomeQuery/);
   assert.match(mobileApp.contents, /useActivateInterestMutation/);
   assert.match(mobileApp.contents, /StyleSheet\.create/);
