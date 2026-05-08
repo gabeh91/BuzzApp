@@ -13,6 +13,8 @@ const traits: ProfileTraits = {
   socialStyle: "small_group",
   availability: "weekend",
   activityIntent: "learn",
+  cityTags: [],
+  lifestyleTags: [],
   quizCompleted: true,
   answersCount: 20,
   totalQuestions: 20,
@@ -47,6 +49,7 @@ test("home screen renders the deterministic landing plan checklist", () => {
   const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
 
   assert.match(homeSource, /createLandingPlan/);
+  assert.match(homeSource, /getTopSuburbNamesForTraits/);
   assert.match(homeSource, /landingPlan\.items/);
   assert.match(homeSource, /LL\.home\.landingPlan/);
   assert.match(translationsSource, /landingPlan:/);

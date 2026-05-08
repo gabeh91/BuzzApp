@@ -31,6 +31,8 @@ const traits: ProfileTraits = {
   socialStyle: "small_group",
   availability: "mixed",
   activityIntent: "social",
+  cityTags: ["walkability"],
+  lifestyleTags: ["coffee"],
   quizCompleted: false,
   answersCount: 2,
   totalQuestions: 20,

@@ -31,10 +31,32 @@ test("deriveProfileTraits turns quiz answers into deterministic matching traits"
   assert.ok(traits.summary.includes("small groups"));
 });
 
+test("deriveProfileTraits emits separate city and lifestyle tags without adding onboarding questions", () => {
+  const traits = deriveProfileTraits({
+    "new-city-need": "regular-places",
+    "travel-radius": "nearby",
+    "activity-vibe": "calm",
+    "food-coffee": "group-anchor",
+    "outdoor-indoor": "outdoor",
+    "buzz-outcome": "try-things"
+  });
+
+  assert.deepEqual(quizQuestions.length, 20);
+  assert.ok(traits.cityTags.includes("walkability"));
+  assert.ok(traits.cityTags.includes("local_access"));
+  assert.ok(traits.cityTags.includes("quiet"));
+  assert.ok(traits.lifestyleTags.includes("food"));
+  assert.ok(traits.lifestyleTags.includes("coffee"));
+  assert.ok(traits.lifestyleTags.includes("outdoors"));
+  assert.ok(traits.lifestyleTags.includes("creative"));
+});
+
 test("deriveProfileTraits reports incomplete quiz state without throwing", () => {
   const traits = deriveProfileTraits({});
 
   assert.equal(traits.quizCompleted, false);
   assert.equal(traits.answersCount, 0);
   assert.equal(traits.totalQuestions, 20);
+  assert.deepEqual(traits.cityTags, []);
+  assert.deepEqual(traits.lifestyleTags, []);
 });

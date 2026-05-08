@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const migrationPath = "../../supabase/migrations/000011_suburb_matching_backfill.sql";
+const cityLifestyleMigrationPath = "../../supabase/migrations/000018_city_lifestyle_suburb_tags.sql";
 const seedPath = "../../supabase/seed.sql";
 
 test("suburb matching migration adds city-scoped suburbs, tags, and stored recommendations", () => {
@@ -37,4 +38,19 @@ test("Melbourne seed data includes enough suburb tag data for deterministic reco
   assert.match(seedSource, /small_group/);
   assert.match(seedSource, /weekend/);
   assert.match(seedSource, /learn/);
+});
+
+test("city lifestyle suburb tag backfill adds real suburb-fit signals", () => {
+  assert.equal(existsSync(cityLifestyleMigrationPath), true, "city lifestyle suburb tag backfill migration should exist");
+
+  const migrationSource = readFileSync(cityLifestyleMigrationPath, "utf8");
+
+  assert.match(migrationSource, /beach/);
+  assert.match(migrationSource, /music/);
+  assert.match(migrationSource, /food/);
+  assert.match(migrationSource, /creative/);
+  assert.match(migrationSource, /walkability/);
+  assert.match(migrationSource, /budget/);
+  assert.match(migrationSource, /quiet/);
+  assert.match(migrationSource, /public_transport/);
 });

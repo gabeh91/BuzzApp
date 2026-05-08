@@ -36,6 +36,8 @@ test("activateInterestLocally creates a deterministic preview from selected inte
     socialStyle: "small_group",
     availability: "weekend",
     activityIntent: "social",
+    cityTags: [],
+    lifestyleTags: [],
     quizCompleted: true,
     answersCount: 20,
     totalQuestions: 20,

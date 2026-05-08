@@ -4,6 +4,7 @@ import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "rea
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { createCityContextFallback, isCityFeatureEnabled } from "@/features/city/cityContext";
+import { getTopSuburbNamesForTraits } from "@/features/city/suburbMatching";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { createLandingPlan, type LandingPlanItemStatus } from "@/features/landingPlan/landingPlan";
 import { createSettlingProgress } from "@/features/progress/settlingProgress";
@@ -28,11 +29,15 @@ export const HomeScreen = () => {
   const [matchActionStatus, setMatchActionStatus] = useState<MatchActionStatus>("idle");
   const selectedInterestName = state.selectedInterest?.name ?? LL.home.fallbackInterest();
   const match = state.matchPreview;
+  const topSuburbs = getTopSuburbNamesForTraits({
+    fallbackNames: cityContext.activeSuburbs,
+    traits
+  });
   const landingPlan = createLandingPlan({
     cityContext,
     traits,
     selectedInterests: state.selectedInterest ? [state.selectedInterest.name] : [],
-    topSuburbs: cityContext.activeSuburbs.slice(0, 3)
+    topSuburbs
   });
   const settlingProgress = createSettlingProgress({
     attendanceConfirmed: false,
