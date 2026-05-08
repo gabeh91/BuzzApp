@@ -5,18 +5,31 @@ export type BuzzThemeMode = "light" | "dark";
 const fontFamilies = {
   display: Platform.select({
     ios: "Avenir Next",
-    android: "sans-serif-condensed",
-    default: "serif"
+    android: "Metropolis-ExtraBold",
+    default: "Metropolis-ExtraBold"
   }),
   body: Platform.select({
     ios: "Avenir Next",
-    android: "sans-serif",
-    default: "sans-serif"
+    android: "Metropolis-Regular",
+    default: "Metropolis-Regular"
   }),
   mono: Platform.select({
     ios: "Menlo",
-    android: "monospace",
-    default: "monospace"
+    android: "Menlo-Regular",
+    default: "Menlo-Regular"
+  })
+};
+
+const fontStyles = {
+  display: Platform.select({
+    ios: { fontFamily: "Avenir Next", fontWeight: "900" as const },
+    android: { fontFamily: "Metropolis-ExtraBold" },
+    default: { fontFamily: "Metropolis-ExtraBold" }
+  }),
+  displayStrong: Platform.select({
+    ios: { fontFamily: "Avenir Next", fontWeight: "800" as const },
+    android: { fontFamily: "Metropolis-ExtraBold" },
+    default: { fontFamily: "Metropolis-ExtraBold" }
   })
 };
 
@@ -158,6 +171,7 @@ const createTheme = <Mode extends BuzzThemeMode>(
     palette,
     colors: createSemanticColors(palette),
     fontFamilies,
+    fontStyles,
     fontSizes,
     lineHeights,
     spacing,

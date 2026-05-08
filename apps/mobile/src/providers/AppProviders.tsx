@@ -1,4 +1,5 @@
 import { ApolloProvider } from "@apollo/client";
+import { useFonts } from "expo-font";
 import { useMemo, type ReactNode } from "react";
 
 import { BuzzAuthProvider } from "@/auth/AuthProvider";
@@ -11,6 +12,17 @@ import { ThemeProvider } from "@/theme/ThemeProvider";
 
 export const AppProviders = ({ children }: { children: ReactNode }) => {
   const client = useMemo(() => createBuzzApolloClient(), []);
+  const [fontsLoaded] = useFonts({
+    "Metropolis-Regular": require("../../assets/fonts/Metropolis-Regular.otf"),
+    "Metropolis-Bold": require("../../assets/fonts/Metropolis-Bold.otf"),
+    "Metropolis-ExtraBold": require("../../assets/fonts/Metropolis-ExtraBold.otf"),
+    "Menlo-Regular": require("../../assets/fonts/Menlo-Regular.ttf"),
+    "Menlo-Bold": require("../../assets/fonts/Menlo-Bold.ttf")
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <ApolloProvider client={client}>

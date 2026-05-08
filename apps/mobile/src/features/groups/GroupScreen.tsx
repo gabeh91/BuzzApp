@@ -175,7 +175,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, fontFamilies, fontSizes, lineHeights, radii, spacing, borderWidths, shadows } = theme;
+  const { colors, fontStyles, fontSizes, lineHeights, radii, spacing, borderWidths, shadows } = theme;
 
   return StyleSheet.create({
     screen: {
@@ -220,9 +220,8 @@ const createStyles = (theme: BuzzTheme) => {
     },
     title: {
       color: colors.text,
-      fontFamily: fontFamilies.display,
+      ...fontStyles.display,
       fontSize: fontSizes.hero,
-      fontWeight: "900",
       lineHeight: lineHeights.hero
     },
     body: {

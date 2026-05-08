@@ -710,7 +710,7 @@ export const OnboardingScreen = () => {
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, fontFamilies, fontSizes, lineHeights, radii, spacing, borderWidths, shadows } = theme;
+  const { colors, fontStyles, fontSizes, lineHeights, radii, spacing, borderWidths, shadows } = theme;
 
   return StyleSheet.create({
   screen: {
@@ -771,9 +771,8 @@ const createStyles = (theme: BuzzTheme) => {
   },
   logo: {
     color: colors.text,
-    fontFamily: fontFamilies.display,
+    ...fontStyles.display,
     fontSize: 28,
-    fontWeight: "900",
     letterSpacing: -1
   },
   envLabel: {
@@ -838,9 +837,8 @@ const createStyles = (theme: BuzzTheme) => {
   },
   title: {
     color: colors.text,
-    fontFamily: fontFamilies.display,
+    ...fontStyles.display,
     fontSize: 34,
-    fontWeight: "900",
     lineHeight: 39,
     letterSpacing: -1.2
   },
@@ -865,9 +863,8 @@ const createStyles = (theme: BuzzTheme) => {
   },
   profileName: {
     color: colors.text,
-    fontFamily: fontFamilies.display,
+    ...fontStyles.displayStrong,
     fontSize: 28,
-    fontWeight: "800",
     marginTop: 10
   },
   profileMeta: {

@@ -133,9 +133,8 @@ const createStyles = (theme: BuzzTheme) => {
     },
     logo: {
       color: colors.text,
-      fontFamily: theme.fontFamilies.display,
+      ...theme.fontStyles.display,
       fontSize: fontSizes["5xl"],
-      fontWeight: "900",
       letterSpacing: -1
     },
     city: {
@@ -163,9 +162,8 @@ const createStyles = (theme: BuzzTheme) => {
     },
     title: {
       color: colors.text,
-      fontFamily: theme.fontFamilies.display,
+      ...theme.fontStyles.display,
       fontSize: fontSizes.hero,
-      fontWeight: "900",
       lineHeight: lineHeights.hero,
       letterSpacing: -1.1
     },
