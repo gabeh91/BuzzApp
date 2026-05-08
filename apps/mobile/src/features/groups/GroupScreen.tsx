@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useGroupMessagesQuery, useSendGroupMessageMutation } from "@graphql/generated";
@@ -7,6 +7,7 @@ import { useBuzzAuth } from "@/auth/AuthProvider";
 import { ChatComposer } from "@/features/chat/ChatComposer";
 import { createChatDraft } from "@/features/chat/chatModel";
 import { MessageList, type ChatMessage } from "@/features/chat/MessageList";
+import { useGroupMessages } from "@/features/chat/useGroupMessages";
 import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { createDefaultActivityPlan, type ActivityPlanConfirmationStatus } from "@/features/plans/activityPlan";
@@ -64,7 +65,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<ActivityPlanConfirmationStatus>("pending");
-  const { data, refetch } = useGroupMessagesQuery({
+  const { data } = useGroupMessagesQuery({
     variables: { groupId },
     skip: isLocalGroup
   });
@@ -94,15 +95,24 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     matchSuggestion: group.suggestedPlan ?? LL.groups.nextStepBody()
   });
   const exactLocationVisible = canShowExactLocation(false);
-  const remoteMessages: ChatMessage[] =
-    data?.groupMessagesCollection?.edges.map(({ node }) => ({
-      id: node.id,
-      body: node.body,
-      createdAt: node.createdAt,
-      isOwnMessage: node.senderId === user.id,
-      moderationStatus: node.moderationStatus
-    })) ?? [];
-  const messages = isLocalGroup ? localMessages : remoteMessages;
+  const remoteMessages: ChatMessage[] = useMemo(
+    () =>
+      data?.groupMessagesCollection?.edges.map(({ node }) => ({
+        id: node.id,
+        body: node.body,
+        createdAt: node.createdAt,
+        isOwnMessage: node.senderId === user.id,
+        moderationStatus: node.moderationStatus
+      })) ?? [],
+    [data, user.id]
+  );
+  const realtimeMessages = useGroupMessages({
+    currentUserId: user.id,
+    enabled: !isLocalGroup,
+    groupId,
+    initialMessages: remoteMessages
+  });
+  const messages = isLocalGroup ? localMessages : realtimeMessages;
 
   const handleSendMessage = async (body: string) => {
     const draft = createChatDraft(body);
@@ -130,7 +140,6 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
         senderId: user.id
       }
     });
-    await refetch();
   };
 
   const getConfirmationStatusCopy = () => {
