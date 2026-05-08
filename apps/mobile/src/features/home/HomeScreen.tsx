@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
+import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -19,6 +20,7 @@ export const HomeScreen = () => {
   const styles = createStyles(theme);
   const { LL } = useI18n();
   const { user } = useBuzzAuth();
+  const cityContext = createCityContextFallback({ cityId: user.cityId, cityName: user.cityName });
   const { traits } = useQuiz();
   const { state } = useInterestFlow();
   const [matchActionStatus, setMatchActionStatus] = useState<MatchActionStatus>("idle");
@@ -76,7 +78,7 @@ export const HomeScreen = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.logo}>{LL.brand.name()}</Text>
-          <Text style={styles.city}>{user.cityName}</Text>
+          <Text style={styles.city}>{cityContext.city.name}</Text>
         </View>
 
         <View style={styles.heroCard}>

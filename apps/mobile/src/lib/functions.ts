@@ -1,3 +1,5 @@
+import { normalizeCityContext, type CityContext } from "@/features/city/cityContext";
+
 export type MatchAction = "accept" | "decline";
 
 export type MatchActionResult = {
@@ -22,6 +24,14 @@ export type MatchActionRequest = {
   init: RequestInit;
 };
 
+export type CreateCityContextRequestInput = {
+  accessToken?: string;
+  cityId?: string;
+  cityName?: string;
+  supabaseAnonKey?: string;
+  supabaseUrl?: string;
+};
+
 const defaultSupabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const defaultSupabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const defaultAppEnv = process.env.EXPO_PUBLIC_APP_ENV ?? "local";
@@ -33,6 +43,38 @@ const functionNameByAction: Record<MatchAction, string> = {
 
 export const createBuzzFunctionUrl = (functionName: string, supabaseUrl = defaultSupabaseUrl): string => {
   return `${supabaseUrl.replace(/\/$/, "")}/functions/v1/${functionName}`;
+};
+
+export const createCityContextRequest = ({
+  accessToken,
+  cityId,
+  cityName,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl
+}: CreateCityContextRequestInput): MatchActionRequest => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json"
+  };
+
+  if (supabaseAnonKey) {
+    headers.apikey = supabaseAnonKey;
+  }
+
+  if (accessToken) {
+    headers.authorization = `Bearer ${accessToken}`;
+  }
+
+  return {
+    url: createBuzzFunctionUrl("get-city-context", supabaseUrl),
+    init: {
+      body: JSON.stringify({
+        ...(cityId ? { cityId } : {}),
+        ...(cityName ? { cityName } : {})
+      }),
+      headers,
+      method: "POST"
+    }
+  };
 };
 
 export const createMatchActionRequest = ({
@@ -94,4 +136,19 @@ export const runMatchAction = async (
   }
 
   return result;
+};
+
+export const runCityContextRequest = async (
+  input: CreateCityContextRequestInput,
+  fetcher: typeof fetch = fetch
+): Promise<CityContext> => {
+  const request = createCityContextRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as { error?: string; ok?: boolean } & Parameters<typeof normalizeCityContext>[0];
+
+  if (!response.ok || body.ok !== true) {
+    throw new Error(body.error ?? "Unable to load city context");
+  }
+
+  return normalizeCityContext(body);
 };

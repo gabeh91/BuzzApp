@@ -14,6 +14,7 @@ import Animated, {
 
 import { useActivateInterestMutation, useBuzzHomeQuery, useUpsertBuzzProfileMutation } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
+import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import { isBackendActivationResult, shouldActivateInterestThroughSupabase, type BuzzInterest } from "@/features/interests/interestFlow";
 import { useQuiz } from "@/features/quiz/QuizProvider";
@@ -351,6 +352,7 @@ const IntroContent = () => {
   const { styles } = useOnboardingTheme();
   const { state } = useOnboarding();
   const { user } = useBuzzAuth();
+  const cityContext = createCityContextFallback({ cityId: user.cityId, cityName: user.cityName });
   const { LL } = useI18n();
   const stepCopy = LL.onboarding.steps[state.step.id];
 
@@ -360,7 +362,7 @@ const IntroContent = () => {
         <View style={styles.profileCard}>
           <Text style={styles.metaLabel}>{LL.onboarding.profile.metaLabel()}</Text>
           <Text style={styles.profileName}>{user.displayName}</Text>
-          <Text style={styles.profileMeta}>{LL.onboarding.profile.meta({ city: user.cityName })}</Text>
+          <Text style={styles.profileMeta}>{LL.onboarding.profile.meta({ city: cityContext.city.name })}</Text>
         </View>
         <Text style={styles.bodyCopy}>{LL.onboarding.profile.body()}</Text>
       </View>
@@ -540,6 +542,7 @@ const OnboardingExperience = () => {
   const router = useRouter();
   const onboarding = useOnboarding();
   const { user } = useBuzzAuth();
+  const cityContext = createCityContextFallback({ cityId: user.cityId, cityName: user.cityName });
   const { LL } = useI18n();
   const quiz = useQuiz();
   const interestFlow = useInterestFlow();
@@ -672,7 +675,7 @@ const OnboardingExperience = () => {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <FixedOnboardingHeader cityName={user.cityName} flowProgress={onboarding.state.progress} quizProgress={quizProgress} />
+      <FixedOnboardingHeader cityName={cityContext.city.name} flowProgress={onboarding.state.progress} quizProgress={quizProgress} />
       <View style={styles.stage}>
         <AmbientBackground scrollY={scrollY} />
         <Animated.ScrollView onScroll={scrollHandler} scrollEventThrottle={16} contentContainerStyle={styles.scrollContent}>
