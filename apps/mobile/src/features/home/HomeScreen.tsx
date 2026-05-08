@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
-import { createCityContextFallback } from "@/features/city/cityContext";
+import { createCityContextFallback, isCityFeatureEnabled } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
+import { createLandingPlan, type LandingPlanItemStatus } from "@/features/landingPlan/landingPlan";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { runMatchAction } from "@/lib/functions";
@@ -26,8 +27,27 @@ export const HomeScreen = () => {
   const [matchActionStatus, setMatchActionStatus] = useState<MatchActionStatus>("idle");
   const selectedInterestName = state.selectedInterest?.name ?? LL.home.fallbackInterest();
   const match = state.matchPreview;
+  const landingPlan = createLandingPlan({
+    cityContext,
+    traits,
+    selectedInterests: state.selectedInterest ? [state.selectedInterest.name] : [],
+    topSuburbs: cityContext.activeSuburbs.slice(0, 3)
+  });
+  const shouldShowLandingPlan = isCityFeatureEnabled(cityContext, "landing_plan");
   const isAccepting = matchActionStatus === "accepting";
   const isDeclining = matchActionStatus === "declining";
+
+  const getLandingPlanStatusLabel = (status: LandingPlanItemStatus) => {
+    if (status === "completed") {
+      return LL.home.landingPlan.done();
+    }
+
+    if (status === "active") {
+      return LL.home.landingPlan.next();
+    }
+
+    return LL.home.landingPlan.pending();
+  };
 
   const handleAcceptPlan = async () => {
     if (!match) return;
@@ -110,6 +130,35 @@ export const HomeScreen = () => {
           {matchActionStatus === "declined" ? <Text style={styles.feedback}>{LL.home.declinedPlan()}</Text> : null}
           {matchActionStatus === "error" ? <Text style={styles.feedback}>{LL.home.matchActionFailed()}</Text> : null}
         </View>
+
+        {shouldShowLandingPlan ? (
+          <View style={styles.landingPanel}>
+            <Text style={styles.eyebrow}>{LL.home.landingPlan.eyebrow()}</Text>
+            <Text style={styles.panelTitle}>{LL.home.landingPlan.first30Days({ city: cityContext.city.name })}</Text>
+            <View style={styles.planList}>
+              {landingPlan.items.slice(0, 6).map((item) => (
+                <View key={`${item.weekNumber}-${item.sortOrder}-${item.itemType}`} style={styles.planItem}>
+                  <Text
+                    style={[
+                      styles.planStatus,
+                      item.status === "completed"
+                        ? styles.planStatusCompleted
+                        : item.status === "active"
+                          ? styles.planStatusActive
+                          : styles.planStatusPending
+                    ]}
+                  >
+                    {getLandingPlanStatusLabel(item.status)}
+                  </Text>
+                  <View style={styles.planItemCopy}>
+                    <Text style={styles.planItemTitle}>{item.title}</Text>
+                    <Text style={styles.planItemBody}>{item.description}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -180,6 +229,14 @@ const createStyles = (theme: BuzzTheme) => {
       padding: spacing[5],
       gap: spacing[3]
     },
+    landingPanel: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radii.xl,
+      borderWidth: borderWidths.hairline,
+      gap: spacing[3],
+      padding: spacing[5]
+    },
     panelTitle: {
       color: colors.brand,
       fontSize: fontSizes.xl,
@@ -225,6 +282,51 @@ const createStyles = (theme: BuzzTheme) => {
       color: colors.brand,
       fontSize: fontSizes.sm,
       fontWeight: "800",
+      lineHeight: lineHeights.tight
+    },
+    planList: {
+      gap: spacing[3]
+    },
+    planItem: {
+      alignItems: "flex-start",
+      flexDirection: "row",
+      gap: spacing[3]
+    },
+    planStatus: {
+      borderRadius: radii.sm,
+      fontSize: fontSizes.xs,
+      fontWeight: "900",
+      minWidth: 48,
+      overflow: "hidden",
+      paddingHorizontal: spacing[2],
+      paddingVertical: spacing[1],
+      textAlign: "center"
+    },
+    planStatusActive: {
+      backgroundColor: colors.surfaceInverse,
+      color: colors.textInverse
+    },
+    planStatusCompleted: {
+      backgroundColor: colors.surfaceMuted,
+      color: colors.brand
+    },
+    planStatusPending: {
+      backgroundColor: colors.background,
+      color: colors.textMuted
+    },
+    planItemCopy: {
+      flex: 1,
+      gap: spacing[1]
+    },
+    planItemTitle: {
+      color: colors.text,
+      fontSize: fontSizes.base,
+      fontWeight: "900",
+      lineHeight: lineHeights.tight
+    },
+    planItemBody: {
+      color: colors.textMuted,
+      fontSize: fontSizes.sm,
       lineHeight: lineHeights.tight
     }
   });

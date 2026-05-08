@@ -107,7 +107,14 @@ const en = {
     declinePlan: "Pass for now",
     acceptingPlan: "Accepting...",
     declinedPlan: "Plan passed for now.",
-    matchActionFailed: "We could not update that plan yet. Try again in a moment."
+    matchActionFailed: "We could not update that plan yet. Try again in a moment.",
+    landingPlan: {
+      eyebrow: "Landing plan",
+      first30Days: "Your first 30 days in {city:string}",
+      next: "Next",
+      done: "Done",
+      pending: "Soon"
+    }
   },
   groups: {
     eyebrow: "Activity group",
