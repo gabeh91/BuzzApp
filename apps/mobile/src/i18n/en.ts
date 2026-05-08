@@ -38,7 +38,13 @@ const en = {
     },
     activation: {
       eyebrow: "Ready signal",
-      chooseInterestFirst: "Choose an interest first"
+      chooseInterestFirst: "Choose an interest first",
+      availability: {
+        label: "When works",
+        thisWeek: "This week",
+        weekend: "Weekend",
+        daytime: "Daytime"
+      }
     },
     matchPreview: {
       empty: "Activate an interest to preview your first suggested plan.",

@@ -10,6 +10,8 @@ import {
   markInterestActivating,
   markInterestActivationError,
   selectInterest,
+  setActivationAvailabilityIntent,
+  type ActivationAvailabilityIntent,
   type BackendActivationResult,
   type BuzzInterest,
   type InterestFlowState
@@ -21,6 +23,7 @@ type InterestFlowContextValue = {
   markActivating: () => void;
   completeLocalActivation: (traits: ProfileTraits) => void;
   completeBackendActivation: (result: BackendActivationResult) => void;
+  setAvailabilityIntent: (intent: ActivationAvailabilityIntent) => void;
   failActivation: (message: string) => void;
 };
 
@@ -44,6 +47,9 @@ export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
     },
     completeBackendActivation: (result) => {
       setState((current) => completeBackendActivation(current, result, copy));
+    },
+    setAvailabilityIntent: (intent) => {
+      setState((current) => setActivationAvailabilityIntent(current, intent));
     },
     failActivation: (message) => {
       setState((current) => markInterestActivationError(current, message));

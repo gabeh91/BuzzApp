@@ -19,9 +19,16 @@ export type InterestActivationState = {
   source?: "local" | "supabase";
 };
 
+export type ActivationAvailabilityIntent = {
+  availabilityWindow: "today" | "this_week" | "weekend" | "weekdays";
+  preferredTime: "daytime" | "evening" | "flexible";
+  urgency: "low" | "soon" | "now";
+};
+
 export type InterestFlowState = {
   selectedInterest: BuzzInterest | null;
   activation: InterestActivationState;
+  activationAvailability: ActivationAvailabilityIntent;
   matchPreview: MatchCandidatePreview | null;
 };
 
@@ -61,6 +68,12 @@ export const createInterestFlowCopy = (translations: I18n = LL): InterestFlowCop
 
 const defaultInterestFlowCopy = createInterestFlowCopy();
 
+export const defaultActivationAvailabilityIntent: ActivationAvailabilityIntent = {
+  availabilityWindow: "this_week",
+  preferredTime: "flexible",
+  urgency: "soon"
+};
+
 export const createInitialInterestFlowState = (copy: InterestFlowCopy = defaultInterestFlowCopy): InterestFlowState => {
   return {
     selectedInterest: null,
@@ -68,6 +81,7 @@ export const createInitialInterestFlowState = (copy: InterestFlowCopy = defaultI
       status: "idle",
       message: copy.initialMessage
     },
+    activationAvailability: defaultActivationAvailabilityIntent,
     matchPreview: null
   };
 };
@@ -85,6 +99,16 @@ export const selectInterest = (
       message: copy.selectedMessage(interest.name)
     },
     matchPreview: null
+  };
+};
+
+export const setActivationAvailabilityIntent = (
+  state: InterestFlowState,
+  intent: ActivationAvailabilityIntent
+): InterestFlowState => {
+  return {
+    ...state,
+    activationAvailability: intent
   };
 };
 

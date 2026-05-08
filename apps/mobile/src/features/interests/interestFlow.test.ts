@@ -9,6 +9,7 @@ import {
   completeBackendActivation,
   createInitialInterestFlowState,
   selectInterest,
+  setActivationAvailabilityIntent,
   shouldActivateInterestThroughSupabase
 } from "./interestFlow";
 
@@ -57,6 +58,20 @@ test("shouldActivateInterestThroughSupabase only sends activation writes for Sup
 
   assert.equal(shouldActivateInterestThroughSupabase(user), false);
   assert.equal(shouldActivateInterestThroughSupabase({ ...user, authSource: "supabase" }), true);
+});
+
+test("setActivationAvailabilityIntent stores pre-activation availability preferences", () => {
+  const state = setActivationAvailabilityIntent(createInitialInterestFlowState(), {
+    availabilityWindow: "weekend",
+    preferredTime: "daytime",
+    urgency: "soon"
+  });
+
+  assert.deepEqual(state.activationAvailability, {
+    availabilityWindow: "weekend",
+    preferredTime: "daytime",
+    urgency: "soon"
+  });
 });
 
 test("completeBackendActivation stores the persisted activation and first backend match preview", () => {
@@ -121,4 +136,16 @@ test("mobile match action client calls accept and decline Edge Functions with lo
   assert.match(source, /functions\/v1/);
   assert.match(source, /x-buzz-local-bypass/);
   assert.match(source, /appEnv === "local"/);
+});
+
+test("onboarding captures availability intent before activating an interest", () => {
+  const source = readFileSync("src/features/onboarding/OnboardingScreen.tsx", "utf8");
+  const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
+
+  assert.match(source, /availabilityOptions/);
+  assert.match(source, /setAvailabilityIntent/);
+  assert.match(source, /LL\.onboarding\.activation\.availability/);
+  assert.match(translationsSource, /availability:/);
+  assert.match(translationsSource, /weekend:/);
+  assert.match(translationsSource, /daytime:/);
 });

@@ -16,7 +16,12 @@ import { useActivateInterestMutation, useBuzzHomeQuery, useUpsertBuzzProfileMuta
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
-import { isBackendActivationResult, shouldActivateInterestThroughSupabase, type BuzzInterest } from "@/features/interests/interestFlow";
+import {
+  isBackendActivationResult,
+  shouldActivateInterestThroughSupabase,
+  type ActivationAvailabilityIntent,
+  type BuzzInterest
+} from "@/features/interests/interestFlow";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { createBuzzProfilePersistenceInput, shouldPersistProfileToSupabase } from "@/features/quiz/profilePersistence";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -469,6 +474,24 @@ const ActivationContent = () => {
   const quiz = useQuiz();
   const { LL } = useI18n();
   const selected = interestFlow.state.selectedInterest;
+  const selectedAvailability = interestFlow.state.activationAvailability;
+  const availabilityOptions: Array<{ id: string; label: string; intent: ActivationAvailabilityIntent }> = [
+    {
+      id: "this-week",
+      label: LL.onboarding.activation.availability.thisWeek(),
+      intent: { availabilityWindow: "this_week", preferredTime: "flexible", urgency: "soon" }
+    },
+    {
+      id: "weekend",
+      label: LL.onboarding.activation.availability.weekend(),
+      intent: { availabilityWindow: "weekend", preferredTime: "daytime", urgency: "soon" }
+    },
+    {
+      id: "daytime",
+      label: LL.onboarding.activation.availability.daytime(),
+      intent: { availabilityWindow: "weekdays", preferredTime: "daytime", urgency: "low" }
+    }
+  ];
 
   return (
     <View style={styles.contentStack}>
@@ -476,6 +499,32 @@ const ActivationContent = () => {
         <Text style={styles.activationEyebrow}>{LL.onboarding.activation.eyebrow()}</Text>
         <Text style={styles.activationTitle}>{selected ? selected.name : LL.onboarding.activation.chooseInterestFirst()}</Text>
         <Text style={styles.activationCopy}>{quiz.traits.summary}</Text>
+      </View>
+      <View style={styles.availabilityStack}>
+        <Text style={styles.activationOptionLabel}>{LL.onboarding.activation.availability.label()}</Text>
+        <View style={styles.availabilityGrid}>
+          {availabilityOptions.map((option) => {
+            const isSelected =
+              selectedAvailability.availabilityWindow === option.intent.availabilityWindow &&
+              selectedAvailability.preferredTime === option.intent.preferredTime &&
+              selectedAvailability.urgency === option.intent.urgency;
+
+            return (
+              <Pressable
+                key={option.id}
+                accessibilityRole="button"
+                onPress={() => {
+                  interestFlow.setAvailabilityIntent(option.intent);
+                }}
+                style={[styles.availabilityPill, isSelected ? styles.availabilityPillSelected : null]}
+              >
+                <Text style={[styles.availabilityPillText, isSelected ? styles.availabilityPillTextSelected : null]}>
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
       <Text style={styles.bodyCopy}>{interestFlow.state.activation.message}</Text>
     </View>
@@ -983,6 +1032,41 @@ const createStyles = (theme: BuzzTheme) => {
   activationCopy: {
     color: colors.textInverse,
     lineHeight: 22
+  },
+  availabilityStack: {
+    gap: 10
+  },
+  activationOptionLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+    textTransform: "uppercase"
+  },
+  availabilityGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  availabilityPill: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    borderWidth: borderWidths.hairline,
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  availabilityPillSelected: {
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.accent
+  },
+  availabilityPillText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  availabilityPillTextSelected: {
+    color: colors.accent
   },
   matchCard: {
     backgroundColor: colors.surfaceMuted,
