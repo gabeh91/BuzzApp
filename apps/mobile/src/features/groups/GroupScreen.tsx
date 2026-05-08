@@ -10,6 +10,7 @@ import { MessageList, type ChatMessage } from "@/features/chat/MessageList";
 import { useGroupMessages } from "@/features/chat/useGroupMessages";
 import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
+import { createGroupInviteLink, createInviteDraft } from "@/features/invites/inviteModel";
 import { createDefaultActivityPlan, type ActivityPlanConfirmationStatus } from "@/features/plans/activityPlan";
 import { canShowExactLocation, createBlockPayload, createReportDraft } from "@/features/safety/safetyActions";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -63,6 +64,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const match = state.matchPreview;
   const isLocalGroup = groupId.startsWith("local-");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<ActivityPlanConfirmationStatus>("pending");
   const { data } = useGroupMessagesQuery({
@@ -188,6 +190,16 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     setSafetyFeedback(LL.groups.safety.leaveReady());
   };
 
+  const handlePrepareInvite = () => {
+    const inviteDraft = createInviteDraft({
+      activityGroupId: group.id,
+      inviterId: user.id
+    });
+    const token = `${inviteDraft.activityGroupId}:${inviteDraft.inviterId}`;
+
+    setInviteLink(createGroupInviteLink({ origin: "https://buzz.local", token }));
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -267,6 +279,22 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
             </Pressable>
           </View>
           {safetyFeedback ? <Text style={styles.safetyFeedback}>{safetyFeedback}</Text> : null}
+        </View>
+
+        <View style={styles.invitePanel}>
+          <View style={styles.detailStack}>
+            <Text style={styles.detailTitle}>{LL.groups.invites.bringFriend()}</Text>
+            <Text style={styles.detailBody}>{LL.groups.invites.body()}</Text>
+          </View>
+          <Pressable accessibilityRole="button" onPress={handlePrepareInvite} style={styles.inviteAction}>
+            <Text style={styles.safetyActionText}>{LL.groups.invites.create()}</Text>
+          </Pressable>
+          {inviteLink ? (
+            <View style={styles.inviteLinkBox}>
+              <Text style={styles.detailTitle}>{LL.groups.invites.ready()}</Text>
+              <Text selectable style={styles.inviteLink}>{inviteLink}</Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.chatPanel}>
@@ -439,6 +467,34 @@ const createStyles = (theme: BuzzTheme) => {
     },
     safetyFeedback: {
       color: colors.textMuted,
+      fontSize: fontSizes.sm,
+      fontWeight: "800",
+      lineHeight: lineHeights.tight
+    },
+    invitePanel: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radii.xl,
+      borderWidth: borderWidths.hairline,
+      gap: spacing[4],
+      padding: spacing[5]
+    },
+    inviteAction: {
+      alignItems: "center",
+      alignSelf: "flex-start",
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: radii.sm,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3]
+    },
+    inviteLinkBox: {
+      backgroundColor: colors.background,
+      borderRadius: radii.sm,
+      gap: spacing[2],
+      padding: spacing[3]
+    },
+    inviteLink: {
+      color: colors.text,
       fontSize: fontSizes.sm,
       fontWeight: "800",
       lineHeight: lineHeights.tight

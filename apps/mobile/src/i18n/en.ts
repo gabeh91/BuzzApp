@@ -144,6 +144,15 @@ const en = {
       confirmed: "Plan confirmed.",
       needsChanges: "Changes requested before confirming."
     },
+    invites: {
+      bringFriend: "Bring a friend",
+      body: "Create a one-use group invite for someone you already trust.",
+      create: "Create invite",
+      ready: "Invite link ready",
+      joinTitle: "Join this Buzz group",
+      joinBody: "Open Buzz to review the group invite before joining.",
+      missingToken: "This invite link is missing a token."
+    },
     safety: {
       title: "Safety",
       locationHidden: "Exact location stays hidden until a confirmed public plan is ready.",
