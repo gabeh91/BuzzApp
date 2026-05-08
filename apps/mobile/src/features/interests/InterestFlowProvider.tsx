@@ -1,7 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { useI18n } from "@/i18n/I18nProvider";
-import type { ProfileTraits } from "@/features/quiz/quizModel";
 import {
   activateInterestLocally,
   completeBackendActivation,
@@ -21,7 +20,7 @@ type InterestFlowContextValue = {
   state: InterestFlowState;
   select: (interest: BuzzInterest) => void;
   markActivating: () => void;
-  completeLocalActivation: (traits: ProfileTraits) => void;
+  completeLocalActivation: () => void;
   completeBackendActivation: (result: BackendActivationResult) => void;
   setAvailabilityIntent: (intent: ActivationAvailabilityIntent) => void;
   failActivation: (message: string) => void;
@@ -42,8 +41,8 @@ export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
     markActivating: () => {
       setState((current) => markInterestActivating(current, copy));
     },
-    completeLocalActivation: (traits) => {
-      setState((current) => activateInterestLocally(current, traits, copy));
+    completeLocalActivation: () => {
+      setState((current) => activateInterestLocally(current, copy));
     },
     completeBackendActivation: (result) => {
       setState((current) => completeBackendActivation(current, result, copy));

@@ -1,9 +1,7 @@
 import { LL, type I18n } from "@/i18n";
 
-import { createDemoMatchPreview } from "@/features/matching/demoMatch";
 import type { MatchCandidatePreview } from "@/features/matching/matchCandidate.types";
 import type { BuzzAuthUser } from "@/auth/auth.types";
-import type { ProfileTraits } from "@/features/quiz/quizModel";
 
 export type BuzzInterest = {
   id: string;
@@ -127,7 +125,6 @@ export const markInterestActivating = (
 
 export const activateInterestLocally = (
   state: InterestFlowState,
-  traits: ProfileTraits,
   copy: InterestFlowCopy = defaultInterestFlowCopy
 ): InterestFlowState => {
   if (!state.selectedInterest) {
@@ -147,10 +144,7 @@ export const activateInterestLocally = (
       message: copy.completeMessage(state.selectedInterest.name),
       source: "local"
     },
-    matchPreview: createDemoMatchPreview({
-      interestName: state.selectedInterest.name,
-      traits
-    })
+    matchPreview: null
   };
 };
 

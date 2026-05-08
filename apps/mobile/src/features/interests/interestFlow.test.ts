@@ -28,25 +28,13 @@ test("selectInterest stores a replaceable interest selection state", () => {
   assert.equal(state.matchPreview, null);
 });
 
-test("activateInterestLocally creates a deterministic preview from selected interest and traits", () => {
+test("activateInterestLocally completes activation without creating a fake match preview", () => {
   const selected = selectInterest(createInitialInterestFlowState(), surfing);
-  const activated = activateInterestLocally(selected, {
-    energy: "medium",
-    planning: "balanced",
-    socialStyle: "small_group",
-    availability: "weekend",
-    activityIntent: "social",
-    cityTags: [],
-    lifestyleTags: [],
-    quizCompleted: true,
-    answersCount: 20,
-    totalQuestions: 20,
-    summary: "Small groups fit."
-  });
+  const activated = activateInterestLocally(selected);
 
   assert.equal(activated.activation.status, "complete");
   assert.equal(activated.activation.message, "Surfing is active. Buzz will use it to shape your next suggestion.");
-  assert.equal(activated.matchPreview?.interestName, "Surfing");
+  assert.equal(activated.matchPreview, null);
 });
 
 test("shouldActivateInterestThroughSupabase only sends activation writes for Supabase users", () => {

@@ -643,6 +643,7 @@ const OnboardingExperience = () => {
     }
 
     interestFlow.markActivating();
+    let shouldShowMatchPreview = false;
 
     try {
       if (shouldActivateInterestThroughSupabase(user)) {
@@ -656,16 +657,23 @@ const OnboardingExperience = () => {
           throw new Error("Activation response was invalid");
         }
 
-        interestFlow.completeBackendActivation(response.data.activateInterest);
+        const result = response.data.activateInterest;
+        interestFlow.completeBackendActivation(result);
+        shouldShowMatchPreview = result.matchCandidates.length > 0;
       } else {
-        interestFlow.completeLocalActivation(quiz.traits);
+        interestFlow.completeLocalActivation();
       }
     } catch {
       interestFlow.failActivation(LL.interests.activation.failed());
       return;
     }
 
-    onboarding.next();
+    if (shouldShowMatchPreview) {
+      onboarding.next();
+      return;
+    }
+
+    router.replace(routes.home);
   };
 
   const primaryLabel =

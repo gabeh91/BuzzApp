@@ -1,13 +1,6 @@
 import type { ProfileTraits } from "../quiz/quizModel";
 import type { MatchCandidatePreview, MatchCandidateSource } from "./matchCandidate.types";
 
-export type DemoMatchInput = {
-  interestName: string;
-  traits: ProfileTraits;
-};
-
-export type DemoMatchPreview = MatchCandidatePreview;
-
 export type DeterministicMatchCandidateInput = {
   id: string;
   displayName: string;
@@ -62,16 +55,4 @@ export const createDeterministicMatchCandidate = ({
     isDemo,
     source
   };
-};
-
-export const createDemoMatchPreview = ({ interestName, traits }: DemoMatchInput): DemoMatchPreview => {
-  return createDeterministicMatchCandidate({
-    id: "local-demo-sam",
-    displayName: "Sam",
-    interestName,
-    traits,
-    candidateTraits: traits,
-    isDemo: true,
-    source: "local"
-  });
 };
