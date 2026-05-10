@@ -44,16 +44,20 @@ test("createLandingPlan wraps suburb fit, interests, groups, invites, and repeat
   assert.ok(plan.items.some((item) => item.itemType === "meet_again"));
 });
 
-test("home screen renders the deterministic landing plan checklist", () => {
+test("profile screen renders the deterministic landing plan checklist while home stays activity-focused", () => {
   const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
+  const profileSource = readFileSync("src/features/profile/ProfileScreen.tsx", "utf8");
   const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
 
-  assert.match(homeSource, /createLandingPlan/);
-  assert.match(homeSource, /getTopSuburbMatchesForTraits/);
-  assert.match(homeSource, /topSuburbMatches\.map/);
+  assert.doesNotMatch(homeSource, /landingPlan\.items/);
+  assert.doesNotMatch(homeSource, /LL\.home\.landingPlan/);
+  assert.match(homeSource, /routes\.profile/);
+  assert.match(profileSource, /createLandingPlan/);
+  assert.match(profileSource, /getTopSuburbMatchesForTraits/);
+  assert.match(profileSource, /topSuburbMatches\.map/);
   assert.match(homeSource, /LL\.home\.suburbFit\.title/);
-  assert.match(homeSource, /landingPlan\.items/);
-  assert.match(homeSource, /LL\.home\.landingPlan/);
+  assert.match(profileSource, /landingPlan\.items/);
+  assert.match(profileSource, /LL\.profile\.landingPlan/);
   assert.match(translationsSource, /landingPlan:/);
   assert.match(translationsSource, /suburbFit:/);
   assert.match(translationsSource, /first30Days/);

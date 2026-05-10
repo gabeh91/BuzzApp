@@ -28,6 +28,13 @@ export type FeedbackActionResult = {
   feedbackCompletedAt?: string;
 };
 
+export type SettledActionResult = {
+  ok: boolean;
+  profileId: string;
+  settled: boolean;
+  visible?: boolean;
+};
+
 export type CreateMatchActionRequestInput = {
   action: MatchAction;
   matchCandidateId: string;
@@ -51,6 +58,15 @@ export type CreateFeedbackActionRequestInput =
   CreateAttendanceActionRequestInput & {
     feltSafe?: boolean;
   };
+
+export type CreateSettledActionRequestInput = {
+  settled: boolean;
+  accessToken?: string;
+  profileId?: string;
+  appEnv?: string;
+  supabaseAnonKey?: string;
+  supabaseUrl?: string;
+};
 
 export type MatchActionRequest = {
   url: string;
@@ -221,6 +237,41 @@ export const createFeedbackActionRequest = ({
   };
 };
 
+export const createSettledActionRequest = ({
+  accessToken,
+  appEnv = defaultAppEnv,
+  profileId,
+  settled,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl,
+}: CreateSettledActionRequestInput): MatchActionRequest => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (supabaseAnonKey) {
+    headers.apikey = supabaseAnonKey;
+  }
+
+  if (accessToken) {
+    headers.authorization = `Bearer ${accessToken}`;
+  }
+
+  if (appEnv === "local" && profileId) {
+    headers["x-buzz-local-bypass"] = "true";
+    headers["x-buzz-profile-id"] = profileId;
+  }
+
+  return {
+    url: createBuzzFunctionUrl("update-profile-settled", supabaseUrl),
+    init: {
+      body: JSON.stringify({ settled }),
+      headers,
+      method: "POST",
+    },
+  };
+};
+
 export const runMatchAction = async (
   input: CreateMatchActionRequestInput,
   fetcher: typeof fetch = fetch,
@@ -311,6 +362,38 @@ export const runFeedbackAction = async (
 
   if (body.feedbackCompletedAt) {
     result.feedbackCompletedAt = body.feedbackCompletedAt;
+  }
+
+  return result;
+};
+
+export const runSettledAction = async (
+  input: CreateSettledActionRequestInput,
+  fetcher: typeof fetch = fetch,
+): Promise<SettledActionResult> => {
+  const request = createSettledActionRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as Partial<SettledActionResult> & {
+    error?: string;
+  };
+
+  if (
+    !response.ok ||
+    !body.ok ||
+    !body.profileId ||
+    typeof body.settled !== "boolean"
+  ) {
+    throw new Error(body.error ?? "Unable to update matching availability");
+  }
+
+  const result: SettledActionResult = {
+    ok: true,
+    profileId: body.profileId,
+    settled: body.settled,
+  };
+
+  if (typeof body.visible === "boolean") {
+    result.visible = body.visible;
   }
 
   return result;

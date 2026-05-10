@@ -18,10 +18,11 @@ test("mobile package uses Expo Router as its entrypoint", () => {
   assert.deepEqual(tsconfig.compilerOptions?.paths?.["@graphql/*"], ["graphql/*"]);
 });
 
-test("mobile app exposes Expo Router layout, onboarding, home, and group routes", () => {
+test("mobile app exposes Expo Router layout, onboarding, home, profile, and group routes", () => {
   assert.equal(existsSync("app/_layout.tsx"), true);
   assert.equal(existsSync("app/index.tsx"), true);
   assert.equal(existsSync("app/home.tsx"), true);
+  assert.equal(existsSync("app/profile.tsx"), true);
   assert.equal(existsSync("app/groups/[id].tsx"), true);
   assert.equal(existsSync("src/app"), false);
 
@@ -32,6 +33,7 @@ test("mobile app exposes Expo Router layout, onboarding, home, and group routes"
   assert.doesNotMatch(layoutSource, /@\/app\/AppProviders/);
   assert.match(readFileSync("app/index.tsx", "utf8"), /OnboardingScreen/);
   assert.match(readFileSync("app/home.tsx", "utf8"), /HomeScreen/);
+  assert.match(readFileSync("app/profile.tsx", "utf8"), /ProfileScreen/);
   assert.match(readFileSync("app/groups/[id].tsx", "utf8"), /GroupScreen/);
   assert.match(readFileSync("src/features/groups/GroupScreen.tsx", "utf8"), /LL\.groups/);
 });

@@ -4,8 +4,10 @@ import test from "node:test";
 import {
   createAttendanceActionRequest,
   createFeedbackActionRequest,
+  createSettledActionRequest,
   runAttendanceAction,
   runFeedbackAction,
+  runSettledAction,
 } from "./functions";
 
 test("createAttendanceActionRequest targets record-attendance with local-only bypass headers", () => {
@@ -128,5 +130,63 @@ test("runFeedbackAction returns persisted feedback status", async () => {
     activityGroupId: "00000000-0000-0000-0000-000000000701",
     feedbackStatus: "completed",
     positiveFeedbackRecorded: true,
+  });
+});
+
+test("createSettledActionRequest targets update-profile-settled with local-only bypass headers", () => {
+  const request = createSettledActionRequest({
+    appEnv: "local",
+    profileId: "00000000-0000-0000-0000-000000000101",
+    settled: true,
+    supabaseAnonKey: "anon-key",
+    supabaseUrl: "http://localhost:54321",
+  });
+
+  assert.equal(
+    request.url,
+    "http://localhost:54321/functions/v1/update-profile-settled",
+  );
+  assert.equal(request.init.method, "POST");
+  assert.deepEqual(JSON.parse(String(request.init.body)), {
+    settled: true,
+  });
+  assert.equal(
+    (request.init.headers as Record<string, string>).apikey,
+    "anon-key",
+  );
+  assert.equal(
+    (request.init.headers as Record<string, string>)["x-buzz-local-bypass"],
+    "true",
+  );
+  assert.equal(
+    (request.init.headers as Record<string, string>)["x-buzz-profile-id"],
+    "00000000-0000-0000-0000-000000000101",
+  );
+});
+
+test("runSettledAction returns persisted settled status", async () => {
+  const result = await runSettledAction(
+    {
+      appEnv: "local",
+      profileId: "00000000-0000-0000-0000-000000000101",
+      settled: true,
+      supabaseAnonKey: "anon-key",
+      supabaseUrl: "http://localhost:54321",
+    },
+    async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          profileId: "00000000-0000-0000-0000-000000000101",
+          settled: true,
+        }),
+        { status: 200 },
+      ),
+  );
+
+  assert.deepEqual(result, {
+    ok: true,
+    profileId: "00000000-0000-0000-0000-000000000101",
+    settled: true,
   });
 });
