@@ -149,6 +149,20 @@ const en = {
   profile: {
     title: "Your profile",
     subtitle: "Keep your local plan and matching availability in one place.",
+    melbourneStartingPoint: {
+      eyebrow: "Melbourne starting point",
+      title: "Your {city:string} starting point",
+      body: "A compact read on where to start without turning Buzz into a city guide.",
+      areasTitle: "Areas you may enjoy exploring",
+      interestsTitle: "Best interests to activate first",
+      firstActionTitle: "Suggested first action",
+      actionPickInterest:
+        "Pick one interest you would genuinely show up for this week.",
+      actionActivateSelected:
+        "Activate {interest:string} when you are ready to form a small plan.",
+      actionAfterActivation:
+        "Keep your active interest warm while Buzz looks for a practical group plan.",
+    },
     landingPlan: {
       eyebrow: "Landing plan",
       first30Days: "Your first 30 days in {city:string}",

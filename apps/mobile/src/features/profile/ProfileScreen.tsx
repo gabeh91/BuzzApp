@@ -2,7 +2,10 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
-import { createCityContextFallback } from "@/features/city/cityContext";
+import {
+  createCityContextFallback,
+  isCityFeatureEnabled,
+} from "@/features/city/cityContext";
 import { getTopSuburbMatchesForTraits } from "@/features/city/suburbMatching";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import {
@@ -37,6 +40,30 @@ export const ProfileScreen = () => {
     traits,
   });
   const topSuburbs = topSuburbMatches.map((suburb) => suburb.name);
+  const showFullLandingPlan = isCityFeatureEnabled(
+    cityContext,
+    "landing_plan_enabled",
+  );
+  const showMelbourneStartingPoint = isCityFeatureEnabled(
+    cityContext,
+    "melbourne_starting_point_enabled",
+  );
+  const startingPointInterests = Array.from(
+    new Set([
+      ...(interestState.selectedInterest
+        ? [interestState.selectedInterest.name]
+        : []),
+      ...cityContext.defaultInterests,
+    ]),
+  ).slice(0, 3);
+  const suggestedFirstAction =
+    interestState.activation.status === "complete"
+      ? LL.profile.melbourneStartingPoint.actionAfterActivation()
+      : interestState.selectedInterest
+        ? LL.profile.melbourneStartingPoint.actionActivateSelected({
+            interest: interestState.selectedInterest.name,
+          })
+        : LL.profile.melbourneStartingPoint.actionPickInterest();
   const landingPlan = createLandingPlan({
     cityContext,
     selectedInterests: interestState.selectedInterest
@@ -129,78 +156,136 @@ export const ProfileScreen = () => {
         ) : null}
       </Panel>
 
-      <Panel variant="plain" style={styles.panel}>
-        <UiText variant="eyebrow">{LL.profile.landingPlan.eyebrow()}</UiText>
-        <UiText variant="panelTitle">
-          {LL.profile.landingPlan.first30Days({
-            city: cityContext.city.name,
-          })}
-        </UiText>
-        <View style={styles.suburbFitBlock}>
-          <Text style={styles.suburbFitTitle}>
-            {LL.profile.suburbFit.title()}
-          </Text>
-          <Text style={styles.suburbFitBody}>
-            {LL.profile.suburbFit.body()}
-          </Text>
-          <View style={styles.suburbFitList}>
-            {topSuburbMatches.map((suburb, index) => (
-              <View key={suburb.id} style={styles.suburbFitRow}>
-                <Text style={styles.suburbFitRank}>{index + 1}</Text>
-                <View style={styles.suburbFitCopy}>
-                  <Text style={styles.suburbFitName}>{suburb.name}</Text>
-                  <Text style={styles.suburbFitReason}>
-                    {suburb.reasons[0] ?? LL.profile.suburbFit.fallbackReason()}
-                  </Text>
+      {showMelbourneStartingPoint ? (
+        <Panel variant="plain" style={styles.panel}>
+          <UiText variant="eyebrow">
+            {LL.profile.melbourneStartingPoint.eyebrow()}
+          </UiText>
+          <UiText variant="panelTitle">
+            {LL.profile.melbourneStartingPoint.title({
+              city: cityContext.city.name,
+            })}
+          </UiText>
+          <UiText variant="panelBody">
+            {LL.profile.melbourneStartingPoint.body()}
+          </UiText>
+          <View style={styles.suburbFitBlock}>
+            <Text style={styles.suburbFitTitle}>
+              {LL.profile.melbourneStartingPoint.areasTitle()}
+            </Text>
+            <View style={styles.suburbFitList}>
+              {topSuburbMatches.map((suburb, index) => (
+                <View key={suburb.id} style={styles.suburbFitRow}>
+                  <Text style={styles.suburbFitRank}>{index + 1}</Text>
+                  <View style={styles.suburbFitCopy}>
+                    <Text style={styles.suburbFitName}>{suburb.name}</Text>
+                    <Text style={styles.suburbFitReason}>
+                      {suburb.reasons[0] ??
+                        LL.profile.suburbFit.fallbackReason()}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+          <View style={styles.suburbFitBlock}>
+            <Text style={styles.suburbFitTitle}>
+              {LL.profile.melbourneStartingPoint.interestsTitle()}
+            </Text>
+            <View style={styles.interestRow}>
+              {startingPointInterests.map((interest) => (
+                <Text key={interest} style={styles.interestPill}>
+                  {interest}
+                </Text>
+              ))}
+            </View>
+          </View>
+          <View style={styles.suburbFitBlock}>
+            <Text style={styles.suburbFitTitle}>
+              {LL.profile.melbourneStartingPoint.firstActionTitle()}
+            </Text>
+            <Text style={styles.suburbFitBody}>{suggestedFirstAction}</Text>
+          </View>
+        </Panel>
+      ) : null}
+
+      {showFullLandingPlan ? (
+        <Panel variant="plain" style={styles.panel}>
+          <UiText variant="eyebrow">{LL.profile.landingPlan.eyebrow()}</UiText>
+          <UiText variant="panelTitle">
+            {LL.profile.landingPlan.first30Days({
+              city: cityContext.city.name,
+            })}
+          </UiText>
+          <View style={styles.suburbFitBlock}>
+            <Text style={styles.suburbFitTitle}>
+              {LL.profile.suburbFit.title()}
+            </Text>
+            <Text style={styles.suburbFitBody}>
+              {LL.profile.suburbFit.body()}
+            </Text>
+            <View style={styles.suburbFitList}>
+              {topSuburbMatches.map((suburb, index) => (
+                <View key={suburb.id} style={styles.suburbFitRow}>
+                  <Text style={styles.suburbFitRank}>{index + 1}</Text>
+                  <View style={styles.suburbFitCopy}>
+                    <Text style={styles.suburbFitName}>{suburb.name}</Text>
+                    <Text style={styles.suburbFitReason}>
+                      {suburb.reasons[0] ??
+                        LL.profile.suburbFit.fallbackReason()}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+          <View style={styles.planList}>
+            {landingPlan.items.slice(0, 6).map((item) => (
+              <View
+                key={`${item.weekNumber}-${item.sortOrder}-${item.itemType}`}
+                style={styles.planItem}
+              >
+                <Text
+                  style={[
+                    styles.planStatus,
+                    item.status === "completed"
+                      ? styles.planStatusCompleted
+                      : item.status === "active"
+                        ? styles.planStatusActive
+                        : styles.planStatusPending,
+                  ]}
+                >
+                  {getLandingPlanStatusLabel(item.status)}
+                </Text>
+                <View style={styles.planItemCopy}>
+                  <Text style={styles.planItemTitle}>{item.title}</Text>
+                  <Text style={styles.planItemBody}>{item.description}</Text>
                 </View>
               </View>
             ))}
           </View>
-        </View>
-        <View style={styles.planList}>
-          {landingPlan.items.slice(0, 6).map((item) => (
-            <View
-              key={`${item.weekNumber}-${item.sortOrder}-${item.itemType}`}
-              style={styles.planItem}
-            >
-              <Text
-                style={[
-                  styles.planStatus,
-                  item.status === "completed"
-                    ? styles.planStatusCompleted
-                    : item.status === "active"
-                      ? styles.planStatusActive
-                      : styles.planStatusPending,
-                ]}
-              >
-                {getLandingPlanStatusLabel(item.status)}
-              </Text>
-              <View style={styles.planItemCopy}>
-                <Text style={styles.planItemTitle}>{item.title}</Text>
-                <Text style={styles.planItemBody}>{item.description}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      </Panel>
+        </Panel>
+      ) : null}
 
-      <Panel variant="muted" style={styles.panel}>
-        <UiText variant="eyebrow">
-          {LL.profile.settlingProgress.eyebrow()}
-        </UiText>
-        <UiText variant="panelTitle">
-          {LL.profile.settlingProgress.title({
-            percent: settlingProgress.percent,
-          })}
-        </UiText>
-        <UiText variant="panelBody">
-          {settlingProgress.nextStep
-            ? LL.profile.settlingProgress.nextStep({
-                step: settlingProgress.nextStep.label,
-              })
-            : LL.profile.settlingProgress.complete()}
-        </UiText>
-      </Panel>
+      {showFullLandingPlan ? (
+        <Panel variant="muted" style={styles.panel}>
+          <UiText variant="eyebrow">
+            {LL.profile.settlingProgress.eyebrow()}
+          </UiText>
+          <UiText variant="panelTitle">
+            {LL.profile.settlingProgress.title({
+              percent: settlingProgress.percent,
+            })}
+          </UiText>
+          <UiText variant="panelBody">
+            {settlingProgress.nextStep
+              ? LL.profile.settlingProgress.nextStep({
+                  step: settlingProgress.nextStep.label,
+                })
+              : LL.profile.settlingProgress.complete()}
+          </UiText>
+        </Panel>
+      ) : null}
     </Screen>
   );
 };
@@ -233,6 +318,22 @@ const createStyles = (theme: BuzzTheme) => {
     },
     suburbFitList: {
       gap: spacing[2],
+    },
+    interestRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing[2],
+    },
+    interestPill: {
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: radii.sm,
+      color: colors.brand,
+      fontSize: fontSizes.sm,
+      fontWeight: "900",
+      overflow: "hidden",
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+      textTransform: "capitalize",
     },
     suburbFitRow: {
       alignItems: "flex-start",

@@ -89,11 +89,15 @@ select
     'starterPackTitle', 'Your first 30 days in Melbourne'
   ),
   jsonb_build_object(
-    'neighbourhood_matching', true,
-    'landing_plan', true,
-    'bring_friend', true,
-    'safety_checks', true,
-    'starter_plans', false
+    'bring_friend_enabled', true,
+    'basic_safety_enabled', true,
+    'melbourne_starting_point_enabled', true,
+    'text_only_chat_enabled', true,
+    'group_first_matching_enabled', true,
+    'city_config_enabled', true,
+    'landing_plan_enabled', false,
+    'full_neighbourhood_recommender_enabled', false,
+    'starter_plans_enabled', false
   )
 from public.cities
 where cities.name = 'Melbourne'
@@ -117,34 +121,46 @@ with melbourne as (
 ),
 flags (feature_key, enabled, payload_json) as (
   values
-    ('neighbourhood_matching', true, '{}'::jsonb),
-    ('landing_plan', true, '{}'::jsonb),
-    ('bring_friend', true, '{}'::jsonb),
-    ('safety_checks', true, '{}'::jsonb),
-    ('starter_plans', false, '{}'::jsonb),
-    ('business_recommendations', false, '{}'::jsonb),
-    ('promoted_events', false, '{}'::jsonb),
-    ('lead_attribution', false, '{}'::jsonb),
-    ('ai_match_cards', false, '{}'::jsonb),
-    ('local_knowledge_qa', false, '{}'::jsonb),
-    ('verified_locals', false, '{}'::jsonb),
-    ('paid_hosts', false, '{}'::jsonb),
-    ('subscriptions', false, '{}'::jsonb)
+    ('bring_friend_enabled', true, '{}'::jsonb),
+    ('basic_safety_enabled', true, '{}'::jsonb),
+    ('melbourne_starting_point_enabled', true, '{}'::jsonb),
+    ('text_only_chat_enabled', true, '{}'::jsonb),
+    ('group_first_matching_enabled', true, '{}'::jsonb),
+    ('city_config_enabled', true, '{}'::jsonb),
+    ('landing_plan_enabled', false, '{}'::jsonb),
+    ('full_neighbourhood_recommender_enabled', false, '{}'::jsonb),
+    ('ai_match_cards_enabled', false, '{}'::jsonb),
+    ('local_knowledge_qa_enabled', false, '{}'::jsonb),
+    ('city_starter_packs_enabled', false, '{}'::jsonb),
+    ('starter_plans_enabled', false, '{}'::jsonb),
+    ('business_recommendations_enabled', false, '{}'::jsonb),
+    ('promoted_events_enabled', false, '{}'::jsonb),
+    ('lead_attribution_enabled', false, '{}'::jsonb),
+    ('verified_locals_enabled', false, '{}'::jsonb),
+    ('paid_hosts_enabled', false, '{}'::jsonb),
+    ('superhost_progression_enabled', false, '{}'::jsonb),
+    ('subscriptions_enabled', false, '{}'::jsonb),
+    ('multi_city_ui_enabled', false, '{}'::jsonb),
+    ('travel_mode_enabled', false, '{}'::jsonb),
+    ('one_to_one_meetups_enabled', false, '{}'::jsonb),
+    ('media_chat_enabled', false, '{}'::jsonb)
 )
 insert into public.city_feature_flags (
   city_id,
+  environment,
   feature_key,
   enabled,
   payload_json
 )
 select
   melbourne.id,
+  'local',
   flags.feature_key,
   flags.enabled,
   flags.payload_json
 from melbourne
 cross join flags
-on conflict (city_id, feature_key) do update
+on conflict (city_id, environment, feature_key) do update
 set
   enabled = excluded.enabled,
   payload_json = excluded.payload_json,

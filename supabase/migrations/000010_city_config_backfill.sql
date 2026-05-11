@@ -40,12 +40,13 @@ create table if not exists public.city_settings (
 create table if not exists public.city_feature_flags (
   id uuid primary key default gen_random_uuid(),
   city_id uuid not null references public.cities(id) on delete cascade,
+  environment text not null default 'local',
   feature_key text not null,
   enabled boolean not null default false,
   payload_json jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (city_id, feature_key)
+  unique (city_id, environment, feature_key)
 );
 
 create table if not exists public.city_interests (
@@ -59,7 +60,7 @@ create table if not exists public.city_interests (
 );
 
 create index if not exists city_feature_flags_city_enabled_idx
-  on public.city_feature_flags (city_id, enabled, feature_key);
+  on public.city_feature_flags (city_id, environment, enabled, feature_key);
 
 create index if not exists city_interests_city_sort_idx
   on public.city_interests (city_id, is_default desc, sort_order, interest_id);
