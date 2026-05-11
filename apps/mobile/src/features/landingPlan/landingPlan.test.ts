@@ -52,7 +52,7 @@ test("createLandingPlan wraps suburb fit, interests, groups, invites, and repeat
   assert.ok(plan.items.some((item) => item.itemType === "meet_again"));
 });
 
-test("profile screen gates the full landing plan and shows the Melbourne starting point by default", () => {
+test("profile screen gates the full landing plan and shows the city starting point by default", () => {
   const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
   const profileSource = readFileSync(
     "src/features/profile/ProfileScreen.tsx",
@@ -70,14 +70,17 @@ test("profile screen gates the full landing plan and shows the Melbourne startin
   assert.match(profileSource, /topSuburbMatches\.map/);
   assert.match(homeSource, /LL\.home\.suburbFit\.title/);
   assert.match(profileSource, /landing_plan_enabled/);
-  assert.match(profileSource, /melbourne_starting_point_enabled/);
+  assert.match(profileSource, /city_starting_point_enabled/);
   assert.match(profileSource, /showFullLandingPlan/);
-  assert.match(profileSource, /showMelbourneStartingPoint/);
+  assert.match(profileSource, /showCityStartingPoint/);
   assert.match(profileSource, /landingPlan\.items/);
   assert.match(profileSource, /LL\.profile\.landingPlan/);
-  assert.match(profileSource, /LL\.profile\.melbourneStartingPoint/);
+  assert.match(profileSource, /LL\.profile\.cityStartingPoint/);
+  assert.doesNotMatch(profileSource, /melbourne_starting_point_enabled/);
+  assert.doesNotMatch(profileSource, /melbourneStartingPoint/);
   assert.match(translationsSource, /landingPlan:/);
-  assert.match(translationsSource, /melbourneStartingPoint:/);
+  assert.match(translationsSource, /cityStartingPoint:/);
+  assert.doesNotMatch(translationsSource, /Melbourne starting point/);
   assert.match(translationsSource, /suburbFit:/);
   assert.match(translationsSource, /first30Days/);
 });

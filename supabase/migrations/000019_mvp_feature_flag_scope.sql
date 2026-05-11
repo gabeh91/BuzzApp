@@ -31,7 +31,7 @@ with scope_flags (key, enabled) as (
   values
     ('bring_friend_enabled', true),
     ('basic_safety_enabled', true),
-    ('melbourne_starting_point_enabled', true),
+    ('city_starting_point_enabled', true),
     ('text_only_chat_enabled', true),
     ('group_first_matching_enabled', true),
     ('city_config_enabled', true),

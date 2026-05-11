@@ -149,8 +149,8 @@ const en = {
   profile: {
     title: "Your profile",
     subtitle: "Keep your local plan and matching availability in one place.",
-    melbourneStartingPoint: {
-      eyebrow: "Melbourne starting point",
+    cityStartingPoint: {
+      eyebrow: "Starting point",
       title: "Your {city:string} starting point",
       body: "A compact read on where to start without turning Buzz into a city guide.",
       areasTitle: "Areas you may enjoy exploring",

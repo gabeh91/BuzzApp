@@ -44,9 +44,9 @@ export const ProfileScreen = () => {
     cityContext,
     "landing_plan_enabled",
   );
-  const showMelbourneStartingPoint = isCityFeatureEnabled(
+  const showCityStartingPoint = isCityFeatureEnabled(
     cityContext,
-    "melbourne_starting_point_enabled",
+    "city_starting_point_enabled",
   );
   const startingPointInterests = Array.from(
     new Set([
@@ -58,12 +58,12 @@ export const ProfileScreen = () => {
   ).slice(0, 3);
   const suggestedFirstAction =
     interestState.activation.status === "complete"
-      ? LL.profile.melbourneStartingPoint.actionAfterActivation()
+      ? LL.profile.cityStartingPoint.actionAfterActivation()
       : interestState.selectedInterest
-        ? LL.profile.melbourneStartingPoint.actionActivateSelected({
+        ? LL.profile.cityStartingPoint.actionActivateSelected({
             interest: interestState.selectedInterest.name,
           })
-        : LL.profile.melbourneStartingPoint.actionPickInterest();
+        : LL.profile.cityStartingPoint.actionPickInterest();
   const landingPlan = createLandingPlan({
     cityContext,
     selectedInterests: interestState.selectedInterest
@@ -156,22 +156,22 @@ export const ProfileScreen = () => {
         ) : null}
       </Panel>
 
-      {showMelbourneStartingPoint ? (
+      {showCityStartingPoint ? (
         <Panel variant="plain" style={styles.panel}>
           <UiText variant="eyebrow">
-            {LL.profile.melbourneStartingPoint.eyebrow()}
+            {LL.profile.cityStartingPoint.eyebrow()}
           </UiText>
           <UiText variant="panelTitle">
-            {LL.profile.melbourneStartingPoint.title({
+            {LL.profile.cityStartingPoint.title({
               city: cityContext.city.name,
             })}
           </UiText>
           <UiText variant="panelBody">
-            {LL.profile.melbourneStartingPoint.body()}
+            {LL.profile.cityStartingPoint.body()}
           </UiText>
           <View style={styles.suburbFitBlock}>
             <Text style={styles.suburbFitTitle}>
-              {LL.profile.melbourneStartingPoint.areasTitle()}
+              {LL.profile.cityStartingPoint.areasTitle()}
             </Text>
             <View style={styles.suburbFitList}>
               {topSuburbMatches.map((suburb, index) => (
@@ -190,7 +190,7 @@ export const ProfileScreen = () => {
           </View>
           <View style={styles.suburbFitBlock}>
             <Text style={styles.suburbFitTitle}>
-              {LL.profile.melbourneStartingPoint.interestsTitle()}
+              {LL.profile.cityStartingPoint.interestsTitle()}
             </Text>
             <View style={styles.interestRow}>
               {startingPointInterests.map((interest) => (
@@ -202,7 +202,7 @@ export const ProfileScreen = () => {
           </View>
           <View style={styles.suburbFitBlock}>
             <Text style={styles.suburbFitTitle}>
-              {LL.profile.melbourneStartingPoint.firstActionTitle()}
+              {LL.profile.cityStartingPoint.firstActionTitle()}
             </Text>
             <Text style={styles.suburbFitBody}>{suggestedFirstAction}</Text>
           </View>

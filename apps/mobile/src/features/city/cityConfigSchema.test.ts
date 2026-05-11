@@ -6,6 +6,8 @@ const migrationPath =
   "../../supabase/migrations/000010_city_config_backfill.sql";
 const scopeMigrationPath =
   "../../supabase/migrations/000019_mvp_feature_flag_scope.sql";
+const cityStartingPointRenamePath =
+  "../../supabase/migrations/000022_rename_city_starting_point_flag.sql";
 const seedPath = "../../supabase/seed.sql";
 
 test("city config migration adds rollout settings and city-scoped feature flags", () => {
@@ -56,7 +58,8 @@ test("Melbourne seed data defines MVP city settings, flags, and interest availab
   assert.match(seedSource, /insert into public\.city_feature_flags/);
   assert.match(seedSource, /bring_friend_enabled/);
   assert.match(seedSource, /basic_safety_enabled/);
-  assert.match(seedSource, /melbourne_starting_point_enabled/);
+  assert.match(seedSource, /city_starting_point_enabled/);
+  assert.doesNotMatch(seedSource, /melbourne_starting_point_enabled/);
   assert.match(seedSource, /text_only_chat_enabled/);
   assert.match(seedSource, /group_first_matching_enabled/);
   assert.match(seedSource, /city_config_enabled/);
@@ -81,7 +84,26 @@ test("MVP scope migration adds environment-aware remote feature flag defaults", 
   assert.match(migrationSource, /add column if not exists payload_json/);
   assert.match(migrationSource, /bring_friend_enabled', true/);
   assert.match(migrationSource, /basic_safety_enabled', true/);
-  assert.match(migrationSource, /melbourne_starting_point_enabled', true/);
+  assert.match(migrationSource, /city_starting_point_enabled', true/);
+  assert.doesNotMatch(migrationSource, /melbourne_starting_point_enabled/);
   assert.match(migrationSource, /landing_plan_enabled', false/);
   assert.match(migrationSource, /media_chat_enabled', false/);
+});
+
+test("city starting point migration renames existing Melbourne scoped flags", () => {
+  assert.equal(
+    existsSync(cityStartingPointRenamePath),
+    true,
+    "city starting point flag rename migration should exist",
+  );
+
+  const migrationSource = readFileSync(cityStartingPointRenamePath, "utf8");
+
+  assert.match(migrationSource, /city_starting_point_enabled/);
+  assert.match(migrationSource, /melbourne_starting_point_enabled/);
+  assert.match(migrationSource, /insert into public\.feature_flags/);
+  assert.match(migrationSource, /delete from public\.feature_flags/);
+  assert.match(migrationSource, /insert into public\.city_feature_flags/);
+  assert.match(migrationSource, /delete from public\.city_feature_flags/);
+  assert.match(migrationSource, /update public\.city_settings/);
 });

@@ -12,7 +12,7 @@ import {
   runCityContextRequest,
 } from "@/lib/functions";
 
-test("createCityContextFallback exposes Melbourne defaults without hardcoded feature checks in screens", () => {
+test("createCityContextFallback exposes city starting point defaults without hardcoded feature checks in screens", () => {
   const context = createCityContextFallback({
     cityId: "city-melbourne",
     cityName: "Melbourne",
@@ -28,8 +28,12 @@ test("createCityContextFallback exposes Melbourne defaults without hardcoded fea
   assert.equal(context.matching.defaultGroupSizeMin, 3);
   assert.equal(context.matching.defaultGroupSizeMax, 5);
   assert.equal(
-    isCityFeatureEnabled(context, "melbourne_starting_point_enabled"),
+    isCityFeatureEnabled(context, "city_starting_point_enabled"),
     true,
+  );
+  assert.equal(
+    isCityFeatureEnabled(context, "melbourne_starting_point_enabled"),
+    false,
   );
   assert.equal(isCityFeatureEnabled(context, "landing_plan_enabled"), false);
   assert.equal(

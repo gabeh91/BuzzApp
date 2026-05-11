@@ -91,7 +91,7 @@ select
   jsonb_build_object(
     'bring_friend_enabled', true,
     'basic_safety_enabled', true,
-    'melbourne_starting_point_enabled', true,
+    'city_starting_point_enabled', true,
     'text_only_chat_enabled', true,
     'group_first_matching_enabled', true,
     'city_config_enabled', true,
@@ -123,7 +123,7 @@ flags (feature_key, enabled, payload_json) as (
   values
     ('bring_friend_enabled', true, '{}'::jsonb),
     ('basic_safety_enabled', true, '{}'::jsonb),
-    ('melbourne_starting_point_enabled', true, '{}'::jsonb),
+    ('city_starting_point_enabled', true, '{}'::jsonb),
     ('text_only_chat_enabled', true, '{}'::jsonb),
     ('group_first_matching_enabled', true, '{}'::jsonb),
     ('city_config_enabled', true, '{}'::jsonb),
