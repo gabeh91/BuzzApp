@@ -13,7 +13,7 @@ import { runMatchAction } from "@/lib/functions";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button, Header, Panel, Screen, Text as UiText } from "@/ui";
+import { Button, Header, HeroPanel, Panel, Screen, Text as UiText } from "@/ui";
 import { createHomePlanCopy } from "./homePlanCopy";
 
 type MatchActionStatus =
@@ -107,11 +107,11 @@ export const HomeScreen = () => {
         right={<UiText variant="city">{cityContext.city.name}</UiText>}
       />
 
-      <Panel style={styles.heroCard}>
-        <UiText variant="eyebrow">{LL.home.firstPlan()}</UiText>
-        <UiText variant="title">{planCopy.title}</UiText>
-        <UiText variant="body">{planCopy.body}</UiText>
-      </Panel>
+      <HeroPanel
+        body={planCopy.body}
+        eyebrow={LL.home.firstPlan()}
+        title={planCopy.title}
+      />
 
       <Panel variant="muted" style={styles.panel}>
         <UiText variant="panelTitle">{LL.home.suggestedNextStep()}</UiText>
@@ -166,30 +166,13 @@ export const HomeScreen = () => {
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const {
-    colors,
-    fontSizes,
-    lineHeights,
-    radii,
-    spacing,
-    borderWidths,
-    shadows,
-  } = theme;
+  const { colors, fontSizes, lineHeights, radii, spacing } = theme;
 
   return StyleSheet.create({
     content: {
       flexGrow: 1,
       padding: spacing[6],
       gap: spacing[5],
-    },
-    heroCard: {
-      backgroundColor: colors.surface,
-      borderRadius: radii["2xl"],
-      padding: spacing[6],
-      borderWidth: borderWidths.hairline,
-      borderColor: colors.border,
-      gap: spacing[3],
-      ...shadows.card,
     },
     panel: {
       backgroundColor: colors.surfaceMuted,

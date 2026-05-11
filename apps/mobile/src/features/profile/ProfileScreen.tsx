@@ -16,7 +16,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { runSettledAction } from "@/lib/functions";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button, Header, Panel, Screen, Text as UiText } from "@/ui";
+import { Button, Header, HeroPanel, Panel, Screen, Text as UiText } from "@/ui";
 
 type SettledActionStatus = "idle" | "saving" | "error";
 
@@ -98,11 +98,11 @@ export const ProfileScreen = () => {
         right={<UiText variant="city">{cityContext.city.name}</UiText>}
       />
 
-      <Panel style={styles.heroCard}>
-        <UiText variant="eyebrow">{cityContext.city.name}</UiText>
-        <UiText variant="title">{LL.profile.title()}</UiText>
-        <UiText variant="body">{LL.profile.subtitle()}</UiText>
-      </Panel>
+      <HeroPanel
+        body={LL.profile.subtitle()}
+        eyebrow={cityContext.city.name}
+        title={LL.profile.title()}
+      />
 
       <Panel variant="muted" style={styles.panel}>
         <UiText variant="panelTitle">{LL.profile.settled.title()}</UiText>
@@ -213,9 +213,6 @@ const createStyles = (theme: BuzzTheme) => {
       flexGrow: 1,
       gap: spacing[5],
       padding: spacing[6],
-    },
-    heroCard: {
-      gap: spacing[3],
     },
     panel: {
       gap: spacing[3],

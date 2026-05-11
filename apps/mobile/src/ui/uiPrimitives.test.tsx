@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { ReactElement } from "react";
 
 import { ThemeProvider } from "@/theme/ThemeProvider";
-import { Button, Header, Panel, Screen, Text } from "@/ui";
+import { Button, Header, HeroPanel, Panel, Screen, Text } from "@/ui";
 
 const renderWithTheme = (ui: ReactElement) =>
   render(<ThemeProvider>{ui}</ThemeProvider>);
@@ -40,6 +40,22 @@ describe("UI primitives", () => {
     fireEvent.press(screen.getByRole("button", { name: "Accept plan" }));
 
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders the shared hero panel with consistent content slots", () => {
+    renderWithTheme(
+      <HeroPanel
+        body="One reusable card defines the hero spacing."
+        eyebrow="Melbourne"
+        title="Your profile"
+      />,
+    );
+
+    expect(screen.getByText("Melbourne")).toBeTruthy();
+    expect(screen.getByText("Your profile")).toBeTruthy();
+    expect(
+      screen.getByText("One reusable card defines the hero spacing."),
+    ).toBeTruthy();
   });
 
   it("keeps disabled buttons inert", () => {

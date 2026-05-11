@@ -8,6 +8,7 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   assert.equal(existsSync("src/ui/Panel.tsx"), true);
   assert.equal(existsSync("src/ui/Button.tsx"), true);
   assert.equal(existsSync("src/ui/Header.tsx"), true);
+  assert.equal(existsSync("src/ui/HeroPanel.tsx"), true);
   assert.equal(existsSync("src/ui/index.ts"), true);
 
   const screenSource = readFileSync("src/ui/Screen.tsx", "utf8");
@@ -15,6 +16,7 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   const buttonSource = readFileSync("src/ui/Button.tsx", "utf8");
   const panelSource = readFileSync("src/ui/Panel.tsx", "utf8");
   const headerSource = readFileSync("src/ui/Header.tsx", "utf8");
+  const heroPanelSource = readFileSync("src/ui/HeroPanel.tsx", "utf8");
   const indexSource = readFileSync("src/ui/index.ts", "utf8");
 
   assert.match(screenSource, /SafeAreaView/);
@@ -24,7 +26,13 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   assert.match(panelSource, /variant/);
   assert.match(headerSource, /left/);
   assert.match(headerSource, /right/);
-  assert.doesNotMatch(indexSource, /Buzz(Screen|Text|Panel|Button|Header)/);
+  assert.match(heroPanelSource, /eyebrow/);
+  assert.match(heroPanelSource, /title/);
+  assert.match(heroPanelSource, /body/);
+  assert.doesNotMatch(
+    indexSource,
+    /Buzz(Screen|Text|Panel|Button|Header|HeroPanel)/,
+  );
 });
 
 test("Home and Group screens consume shared UI primitives instead of duplicating every primitive style", () => {
@@ -43,4 +51,17 @@ test("Home and Group screens consume shared UI primitives instead of duplicating
   assert.match(groupSource, /@\/ui/);
   assert.match(groupSource, /<Header/);
   assert.match(groupSource, /<Button/);
+});
+
+test("Home and Profile screens share the same hero panel component", () => {
+  const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
+  const profileSource = readFileSync(
+    "src/features/profile/ProfileScreen.tsx",
+    "utf8",
+  );
+
+  assert.match(homeSource, /HeroPanel/);
+  assert.match(profileSource, /HeroPanel/);
+  assert.doesNotMatch(homeSource, /heroCard/);
+  assert.doesNotMatch(profileSource, /heroCard/);
 });
