@@ -3,12 +3,167 @@ import test from "node:test";
 
 import {
   createAttendanceActionRequest,
+  createAcceptInviteActionRequest,
+  createInviteActionRequest,
   createFeedbackActionRequest,
+  createResolveInviteActionRequest,
   createSettledActionRequest,
+  runAcceptInviteAction,
   runAttendanceAction,
+  runCreateInviteAction,
   runFeedbackAction,
+  runResolveInviteAction,
   runSettledAction,
 } from "./functions";
+
+test("createInviteActionRequest targets create-invite with local-only bypass headers", () => {
+  const request = createInviteActionRequest({
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+    appEnv: "local",
+    profileId: "00000000-0000-0000-0000-000000000101",
+    supabaseAnonKey: "anon-key",
+    supabaseUrl: "http://localhost:54321",
+  });
+
+  assert.equal(
+    request.url,
+    "http://localhost:54321/functions/v1/create-invite",
+  );
+  assert.equal(request.init.method, "POST");
+  assert.deepEqual(JSON.parse(String(request.init.body)), {
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+  });
+  assert.equal(
+    (request.init.headers as Record<string, string>).apikey,
+    "anon-key",
+  );
+  assert.equal(
+    (request.init.headers as Record<string, string>)["x-buzz-local-bypass"],
+    "true",
+  );
+  assert.equal(
+    (request.init.headers as Record<string, string>)["x-buzz-profile-id"],
+    "00000000-0000-0000-0000-000000000101",
+  );
+});
+
+test("runCreateInviteAction returns a shareable token", async () => {
+  const result = await runCreateInviteAction(
+    {
+      activityGroupId: "00000000-0000-0000-0000-000000000701",
+      appEnv: "local",
+      profileId: "00000000-0000-0000-0000-000000000101",
+      supabaseAnonKey: "anon-key",
+      supabaseUrl: "http://localhost:54321",
+    },
+    async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          inviteId: "invite-1",
+          token: "token-123",
+          tokenPreview: "token-12",
+          expiresAt: "2026-05-14T00:00:00.000Z",
+        }),
+      ),
+  );
+
+  assert.deepEqual(result, {
+    ok: true,
+    inviteId: "invite-1",
+    token: "token-123",
+    tokenPreview: "token-12",
+    expiresAt: "2026-05-14T00:00:00.000Z",
+  });
+});
+
+test("resolve and accept invite requests preserve invite tokens through the backend", () => {
+  const resolveRequest = createResolveInviteActionRequest({
+    token: "token-123",
+    supabaseAnonKey: "anon-key",
+    supabaseUrl: "http://localhost:54321",
+  });
+  const acceptRequest = createAcceptInviteActionRequest({
+    appEnv: "local",
+    profileId: "00000000-0000-0000-0000-000000000102",
+    supabaseAnonKey: "anon-key",
+    supabaseUrl: "http://localhost:54321",
+    token: "token-123",
+  });
+
+  assert.equal(
+    resolveRequest.url,
+    "http://localhost:54321/functions/v1/resolve-invite",
+  );
+  assert.deepEqual(JSON.parse(String(resolveRequest.init.body)), {
+    token: "token-123",
+  });
+  assert.equal(
+    acceptRequest.url,
+    "http://localhost:54321/functions/v1/accept-invite",
+  );
+  assert.deepEqual(JSON.parse(String(acceptRequest.init.body)), {
+    token: "token-123",
+  });
+  assert.equal(
+    (acceptRequest.init.headers as Record<string, string>)[
+      "x-buzz-local-bypass"
+    ],
+    "true",
+  );
+});
+
+test("runResolveInviteAction and runAcceptInviteAction return invite group context", async () => {
+  const resolved = await runResolveInviteAction(
+    {
+      supabaseUrl: "http://localhost:54321",
+      token: "token-123",
+    },
+    async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          inviteId: "invite-1",
+          activityGroupId: "group-1",
+          inviterId: "user-1",
+          status: "active",
+          expiresAt: "2026-05-14T00:00:00.000Z",
+        }),
+      ),
+  );
+  const accepted = await runAcceptInviteAction(
+    {
+      appEnv: "local",
+      profileId: "00000000-0000-0000-0000-000000000102",
+      supabaseUrl: "http://localhost:54321",
+      token: "token-123",
+    },
+    async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          inviteId: "invite-1",
+          activityGroupId: "group-1",
+          status: "accepted",
+        }),
+      ),
+  );
+
+  assert.deepEqual(resolved, {
+    ok: true,
+    inviteId: "invite-1",
+    activityGroupId: "group-1",
+    inviterId: "user-1",
+    status: "active",
+    expiresAt: "2026-05-14T00:00:00.000Z",
+  });
+  assert.deepEqual(accepted, {
+    ok: true,
+    inviteId: "invite-1",
+    activityGroupId: "group-1",
+    status: "accepted",
+  });
+});
 
 test("createAttendanceActionRequest targets record-attendance with local-only bypass headers", () => {
   const request = createAttendanceActionRequest({

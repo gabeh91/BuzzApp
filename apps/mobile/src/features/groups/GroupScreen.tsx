@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Share, StyleSheet, Text, View } from "react-native";
 
 import {
   useGroupMessagesQuery,
@@ -28,7 +28,11 @@ import {
   createReportDraft,
 } from "@/features/safety/safetyActions";
 import { useI18n } from "@/i18n/I18nProvider";
-import { runAttendanceAction, runFeedbackAction } from "@/lib/functions";
+import {
+  runAttendanceAction,
+  runCreateInviteAction,
+  runFeedbackAction,
+} from "@/lib/functions";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
@@ -81,6 +85,8 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const isLocalGroup = groupId.startsWith("local-");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteFeedback, setInviteFeedback] = useState<string | null>(null);
+  const [inviteCreating, setInviteCreating] = useState(false);
   const [attendanceFeedback, setAttendanceFeedback] = useState<string | null>(
     null,
   );
@@ -222,16 +228,37 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     setSafetyFeedback(LL.groups.safety.leaveReady());
   };
 
-  const handlePrepareInvite = () => {
+  const handlePrepareInvite = async () => {
     const inviteDraft = createInviteDraft({
       activityGroupId: group.id,
       inviterId: user.id,
     });
-    const token = `${inviteDraft.activityGroupId}:${inviteDraft.inviterId}`;
 
-    setInviteLink(
-      createGroupInviteLink({ origin: "https://buzz.local", token }),
-    );
+    setInviteCreating(true);
+    setInviteFeedback(null);
+
+    try {
+      const token = isLocalGroup
+        ? `${inviteDraft.activityGroupId}:${inviteDraft.inviterId}`
+        : (
+            await runCreateInviteAction({
+              activityGroupId: inviteDraft.activityGroupId,
+              profileId: user.id,
+            })
+          ).token;
+      const link = createGroupInviteLink({
+        origin: process.env.EXPO_PUBLIC_INVITE_ORIGIN ?? "https://buzz.local",
+        token,
+      });
+
+      setInviteLink(link);
+      await Share.share({ message: link });
+      setInviteFeedback(LL.groups.invites.shared());
+    } catch {
+      setInviteFeedback(LL.groups.invites.failed());
+    } finally {
+      setInviteCreating(false);
+    }
   };
 
   const confirmAttendance = async () => {
@@ -407,7 +434,12 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
           <Text style={styles.detailBody}>{LL.groups.invites.body()}</Text>
         </View>
         <Button
-          label={LL.groups.invites.create()}
+          disabled={inviteCreating}
+          label={
+            inviteCreating
+              ? LL.groups.invites.creating()
+              : LL.groups.invites.create()
+          }
           onPress={handlePrepareInvite}
           style={styles.inviteAction}
           variant="neutral"
@@ -419,6 +451,9 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
               {inviteLink}
             </Text>
           </View>
+        ) : null}
+        {inviteFeedback ? (
+          <Text style={styles.safetyFeedback}>{inviteFeedback}</Text>
         ) : null}
       </View>
 

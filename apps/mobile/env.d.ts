@@ -9,6 +9,7 @@ declare const process: {
     EXPO_PUBLIC_DEMO_DISPLAY_NAME?: string;
     EXPO_PUBLIC_DEMO_CITY_ID?: string;
     EXPO_PUBLIC_DEMO_CITY_NAME?: string;
+    EXPO_PUBLIC_INVITE_ORIGIN?: string;
     EXPO_PUBLIC_SENTRY_DSN?: string;
     EXPO_PUBLIC_POSTHOG_PUBLIC_KEY?: string;
     EXPO_PUBLIC_POSTHOG_HOST?: string;

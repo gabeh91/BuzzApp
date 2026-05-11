@@ -35,6 +35,31 @@ export type SettledActionResult = {
   visible?: boolean;
 };
 
+export type CreateInviteActionResult = {
+  ok: boolean;
+  inviteId: string;
+  token: string;
+  tokenPreview: string;
+  expiresAt: string;
+};
+
+export type ResolveInviteActionResult = {
+  ok: boolean;
+  inviteId: string;
+  activityGroupId: string;
+  inviterId: string;
+  status: string;
+  expiresAt: string;
+  activityPlanId?: string;
+};
+
+export type AcceptInviteActionResult = {
+  ok: boolean;
+  inviteId: string;
+  activityGroupId: string;
+  status: "accepted";
+};
+
 export type CreateMatchActionRequestInput = {
   action: MatchAction;
   matchCandidateId: string;
@@ -81,6 +106,28 @@ export type CreateCityContextRequestInput = {
   supabaseUrl?: string;
 };
 
+export type CreateInviteActionRequestInput = {
+  activityGroupId: string;
+  activityPlanId?: string;
+  accessToken?: string;
+  profileId?: string;
+  appEnv?: string;
+  supabaseAnonKey?: string;
+  supabaseUrl?: string;
+};
+
+export type ResolveInviteActionRequestInput = {
+  token: string;
+  accessToken?: string;
+  supabaseAnonKey?: string;
+  supabaseUrl?: string;
+};
+
+export type AcceptInviteActionRequestInput = ResolveInviteActionRequestInput & {
+  profileId?: string;
+  appEnv?: string;
+};
+
 const defaultSupabaseUrl =
   process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const defaultSupabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
@@ -96,6 +143,37 @@ export const createBuzzFunctionUrl = (
   supabaseUrl = defaultSupabaseUrl,
 ): string => {
   return `${supabaseUrl.replace(/\/$/, "")}/functions/v1/${functionName}`;
+};
+
+const createFunctionHeaders = ({
+  accessToken,
+  appEnv,
+  profileId,
+  supabaseAnonKey,
+}: {
+  accessToken?: string | undefined;
+  appEnv?: string | undefined;
+  profileId?: string | undefined;
+  supabaseAnonKey?: string | undefined;
+}): Record<string, string> => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (supabaseAnonKey) {
+    headers.apikey = supabaseAnonKey;
+  }
+
+  if (accessToken) {
+    headers.authorization = `Bearer ${accessToken}`;
+  }
+
+  if (appEnv === "local" && profileId) {
+    headers["x-buzz-local-bypass"] = "true";
+    headers["x-buzz-profile-id"] = profileId;
+  }
+
+  return headers;
 };
 
 export const createCityContextRequest = ({
@@ -196,6 +274,75 @@ export const createAttendanceActionRequest = ({
     init: {
       body: JSON.stringify({ activityGroupId }),
       headers,
+      method: "POST",
+    },
+  };
+};
+
+export const createInviteActionRequest = ({
+  accessToken,
+  activityGroupId,
+  activityPlanId,
+  appEnv = defaultAppEnv,
+  profileId,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl,
+}: CreateInviteActionRequestInput): MatchActionRequest => {
+  return {
+    url: createBuzzFunctionUrl("create-invite", supabaseUrl),
+    init: {
+      body: JSON.stringify({
+        activityGroupId,
+        ...(activityPlanId ? { activityPlanId } : {}),
+      }),
+      headers: createFunctionHeaders({
+        accessToken,
+        appEnv,
+        profileId,
+        supabaseAnonKey,
+      }),
+      method: "POST",
+    },
+  };
+};
+
+export const createResolveInviteActionRequest = ({
+  accessToken,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl,
+  token,
+}: ResolveInviteActionRequestInput): MatchActionRequest => {
+  return {
+    url: createBuzzFunctionUrl("resolve-invite", supabaseUrl),
+    init: {
+      body: JSON.stringify({ token }),
+      headers: createFunctionHeaders({
+        accessToken,
+        supabaseAnonKey,
+      }),
+      method: "POST",
+    },
+  };
+};
+
+export const createAcceptInviteActionRequest = ({
+  accessToken,
+  appEnv = defaultAppEnv,
+  profileId,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl,
+  token,
+}: AcceptInviteActionRequestInput): MatchActionRequest => {
+  return {
+    url: createBuzzFunctionUrl("accept-invite", supabaseUrl),
+    init: {
+      body: JSON.stringify({ token }),
+      headers: createFunctionHeaders({
+        accessToken,
+        appEnv,
+        profileId,
+        supabaseAnonKey,
+      }),
       method: "POST",
     },
   };
@@ -365,6 +512,102 @@ export const runFeedbackAction = async (
   }
 
   return result;
+};
+
+export const runCreateInviteAction = async (
+  input: CreateInviteActionRequestInput,
+  fetcher: typeof fetch = fetch,
+): Promise<CreateInviteActionResult> => {
+  const request = createInviteActionRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as Partial<CreateInviteActionResult> & {
+    error?: string;
+  };
+
+  if (
+    !response.ok ||
+    !body.ok ||
+    !body.inviteId ||
+    !body.token ||
+    !body.tokenPreview ||
+    !body.expiresAt
+  ) {
+    throw new Error(body.error ?? "Unable to create invite");
+  }
+
+  return {
+    ok: true,
+    inviteId: body.inviteId,
+    token: body.token,
+    tokenPreview: body.tokenPreview,
+    expiresAt: body.expiresAt,
+  };
+};
+
+export const runResolveInviteAction = async (
+  input: ResolveInviteActionRequestInput,
+  fetcher: typeof fetch = fetch,
+): Promise<ResolveInviteActionResult> => {
+  const request = createResolveInviteActionRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as Partial<ResolveInviteActionResult> & {
+    error?: string;
+  };
+
+  if (
+    !response.ok ||
+    !body.ok ||
+    !body.inviteId ||
+    !body.activityGroupId ||
+    !body.inviterId ||
+    !body.status ||
+    !body.expiresAt
+  ) {
+    throw new Error(body.error ?? "Unable to resolve invite");
+  }
+
+  const result: ResolveInviteActionResult = {
+    ok: true,
+    inviteId: body.inviteId,
+    activityGroupId: body.activityGroupId,
+    inviterId: body.inviterId,
+    status: body.status,
+    expiresAt: body.expiresAt,
+  };
+
+  if (body.activityPlanId) {
+    result.activityPlanId = body.activityPlanId;
+  }
+
+  return result;
+};
+
+export const runAcceptInviteAction = async (
+  input: AcceptInviteActionRequestInput,
+  fetcher: typeof fetch = fetch,
+): Promise<AcceptInviteActionResult> => {
+  const request = createAcceptInviteActionRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as Partial<AcceptInviteActionResult> & {
+    error?: string;
+  };
+
+  if (
+    !response.ok ||
+    !body.ok ||
+    !body.inviteId ||
+    !body.activityGroupId ||
+    body.status !== "accepted"
+  ) {
+    throw new Error(body.error ?? "Unable to accept invite");
+  }
+
+  return {
+    ok: true,
+    inviteId: body.inviteId,
+    activityGroupId: body.activityGroupId,
+    status: "accepted",
+  };
 };
 
 export const runSettledAction = async (
