@@ -40,7 +40,7 @@ Mobile rendered strings should live in the `typesafe-i18n` locale layer and be c
 
 Before building mobile screens or UI, read `docs/UI_COMPONENT_GUIDELINES.md`.
 
-Prefer reusable, categorized componentry over per-screen styling. If two screens render the same UI pattern, extract or reuse a component and drive differences through props. Screens should compose shared primitives/composites and keep local styles limited to feature layout, not repeated card/header/button/hero treatment.
+Prefer reusable, categorized componentry over per-screen styling. If two screens render the same UI pattern, extract or reuse a component and drive differences through props. Screens should compose shared primitives/composites and keep local styles limited to feature layout, not repeated card/header/button/hero treatment. The guideline also covers hook extraction, React context/provider use, `StyleSheet`/theme-token use, root navigation placement, i18n, typography, and Jest/React Native Testing Library expectations.
 
 ---
 

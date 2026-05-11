@@ -78,6 +78,149 @@ Before building or editing a screen:
 4. Keep screen-local styles limited to layout composition, not repeated chrome.
 5. Add or update tests that enforce reuse when the pattern is important.
 
+For mobile screen work, treat this as a required pre-flight check, not a cleanup task at the
+end. Reusable structure should be part of the first implementation, not something agents add
+only after drift is visible.
+
+## Hooks and State Guidelines
+
+Use hooks deliberately and consistently.
+
+- Use existing provider hooks before introducing new state paths: `useI18n`, `useBuzzTheme`,
+  `useBuzzAuth`, `useQuiz`, `useInterestFlow`, and `useSettlingProgressState`.
+- Keep hooks at the top of React components. Do not call hooks conditionally, inside callbacks,
+  loops, or nested helpers.
+- Extract repeated state/data behavior into a custom hook before duplicating it across screens.
+- Keep reusable visual components mostly presentational. Pass content and event handlers through
+  props instead of making every component reach into feature providers.
+- Keep screen components responsible for assembling feature data, route actions, and top-level
+  interactions.
+- Do not surface hook/provider/library names in rendered copy. Technical implementation terms
+  belong in code, tests, and docs, not user-facing UI.
+
+Good hook extraction candidates:
+
+- repeated route/navigation logic
+- repeated progress or status derivation
+- repeated API action state such as `idle`, `saving`, `error`
+- repeated feature data mapping before rendering a shared component
+
+Avoid:
+
+- copying the same `useState`/`try`/`catch` action flow into multiple screens
+- creating hooks that only wrap a single local variable
+- making shared UI primitives depend on feature-specific providers
+
+## Context and Provider Guidelines
+
+Use React context for app-level or feature-level state that genuinely needs to be shared across
+multiple branches of the component tree.
+
+Good context candidates:
+
+- authenticated user/session boundary
+- theme and design tokens
+- i18n/locale access
+- onboarding flow state
+- quiz answers and derived traits
+- active interest flow state
+- settling progress state shared across Home/Profile/Group
+
+Avoid context for:
+
+- state used by only one component or one tightly scoped subtree
+- temporary form field state
+- one-off loading/error flags local to a button or card
+- values that can be passed cleanly as props through one or two levels
+- purely visual component configuration
+
+Provider rules:
+
+- Keep providers focused on one domain. Do not create a broad catch-all app context.
+- Expose domain-specific hooks such as `useQuiz()` or `useInterestFlow()` rather than raw context
+  objects.
+- Throw a clear error if a provider hook is used outside its provider.
+- Keep provider values small and stable. Memoize derived values when churn causes unnecessary
+  renders.
+- Split providers when unrelated state changes would cause large parts of the app to re-render.
+- Do not put server persistence details directly into shared visual components through context.
+  Screens or feature components should coordinate persistence and pass props down.
+- Prefer props for reusable UI primitives and composites. Context dependencies make shared UI
+  harder to reuse and test.
+
+When adding a new context, document why props or a local hook are not enough.
+
+## StyleSheet and Token Guidelines
+
+Use `StyleSheet.create` and theme tokens for React Native styling.
+
+- Prefer styles created from `useBuzzTheme()` and `BuzzTheme` tokens.
+- Use shared primitives/composites for repeated visual treatment before adding screen-local
+  styles.
+- Keep screen-local `StyleSheet` objects focused on layout: section gaps, rows, grids, and
+  feature-specific list alignment.
+- Do not hardcode repeated padding, border radius, shadows, colors, or typography values in
+  feature screens.
+- Do not inline large style objects in JSX. Inline styles should be limited to truly dynamic
+  values.
+- Do not hardcode font families or weights in screens. Use `Text` variants or theme font
+  styles.
+- Do not copy a style block from one screen to another. Extract it into a component.
+- Remove dead local styles when a screen moves to shared components.
+
+When reviewing a screen, search for repeated local style names such as:
+
+- `heroCard`
+- `primaryAction`
+- `secondaryAction`
+- `statusBadge`
+- `sectionHeader`
+- `planItem`
+- `card`
+
+If the same name or visual treatment appears in more than one place, prefer a shared component.
+
+## Navigation and Information Architecture
+
+Root-level navigation should use the bottom tab bar.
+
+- Use bottom tabs for root destinations such as activity discovery and profile/progress.
+- Do not add top-button navigation between root screens when the tab bar already owns that job.
+- Keep detail or workflow routes, such as groups and invite joins, outside the root tabs when
+  they are contextual.
+- Put content where users expect it: discovery/activity surfaces on Home, profile/progress and
+  personal plan context on Profile.
+
+## UX Density and Onboarding
+
+Keep onboarding compact and low-friction.
+
+- Avoid adding extra screens or barriers before a user has joined.
+- Prefer collecting additional matching signals inside existing quiz/profile steps when possible.
+- If new city or lifestyle signals are needed, add them without bloating the visible onboarding
+  flow.
+- Keep first-run screens focused on the next practical action, not broad explanation.
+
+## Copy and i18n
+
+Rendered strings should use the locale layer.
+
+- Put mobile copy in `apps/mobile/src/i18n`.
+- Consume copy through the app i18n hook/context.
+- Avoid hardcoded rendered copy in screens, shared components, and flow models.
+- Keep user-facing copy product-focused, not implementation-focused.
+
+## Typography and Fonts
+
+Use the app typography system.
+
+- iOS display/body can use Avenir Next through theme tokens.
+- Android should use bundled Metropolis faces through theme tokens.
+- Mono text should use the bundled Menlo faces through theme tokens.
+- Screens should not pick platform fonts directly.
+- If a font weight does not display correctly on Android, prefer the explicit bundled font face
+  over relying on weight resolution.
+
 ## What Belongs in Shared Components
 
 Shared components should own:
@@ -119,6 +262,7 @@ Use plain component names:
 When adding reusable UI:
 
 - Add a React Native Testing Library test for rendered content and basic accessibility.
+- Use Jest and `@testing-library/react-native` for component behavior and rendering tests.
 - Add source-level guard tests only when useful to prevent architectural drift.
 - Prefer testing real components. Do not assert on mock component existence.
 
@@ -127,6 +271,17 @@ When fixing repeated UI drift:
 - Add a test that fails while screens are using separate local styles.
 - Refactor the screens to consume the shared component.
 - Keep the test focused on the architectural rule: reuse the component, not a brittle pixel value.
+
+When changing navigation:
+
+- Add or update route/source tests for the Expo Router file structure.
+- Add component tests for reusable navigation visuals when practical.
+
+When changing feature behavior:
+
+- Prefer TDD: write the failing test first, watch it fail, then implement.
+- Cover shared logic with focused logic tests.
+- Cover reusable UI with React Native Testing Library tests.
 
 ## Examples
 
@@ -162,5 +317,10 @@ Before finishing screen/UI work, check:
 - Did I create a shared component for repeated patterns?
 - Did I avoid hardcoding repeated padding/radius/shadow values in screen styles?
 - Are differences between screens driven by props rather than copied styles?
+- Did I use theme tokens and `StyleSheet.create` instead of ad hoc styling?
+- Did I extract repeated hook/state logic instead of copying it between screens?
+- Is root navigation handled by the bottom tabs rather than top buttons?
+- Is the screen contextually placed in the right area of the app?
 - Are rendered strings still coming from i18n where appropriate?
+- Did I add Jest/React Native Testing Library coverage for reusable UI?
 - Did I add tests that make the reuse expectation clear?
