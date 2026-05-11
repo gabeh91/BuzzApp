@@ -13,6 +13,10 @@ test("root scaffold configures GraphQL codegen for Apollo hooks", () => {
   assert.match(packageJson.contents, /"graphql:codegen": "graphql-codegen --config codegen\.ts"/);
   assert.match(packageJson.contents, /"graphql:codegen:watch": "graphql-codegen --config codegen\.ts --watch"/);
   assert.match(packageJson.contents, /"supabase:migrate": "supabase migration up"/);
+  assert.match(packageJson.contents, /"supabase:reset": "bash scripts\/db\/reset-local\.sh"/);
+  assert.match(packageJson.contents, /"supabase:reset:baseline": "supabase db reset"/);
+  assert.match(packageJson.contents, /"supabase:seed:demo": "bash scripts\/db\/seed-demo\.sh"/);
+  assert.match(packageJson.contents, /"db:seed:demo": "bash scripts\/db\/seed-demo\.sh"/);
   assert.match(packageJson.contents, /"@graphql-codegen\/cli": "latest"/);
   assert.match(packageJson.contents, /"@graphql-codegen\/typescript-react-apollo": "latest"/);
 

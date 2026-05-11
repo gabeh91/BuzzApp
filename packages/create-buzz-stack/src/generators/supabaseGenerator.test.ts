@@ -98,15 +98,25 @@ test("supabase scaffold includes backend interest activation matching migration"
 test("supabase scaffold includes deterministic candidate scoring and demo match fixtures", () => {
   const files = generateSupabaseFiles();
   const seedSql = files.find((file) => file.path === "supabase/seed.sql");
+  const demoSeedSql = files.find((file) => file.path === "supabase/seed.demo.sql");
   const migration = files.find((file) => file.path === "supabase/migrations/000009_mvp_deterministic_candidates.sql");
+  const cleanupMigration = files.find(
+    (file) => file.path === "supabase/migrations/000023_remove_demo_fixture_data.sql"
+  );
 
   assert.ok(seedSql);
+  assert.ok(demoSeedSql);
   assert.ok(migration);
+  assert.ok(cleanupMigration);
   assert.match(migration.contents, /current_profile\.quiz_traits->>'socialStyle'/);
   assert.match(migration.contents, /least\(\s*0\.94/);
   assert.match(migration.contents, /order by matched_profile\.match_score desc/);
+  assert.doesNotMatch(seedSql.contents, /Sam Rivera/);
+  assert.doesNotMatch(migration.contents, /Sam Rivera/);
+  assert.match(cleanupMigration.contents, /delete from public\.profiles/);
+  assert.match(cleanupMigration.contents, /Northside Tennis/);
 
-  for (const source of [seedSql.contents, migration.contents]) {
+  for (const source of [demoSeedSql.contents]) {
     assert.match(source, /00000000-0000-0000-0000-000000000201/);
     assert.match(source, /Sam Rivera/);
     assert.match(source, /00000000-0000-0000-0000-000000000202/);
