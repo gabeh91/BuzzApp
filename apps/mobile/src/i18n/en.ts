@@ -256,11 +256,18 @@ const en = {
       block: "Block",
       leave: "Leave group",
       reportReady: "Report draft ready for review.",
+      reportSubmitted: "Report submitted.",
+      reportFailed:
+        "We could not submit that report yet. Try again in a moment.",
       reportUnavailable: "Add a reason before a report can be submitted.",
       blockReady: "{name:string} can be blocked before more matching.",
+      blockSaved: "{name:string} will no longer be matched with you.",
+      blockFailed: "We could not block that member yet. Try again in a moment.",
       blockUnavailable:
         "Block becomes available when a matched member is attached.",
       leaveReady: "You can leave this group before the plan is confirmed.",
+      leaveConfirmed: "You have left this group.",
+      leaveFailed: "We could not leave that group yet. Try again in a moment.",
     },
   },
   chat: {

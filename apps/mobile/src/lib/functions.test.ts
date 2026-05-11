@@ -4,14 +4,20 @@ import test from "node:test";
 import {
   createAttendanceActionRequest,
   createAcceptInviteActionRequest,
+  createBlockActionRequest,
   createInviteActionRequest,
   createFeedbackActionRequest,
+  createLeaveGroupActionRequest,
+  createReportActionRequest,
   createResolveInviteActionRequest,
   createSettledActionRequest,
   runAcceptInviteAction,
   runAttendanceAction,
+  runBlockAction,
   runCreateInviteAction,
   runFeedbackAction,
+  runLeaveGroupAction,
+  runReportAction,
   runResolveInviteAction,
   runSettledAction,
 } from "./functions";
@@ -343,5 +349,162 @@ test("runSettledAction returns persisted settled status", async () => {
     ok: true,
     profileId: "00000000-0000-0000-0000-000000000101",
     settled: true,
+  });
+});
+
+test("createReportActionRequest targets report-safety with group context and local-only bypass headers", () => {
+  const request = createReportActionRequest({
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+    appEnv: "local",
+    category: "unsafe",
+    details: "Kept pushing for a private venue.",
+    profileId: "00000000-0000-0000-0000-000000000101",
+    reason: "Group safety check",
+    supabaseAnonKey: "anon-key",
+    supabaseUrl: "http://localhost:54321",
+    targetUserId: "00000000-0000-0000-0000-000000000102",
+  });
+
+  assert.equal(
+    request.url,
+    "http://localhost:54321/functions/v1/report-safety",
+  );
+  assert.equal(request.init.method, "POST");
+  assert.deepEqual(JSON.parse(String(request.init.body)), {
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+    category: "unsafe",
+    details: "Kept pushing for a private venue.",
+    reason: "Group safety check",
+    targetUserId: "00000000-0000-0000-0000-000000000102",
+  });
+  assert.equal(
+    (request.init.headers as Record<string, string>).apikey,
+    "anon-key",
+  );
+  assert.equal(
+    (request.init.headers as Record<string, string>)["x-buzz-local-bypass"],
+    "true",
+  );
+  assert.equal(
+    (request.init.headers as Record<string, string>)["x-buzz-profile-id"],
+    "00000000-0000-0000-0000-000000000101",
+  );
+});
+
+test("runReportAction returns the persisted report status", async () => {
+  const result = await runReportAction(
+    {
+      activityGroupId: "00000000-0000-0000-0000-000000000701",
+      appEnv: "local",
+      category: "unsafe",
+      profileId: "00000000-0000-0000-0000-000000000101",
+      reason: "Group safety check",
+      supabaseUrl: "http://localhost:54321",
+      targetUserId: "00000000-0000-0000-0000-000000000102",
+    },
+    async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          reportId: "00000000-0000-0000-0000-000000000901",
+          status: "open",
+        }),
+      ),
+  );
+
+  assert.deepEqual(result, {
+    ok: true,
+    reportId: "00000000-0000-0000-0000-000000000901",
+    status: "open",
+  });
+});
+
+test("createBlockActionRequest targets block-user with local-only bypass headers", () => {
+  const request = createBlockActionRequest({
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+    appEnv: "local",
+    blockedId: "00000000-0000-0000-0000-000000000102",
+    profileId: "00000000-0000-0000-0000-000000000101",
+    supabaseAnonKey: "anon-key",
+    supabaseUrl: "http://localhost:54321",
+  });
+
+  assert.equal(request.url, "http://localhost:54321/functions/v1/block-user");
+  assert.deepEqual(JSON.parse(String(request.init.body)), {
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+    blockedId: "00000000-0000-0000-0000-000000000102",
+  });
+  assert.equal(
+    (request.init.headers as Record<string, string>)["x-buzz-local-bypass"],
+    "true",
+  );
+});
+
+test("runBlockAction returns the persisted block id", async () => {
+  const result = await runBlockAction(
+    {
+      appEnv: "local",
+      blockedId: "00000000-0000-0000-0000-000000000102",
+      profileId: "00000000-0000-0000-0000-000000000101",
+      supabaseUrl: "http://localhost:54321",
+    },
+    async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          blockId: "00000000-0000-0000-0000-000000000902",
+          blockedId: "00000000-0000-0000-0000-000000000102",
+        }),
+      ),
+  );
+
+  assert.deepEqual(result, {
+    ok: true,
+    blockId: "00000000-0000-0000-0000-000000000902",
+    blockedId: "00000000-0000-0000-0000-000000000102",
+  });
+});
+
+test("createLeaveGroupActionRequest targets leave-group with local-only bypass headers", () => {
+  const request = createLeaveGroupActionRequest({
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+    appEnv: "local",
+    profileId: "00000000-0000-0000-0000-000000000101",
+    supabaseAnonKey: "anon-key",
+    supabaseUrl: "http://localhost:54321",
+  });
+
+  assert.equal(request.url, "http://localhost:54321/functions/v1/leave-group");
+  assert.deepEqual(JSON.parse(String(request.init.body)), {
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+  });
+  assert.equal(
+    (request.init.headers as Record<string, string>)["x-buzz-local-bypass"],
+    "true",
+  );
+});
+
+test("runLeaveGroupAction returns the left group status", async () => {
+  const result = await runLeaveGroupAction(
+    {
+      activityGroupId: "00000000-0000-0000-0000-000000000701",
+      appEnv: "local",
+      profileId: "00000000-0000-0000-0000-000000000101",
+      supabaseUrl: "http://localhost:54321",
+    },
+    async () =>
+      new Response(
+        JSON.stringify({
+          ok: true,
+          activityGroupId: "00000000-0000-0000-0000-000000000701",
+          status: "left",
+        }),
+      ),
+  );
+
+  assert.deepEqual(result, {
+    ok: true,
+    activityGroupId: "00000000-0000-0000-0000-000000000701",
+    status: "left",
   });
 });

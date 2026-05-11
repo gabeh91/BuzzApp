@@ -60,6 +60,36 @@ export type AcceptInviteActionResult = {
   status: "accepted";
 };
 
+export type ReportActionStatus =
+  | "open"
+  | "reviewing"
+  | "resolved"
+  | "dismissed";
+export type ReportActionCategory =
+  | "unsafe"
+  | "harassment"
+  | "spam"
+  | "no_show"
+  | "other";
+
+export type ReportActionResult = {
+  ok: boolean;
+  reportId: string;
+  status: ReportActionStatus;
+};
+
+export type BlockActionResult = {
+  ok: boolean;
+  blockId: string;
+  blockedId: string;
+};
+
+export type LeaveGroupActionResult = {
+  ok: boolean;
+  activityGroupId: string;
+  status: "left";
+};
+
 export type CreateMatchActionRequestInput = {
   action: MatchAction;
   matchCandidateId: string;
@@ -126,6 +156,38 @@ export type ResolveInviteActionRequestInput = {
 export type AcceptInviteActionRequestInput = ResolveInviteActionRequestInput & {
   profileId?: string;
   appEnv?: string;
+};
+
+export type CreateReportActionRequestInput = {
+  reason: string;
+  category?: ReportActionCategory;
+  details?: string;
+  targetUserId?: string;
+  activityGroupId?: string;
+  accessToken?: string;
+  profileId?: string;
+  appEnv?: string;
+  supabaseAnonKey?: string;
+  supabaseUrl?: string;
+};
+
+export type CreateBlockActionRequestInput = {
+  blockedId: string;
+  activityGroupId?: string;
+  accessToken?: string;
+  profileId?: string;
+  appEnv?: string;
+  supabaseAnonKey?: string;
+  supabaseUrl?: string;
+};
+
+export type CreateLeaveGroupActionRequestInput = {
+  activityGroupId: string;
+  accessToken?: string;
+  profileId?: string;
+  appEnv?: string;
+  supabaseAnonKey?: string;
+  supabaseUrl?: string;
 };
 
 const defaultSupabaseUrl =
@@ -337,6 +399,89 @@ export const createAcceptInviteActionRequest = ({
     url: createBuzzFunctionUrl("accept-invite", supabaseUrl),
     init: {
       body: JSON.stringify({ token }),
+      headers: createFunctionHeaders({
+        accessToken,
+        appEnv,
+        profileId,
+        supabaseAnonKey,
+      }),
+      method: "POST",
+    },
+  };
+};
+
+export const createReportActionRequest = ({
+  accessToken,
+  activityGroupId,
+  appEnv = defaultAppEnv,
+  category,
+  details,
+  profileId,
+  reason,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl,
+  targetUserId,
+}: CreateReportActionRequestInput): MatchActionRequest => {
+  return {
+    url: createBuzzFunctionUrl("report-safety", supabaseUrl),
+    init: {
+      body: JSON.stringify({
+        ...(activityGroupId ? { activityGroupId } : {}),
+        ...(category ? { category } : {}),
+        ...(details ? { details } : {}),
+        reason,
+        ...(targetUserId ? { targetUserId } : {}),
+      }),
+      headers: createFunctionHeaders({
+        accessToken,
+        appEnv,
+        profileId,
+        supabaseAnonKey,
+      }),
+      method: "POST",
+    },
+  };
+};
+
+export const createBlockActionRequest = ({
+  accessToken,
+  activityGroupId,
+  appEnv = defaultAppEnv,
+  blockedId,
+  profileId,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl,
+}: CreateBlockActionRequestInput): MatchActionRequest => {
+  return {
+    url: createBuzzFunctionUrl("block-user", supabaseUrl),
+    init: {
+      body: JSON.stringify({
+        ...(activityGroupId ? { activityGroupId } : {}),
+        blockedId,
+      }),
+      headers: createFunctionHeaders({
+        accessToken,
+        appEnv,
+        profileId,
+        supabaseAnonKey,
+      }),
+      method: "POST",
+    },
+  };
+};
+
+export const createLeaveGroupActionRequest = ({
+  accessToken,
+  activityGroupId,
+  appEnv = defaultAppEnv,
+  profileId,
+  supabaseAnonKey = defaultSupabaseAnonKey,
+  supabaseUrl = defaultSupabaseUrl,
+}: CreateLeaveGroupActionRequestInput): MatchActionRequest => {
+  return {
+    url: createBuzzFunctionUrl("leave-group", supabaseUrl),
+    init: {
+      body: JSON.stringify({ activityGroupId }),
       headers: createFunctionHeaders({
         accessToken,
         appEnv,
@@ -607,6 +752,74 @@ export const runAcceptInviteAction = async (
     inviteId: body.inviteId,
     activityGroupId: body.activityGroupId,
     status: "accepted",
+  };
+};
+
+export const runReportAction = async (
+  input: CreateReportActionRequestInput,
+  fetcher: typeof fetch = fetch,
+): Promise<ReportActionResult> => {
+  const request = createReportActionRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as Partial<ReportActionResult> & {
+    error?: string;
+  };
+
+  if (!response.ok || !body.ok || !body.reportId || !body.status) {
+    throw new Error(body.error ?? "Unable to submit report");
+  }
+
+  return {
+    ok: true,
+    reportId: body.reportId,
+    status: body.status,
+  };
+};
+
+export const runBlockAction = async (
+  input: CreateBlockActionRequestInput,
+  fetcher: typeof fetch = fetch,
+): Promise<BlockActionResult> => {
+  const request = createBlockActionRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as Partial<BlockActionResult> & {
+    error?: string;
+  };
+
+  if (!response.ok || !body.ok || !body.blockId || !body.blockedId) {
+    throw new Error(body.error ?? "Unable to block member");
+  }
+
+  return {
+    ok: true,
+    blockId: body.blockId,
+    blockedId: body.blockedId,
+  };
+};
+
+export const runLeaveGroupAction = async (
+  input: CreateLeaveGroupActionRequestInput,
+  fetcher: typeof fetch = fetch,
+): Promise<LeaveGroupActionResult> => {
+  const request = createLeaveGroupActionRequest(input);
+  const response = await fetcher(request.url, request.init);
+  const body = (await response.json()) as Partial<LeaveGroupActionResult> & {
+    error?: string;
+  };
+
+  if (
+    !response.ok ||
+    !body.ok ||
+    !body.activityGroupId ||
+    body.status !== "left"
+  ) {
+    throw new Error(body.error ?? "Unable to leave group");
+  }
+
+  return {
+    ok: true,
+    activityGroupId: body.activityGroupId,
+    status: "left",
   };
 };
 

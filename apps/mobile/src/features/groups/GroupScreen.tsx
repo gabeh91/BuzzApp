@@ -30,8 +30,11 @@ import {
 import { useI18n } from "@/i18n/I18nProvider";
 import {
   runAttendanceAction,
+  runBlockAction,
   runCreateInviteAction,
   runFeedbackAction,
+  runLeaveGroupAction,
+  runReportAction,
 } from "@/lib/functions";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
@@ -93,6 +96,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const [attendanceSubmitting, setAttendanceSubmitting] = useState(false);
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
+  const [safetySubmitting, setSafetySubmitting] = useState(false);
   const [confirmationStatus, setConfirmationStatus] =
     useState<ActivityPlanConfirmationStatus>("pending");
   const { markAttendanceConfirmed, markFeedbackCompleted, markGroupJoined } =
@@ -190,7 +194,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     return LL.groups.planCard.pending();
   };
 
-  const handlePrepareReport = () => {
+  const handlePrepareReport = async () => {
     const draft = createReportDraft({
       activityGroupId: group.id,
       category: "unsafe",
@@ -198,14 +202,34 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
       reporterId: user.id,
     });
 
-    setSafetyFeedback(
-      draft.canSubmit
-        ? LL.groups.safety.reportReady()
-        : LL.groups.safety.reportUnavailable(),
-    );
+    if (!draft.canSubmit) {
+      setSafetyFeedback(LL.groups.safety.reportUnavailable());
+      return;
+    }
+
+    if (isLocalGroup) {
+      setSafetyFeedback(LL.groups.safety.reportSubmitted());
+      return;
+    }
+
+    setSafetySubmitting(true);
+
+    try {
+      await runReportAction({
+        activityGroupId: group.id,
+        category: draft.category,
+        profileId: user.id,
+        reason: draft.reason,
+      });
+      setSafetyFeedback(LL.groups.safety.reportSubmitted());
+    } catch {
+      setSafetyFeedback(LL.groups.safety.reportFailed());
+    } finally {
+      setSafetySubmitting(false);
+    }
   };
 
-  const handlePrepareBlock = () => {
+  const handlePrepareBlock = async () => {
     if (!match) {
       setSafetyFeedback(LL.groups.safety.blockUnavailable());
       return;
@@ -217,15 +241,55 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
       blockerId: user.id,
     });
 
-    setSafetyFeedback(
-      payload.source === "group"
-        ? LL.groups.safety.blockReady({ name: match.displayName })
-        : LL.groups.safety.blockUnavailable(),
-    );
+    if (payload.source !== "group") {
+      setSafetyFeedback(LL.groups.safety.blockUnavailable());
+      return;
+    }
+
+    if (isLocalGroup) {
+      setSafetyFeedback(
+        LL.groups.safety.blockSaved({ name: match.displayName }),
+      );
+      return;
+    }
+
+    setSafetySubmitting(true);
+
+    try {
+      await runBlockAction({
+        activityGroupId: group.id,
+        blockedId: payload.blockedId,
+        profileId: user.id,
+      });
+      setSafetyFeedback(
+        LL.groups.safety.blockSaved({ name: match.displayName }),
+      );
+    } catch {
+      setSafetyFeedback(LL.groups.safety.blockFailed());
+    } finally {
+      setSafetySubmitting(false);
+    }
   };
 
-  const handlePrepareLeave = () => {
-    setSafetyFeedback(LL.groups.safety.leaveReady());
+  const handlePrepareLeave = async () => {
+    if (isLocalGroup) {
+      setSafetyFeedback(LL.groups.safety.leaveConfirmed());
+      return;
+    }
+
+    setSafetySubmitting(true);
+
+    try {
+      await runLeaveGroupAction({
+        activityGroupId: group.id,
+        profileId: user.id,
+      });
+      setSafetyFeedback(LL.groups.safety.leaveConfirmed());
+    } catch {
+      setSafetyFeedback(LL.groups.safety.leaveFailed());
+    } finally {
+      setSafetySubmitting(false);
+    }
   };
 
   const handlePrepareInvite = async () => {
@@ -403,18 +467,21 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
         </View>
         <View style={styles.safetyActions}>
           <Button
+            disabled={safetySubmitting}
             label={LL.groups.safety.report()}
             onPress={handlePrepareReport}
             style={styles.safetyAction}
             variant="neutral"
           />
           <Button
+            disabled={safetySubmitting}
             label={LL.groups.safety.block()}
             onPress={handlePrepareBlock}
             style={styles.safetyAction}
             variant="neutral"
           />
           <Button
+            disabled={safetySubmitting}
             label={LL.groups.safety.leave()}
             onPress={handlePrepareLeave}
             style={styles.safetyAction}
