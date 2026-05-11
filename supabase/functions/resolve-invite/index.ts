@@ -11,10 +11,13 @@ type InviteRow = {
   expires_at: string;
 };
 
-const jsonResponse = (body: Record<string, unknown>, status = 200): Response => {
+const jsonResponse = (
+  body: Record<string, unknown>,
+  status = 200,
+): Response => {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" }
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 };
 
@@ -30,8 +33,10 @@ const readToken = async (request: Request): Promise<string> => {
 };
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (request.method !== "POST") return jsonError("Method not allowed", 405, corsHeaders);
+  if (request.method === "OPTIONS")
+    return new Response("ok", { headers: corsHeaders });
+  if (request.method !== "POST")
+    return jsonError("Method not allowed", 405, corsHeaders);
 
   const serviceClient = createServiceRoleClient();
 
@@ -39,14 +44,27 @@ Deno.serve(async (request) => {
     const token = await readToken(request);
     const { data: invite, error } = await serviceClient
       .from("group_invites")
-      .select("id, activity_group_id, activity_plan_id, inviter_id, status, expires_at")
+      .select(
+        "id, activity_group_id, activity_plan_id, inviter_id, status, expires_at",
+      )
       .eq("token_hash", token)
       .eq("status", "active")
       .gt("expires_at", new Date().toISOString())
       .maybeSingle<InviteRow>();
 
     if (error) throw error;
-    if (!invite) return jsonError("Invite not found or expired", 404, corsHeaders);
+    if (!invite)
+      return jsonError("Invite not found or expired", 404, corsHeaders);
+
+    const { error: eventError } = await serviceClient
+      .from("group_invite_events")
+      .insert({
+        activity_group_id: invite.activity_group_id,
+        event_type: "resolved",
+        invite_id: invite.id,
+      });
+
+    if (eventError) throw eventError;
 
     return jsonResponse({
       ok: true,
@@ -55,10 +73,11 @@ Deno.serve(async (request) => {
       activityPlanId: invite.activity_plan_id,
       inviterId: invite.inviter_id,
       status: invite.status,
-      expiresAt: invite.expires_at
+      expiresAt: invite.expires_at,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to resolve invite";
+    const message =
+      error instanceof Error ? error.message : "Unable to resolve invite";
     return jsonError(message, 400, corsHeaders);
   }
 });

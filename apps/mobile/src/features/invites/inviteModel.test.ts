@@ -9,6 +9,8 @@ import {
 } from "./inviteModel";
 
 const migrationPath = "../../supabase/migrations/000016_invites_backfill.sql";
+const inviteCapacityAnalyticsPath =
+  "../../supabase/migrations/000020_invite_capacity_analytics.sql";
 
 test("invite migration and Edge Functions add contextual group invite tokens", () => {
   assert.equal(
@@ -56,6 +58,48 @@ test("invite migration and Edge Functions add contextual group invite tokens", (
   assert.match(resolveInviteSource, /expires_at/);
   assert.match(acceptInviteSource, /activity_group_members/);
   assert.match(acceptInviteSource, /use_count/);
+});
+
+test("invite acceptance checks group capacity and records lightweight invite analytics", () => {
+  assert.equal(
+    existsSync(inviteCapacityAnalyticsPath),
+    true,
+    "invite capacity and analytics migration should exist",
+  );
+
+  const migrationSource = readFileSync(inviteCapacityAnalyticsPath, "utf8");
+  const createInviteSource = readFileSync(
+    "../../supabase/functions/create-invite/index.ts",
+    "utf8",
+  );
+  const resolveInviteSource = readFileSync(
+    "../../supabase/functions/resolve-invite/index.ts",
+    "utf8",
+  );
+  const acceptInviteSource = readFileSync(
+    "../../supabase/functions/accept-invite/index.ts",
+    "utf8",
+  );
+
+  assert.match(
+    migrationSource,
+    /create unique index if not exists activity_group_members_group_user_unique/,
+  );
+  assert.match(
+    migrationSource,
+    /create table if not exists public\.group_invite_events/,
+  );
+  assert.match(migrationSource, /event_type text not null/);
+  assert.match(createInviteSource, /\.from\("group_invite_events"\)/);
+  assert.match(createInviteSource, /event_type:\s*"created"/);
+  assert.match(resolveInviteSource, /\.from\("group_invite_events"\)/);
+  assert.match(resolveInviteSource, /event_type:\s*"resolved"/);
+  assert.match(acceptInviteSource, /capacity_max/);
+  assert.match(acceptInviteSource, /count:\s*"exact"/);
+  assert.match(acceptInviteSource, /Group is full/);
+  assert.match(acceptInviteSource, /\.from\("group_invite_events"\)/);
+  assert.match(acceptInviteSource, /recordInviteEvent\("accepted"/);
+  assert.match(acceptInviteSource, /recordInviteEvent\("rejected_full"/);
 });
 
 test("invite model builds safe group invite drafts and deep links", () => {

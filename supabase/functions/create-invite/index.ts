@@ -3,17 +3,24 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { jsonError } from "../_shared/errors.ts";
 import { createServiceRoleClient } from "../_shared/supabase.ts";
 
-const jsonResponse = (body: Record<string, unknown>, status = 200): Response => {
+const jsonResponse = (
+  body: Record<string, unknown>,
+  status = 200,
+): Response => {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" }
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 };
 
 const readInviteInput = async (request: Request) => {
   const body = await request.json().catch(() => ({}));
-  const activityGroupId = typeof body.activityGroupId === "string" ? body.activityGroupId.trim() : "";
-  const activityPlanId = typeof body.activityPlanId === "string" ? body.activityPlanId.trim() : undefined;
+  const activityGroupId =
+    typeof body.activityGroupId === "string" ? body.activityGroupId.trim() : "";
+  const activityPlanId =
+    typeof body.activityPlanId === "string"
+      ? body.activityPlanId.trim()
+      : undefined;
 
   if (!activityGroupId) {
     throw new Error("activityGroupId is required");
@@ -21,13 +28,15 @@ const readInviteInput = async (request: Request) => {
 
   return {
     activityGroupId,
-    activityPlanId
+    activityPlanId,
   };
 };
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (request.method !== "POST") return jsonError("Method not allowed", 405, corsHeaders);
+  if (request.method === "OPTIONS")
+    return new Response("ok", { headers: corsHeaders });
+  if (request.method !== "POST")
+    return jsonError("Method not allowed", 405, corsHeaders);
 
   const serviceClient = createServiceRoleClient();
 
@@ -45,22 +54,34 @@ Deno.serve(async (request) => {
         expires_at: expiresAt,
         inviter_id: profileId,
         token_hash: token,
-        token_preview: token.slice(0, 8)
+        token_preview: token.slice(0, 8),
       })
       .select("id, token_preview, expires_at")
       .single<{ id: string; token_preview: string; expires_at: string }>();
 
     if (error) throw error;
 
+    const { error: eventError } = await serviceClient
+      .from("group_invite_events")
+      .insert({
+        activity_group_id: activityGroupId,
+        actor_id: profileId,
+        event_type: "created",
+        invite_id: invite.id,
+      });
+
+    if (eventError) throw eventError;
+
     return jsonResponse({
       ok: true,
       inviteId: invite.id,
       token,
       tokenPreview: invite.token_preview,
-      expiresAt: invite.expires_at
+      expiresAt: invite.expires_at,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to create invite";
+    const message =
+      error instanceof Error ? error.message : "Unable to create invite";
     const status = message === "Authentication required" ? 401 : 400;
     return jsonError(message, status, corsHeaders);
   }
