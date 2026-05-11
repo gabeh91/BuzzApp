@@ -26,6 +26,7 @@ The MVP should prove whether users will:
 Everything else is secondary until that loop is proven.
 
 ### HOWEVER
+
 A High fidelity, highly-polished, intuitive, modern, clean, user-friendly UI and UX is PARAMOUNT. We're talking shared element transitions for pages that need it. Amazing animations, interpolated user scroll experiences, that sort of thing.
 This is the only thing which will set Buzz apart from other mobile apps. This is VERY important during Component/Screen building.
 
@@ -34,6 +35,12 @@ This is the only thing which will set Buzz apart from other mobile apps. This is
 Rendered product copy must be user-facing, not implementation-facing. Do not show terms like hook names, provider names, GraphQL, mock/demo mode, deterministic matching, route libraries, auth boundaries, or fallback data in mobile/admin UI. Those details belong in code comments, tests, docs, and implementation plans only.
 
 Mobile rendered strings should live in the `typesafe-i18n` locale layer and be consumed through the app i18n hook/context. Avoid hardcoded screen copy in components or flow models unless it is temporary implementation scaffolding that will never render.
+
+### UI Component Reuse Guardrail
+
+Before building mobile screens or UI, read `docs/UI_COMPONENT_GUIDELINES.md`.
+
+Prefer reusable, categorized componentry over per-screen styling. If two screens render the same UI pattern, extract or reuse a component and drive differences through props. Screens should compose shared primitives/composites and keep local styles limited to feature layout, not repeated card/header/button/hero treatment.
 
 ---
 
