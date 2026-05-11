@@ -12,6 +12,14 @@ const en = {
       question: "Question {current:number} of {total:number}",
     },
   },
+  navigation: {
+    tabs: {
+      discover: "Discover",
+      discoverAccessibility: "Discover activities",
+      profile: "Profile",
+      profileAccessibility: "Profile and progress",
+    },
+  },
   onboarding: {
     actions: {
       finishQuiz: "Finish quiz",
@@ -119,7 +127,6 @@ const en = {
     declinedPlan: "Plan passed for now.",
     matchActionFailed:
       "We could not update that plan yet. Try again in a moment.",
-    profileAction: "Profile",
     landingPlan: {
       eyebrow: "Landing plan",
       first30Days: "Your first 30 days in {city:string}",
@@ -142,7 +149,6 @@ const en = {
   profile: {
     title: "Your profile",
     subtitle: "Keep your local plan and matching availability in one place.",
-    backHome: "Home",
     landingPlan: {
       eyebrow: "Landing plan",
       first30Days: "Your first 30 days in {city:string}",

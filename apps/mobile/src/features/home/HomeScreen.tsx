@@ -104,15 +104,7 @@ export const HomeScreen = () => {
     <Screen contentStyle={styles.content}>
       <Header
         left={<UiText variant="logo">{LL.brand.name()}</UiText>}
-        right={
-          <Button
-            label={LL.home.profileAction()}
-            onPress={() => router.push(routes.profile)}
-            style={styles.headerAction}
-            textStyle={styles.headerActionText}
-            variant="neutral"
-          />
-        }
+        right={<UiText variant="city">{cityContext.city.name}</UiText>}
       />
 
       <Panel style={styles.heroCard}>
@@ -198,15 +190,6 @@ const createStyles = (theme: BuzzTheme) => {
       borderColor: colors.border,
       gap: spacing[3],
       ...shadows.card,
-    },
-    headerAction: {
-      minHeight: 38,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[2],
-    },
-    headerActionText: {
-      fontSize: fontSizes.xs,
-      textTransform: "uppercase",
     },
     panel: {
       backgroundColor: colors.surfaceMuted,

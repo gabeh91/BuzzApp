@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -15,7 +14,6 @@ import { createSettlingProgress } from "@/features/progress/settlingProgress";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { runSettledAction } from "@/lib/functions";
-import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import { Button, Header, Panel, Screen, Text as UiText } from "@/ui";
@@ -23,7 +21,6 @@ import { Button, Header, Panel, Screen, Text as UiText } from "@/ui";
 type SettledActionStatus = "idle" | "saving" | "error";
 
 export const ProfileScreen = () => {
-  const router = useRouter();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const { LL } = useI18n();
@@ -98,15 +95,7 @@ export const ProfileScreen = () => {
     <Screen contentStyle={styles.content}>
       <Header
         left={<UiText variant="logo">{LL.brand.name()}</UiText>}
-        right={
-          <Button
-            label={LL.profile.backHome()}
-            onPress={() => router.push(routes.home)}
-            style={styles.headerAction}
-            textStyle={styles.headerActionText}
-            variant="neutral"
-          />
-        }
+        right={<UiText variant="city">{cityContext.city.name}</UiText>}
       />
 
       <Panel style={styles.heroCard}>
@@ -224,15 +213,6 @@ const createStyles = (theme: BuzzTheme) => {
       flexGrow: 1,
       gap: spacing[5],
       padding: spacing[6],
-    },
-    headerAction: {
-      minHeight: 38,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[2],
-    },
-    headerActionText: {
-      fontSize: fontSizes.xs,
-      textTransform: "uppercase",
     },
     heroCard: {
       gap: spacing[3],
