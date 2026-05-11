@@ -246,6 +246,8 @@ const en = {
       feedbackFailed:
         "We could not save that check yet. Try again in a moment.",
       safetyCompleted: "Post-plan check completed.",
+      reportIssue: "Report issue",
+      issueReported: "Issue reported.",
     },
     safety: {
       title: "Safety",

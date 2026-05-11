@@ -26,6 +26,7 @@ export type FeedbackActionResult = {
   feedbackStatus: "completed";
   positiveFeedbackRecorded: boolean;
   feedbackCompletedAt?: string;
+  wouldMeetAgain?: boolean;
 };
 
 export type SettledActionResult = {
@@ -112,6 +113,7 @@ export type CreateAttendanceActionRequestInput = {
 export type CreateFeedbackActionRequestInput =
   CreateAttendanceActionRequestInput & {
     feltSafe?: boolean;
+    wouldMeetAgain?: boolean;
   };
 
 export type CreateSettledActionRequestInput = {
@@ -501,6 +503,7 @@ export const createFeedbackActionRequest = ({
   appEnv = defaultAppEnv,
   supabaseAnonKey = defaultSupabaseAnonKey,
   supabaseUrl = defaultSupabaseUrl,
+  wouldMeetAgain,
 }: CreateFeedbackActionRequestInput): MatchActionRequest => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -522,7 +525,11 @@ export const createFeedbackActionRequest = ({
   return {
     url: createBuzzFunctionUrl("record-feedback", supabaseUrl),
     init: {
-      body: JSON.stringify({ activityGroupId, feltSafe }),
+      body: JSON.stringify({
+        activityGroupId,
+        feltSafe,
+        ...(typeof wouldMeetAgain === "boolean" ? { wouldMeetAgain } : {}),
+      }),
       headers,
       method: "POST",
     },
@@ -654,6 +661,10 @@ export const runFeedbackAction = async (
 
   if (body.feedbackCompletedAt) {
     result.feedbackCompletedAt = body.feedbackCompletedAt;
+  }
+
+  if (typeof body.wouldMeetAgain === "boolean") {
+    result.wouldMeetAgain = body.wouldMeetAgain;
   }
 
   return result;

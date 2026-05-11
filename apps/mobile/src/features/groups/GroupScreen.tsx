@@ -366,9 +366,43 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
         activityGroupId: group.id,
         feltSafe: true,
         profileId: user.id,
+        wouldMeetAgain: true,
       });
       markFeedbackCompleted();
       setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
+    } catch {
+      setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
+
+  const postPlanIssue = async () => {
+    markGroupJoined();
+
+    if (isLocalGroup) {
+      markFeedbackCompleted();
+      setAttendanceFeedback(LL.groups.attendance.issueReported());
+      return;
+    }
+
+    setFeedbackSubmitting(true);
+
+    try {
+      await runFeedbackAction({
+        activityGroupId: group.id,
+        feltSafe: false,
+        profileId: user.id,
+        wouldMeetAgain: false,
+      });
+      await runReportAction({
+        activityGroupId: group.id,
+        category: "unsafe",
+        profileId: user.id,
+        reason: "Post-plan safety issue",
+      });
+      markFeedbackCompleted();
+      setAttendanceFeedback(LL.groups.attendance.issueReported());
     } catch {
       setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
     } finally {
@@ -541,6 +575,13 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
             disabled={feedbackSubmitting}
             label={LL.groups.attendance.postPlanSafety()}
             onPress={postPlanSafety}
+            style={styles.safetyAction}
+            variant="neutral"
+          />
+          <Button
+            disabled={feedbackSubmitting}
+            label={LL.groups.attendance.reportIssue()}
+            onPress={postPlanIssue}
             style={styles.safetyAction}
             variant="neutral"
           />

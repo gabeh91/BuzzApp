@@ -239,6 +239,7 @@ test("createFeedbackActionRequest targets record-feedback with local-only bypass
     profileId: "00000000-0000-0000-0000-000000000101",
     supabaseAnonKey: "anon-key",
     supabaseUrl: "http://localhost:54321",
+    wouldMeetAgain: false,
   });
 
   assert.equal(
@@ -249,6 +250,7 @@ test("createFeedbackActionRequest targets record-feedback with local-only bypass
   assert.deepEqual(JSON.parse(String(request.init.body)), {
     activityGroupId: "00000000-0000-0000-0000-000000000701",
     feltSafe: true,
+    wouldMeetAgain: false,
   });
   assert.equal(
     (request.init.headers as Record<string, string>).apikey,
@@ -281,6 +283,7 @@ test("runFeedbackAction returns persisted feedback status", async () => {
           activityGroupId: "00000000-0000-0000-0000-000000000701",
           feedbackStatus: "completed",
           positiveFeedbackRecorded: true,
+          wouldMeetAgain: true,
         }),
         { status: 200 },
       ),
@@ -291,6 +294,7 @@ test("runFeedbackAction returns persisted feedback status", async () => {
     activityGroupId: "00000000-0000-0000-0000-000000000701",
     feedbackStatus: "completed",
     positiveFeedbackRecorded: true,
+    wouldMeetAgain: true,
   });
 });
 

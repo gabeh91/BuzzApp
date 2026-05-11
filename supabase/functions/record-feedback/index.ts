@@ -17,6 +17,8 @@ type ReliabilityRow = {
 type FeedbackInput = {
   activityGroupId: string;
   feltSafe: boolean;
+  reportRequested: boolean;
+  wouldMeetAgain: boolean;
 };
 
 const jsonResponse = (
@@ -34,12 +36,18 @@ const readFeedbackInput = async (request: Request): Promise<FeedbackInput> => {
   const activityGroupId =
     typeof body.activityGroupId === "string" ? body.activityGroupId.trim() : "";
   const feltSafe = typeof body.feltSafe === "boolean" ? body.feltSafe : true;
+  const wouldMeetAgain =
+    typeof body.wouldMeetAgain === "boolean" ? body.wouldMeetAgain : feltSafe;
+  const reportRequested =
+    typeof body.reportRequested === "boolean"
+      ? body.reportRequested
+      : !feltSafe;
 
   if (!activityGroupId) {
     throw new Error("activityGroupId is required");
   }
 
-  return { activityGroupId, feltSafe };
+  return { activityGroupId, feltSafe, reportRequested, wouldMeetAgain };
 };
 
 Deno.serve(async (request) => {
@@ -51,7 +59,8 @@ Deno.serve(async (request) => {
   const serviceClient = createServiceRoleClient();
 
   try {
-    const { activityGroupId, feltSafe } = await readFeedbackInput(request);
+    const { activityGroupId, feltSafe, reportRequested, wouldMeetAgain } =
+      await readFeedbackInput(request);
     const { profileId } = await resolveCurrentProfile(request, serviceClient);
 
     const { data: existingMember, error: existingMemberError } =
@@ -82,6 +91,23 @@ Deno.serve(async (request) => {
 
     if (memberError) throw memberError;
 
+    const { error: checkinError } = await serviceClient
+      .from("activity_group_checkins")
+      .upsert(
+        {
+          activity_group_id: activityGroupId,
+          did_happen: true,
+          felt_safe: feltSafe,
+          report_requested: reportRequested,
+          updated_at: new Date().toISOString(),
+          user_id: profileId,
+          would_meet_again: wouldMeetAgain,
+        },
+        { onConflict: "activity_group_id,user_id" },
+      );
+
+    if (checkinError) throw checkinError;
+
     if (!alreadyCompleted) {
       const { data: reliability, error: reliabilityError } = await serviceClient
         .from("user_reliability")
@@ -92,8 +118,10 @@ Deno.serve(async (request) => {
       if (reliabilityError) throw reliabilityError;
 
       const nextFeedbackCount = (reliability?.feedback_count ?? 0) + 1;
+      const positiveFeedbackRecorded = feltSafe && wouldMeetAgain;
       const nextPositiveFeedbackCount =
-        (reliability?.positive_feedback_count ?? 0) + (feltSafe ? 1 : 0);
+        (reliability?.positive_feedback_count ?? 0) +
+        (positiveFeedbackRecorded ? 1 : 0);
       const reliabilityPayload = {
         feedback_count: nextFeedbackCount,
         last_feedback_at: feedbackCompletedAt,
@@ -114,7 +142,8 @@ Deno.serve(async (request) => {
       activityGroupId: member.activity_group_id,
       feedbackCompletedAt: member.feedback_completed_at,
       feedbackStatus: "completed",
-      positiveFeedbackRecorded: feltSafe,
+      positiveFeedbackRecorded: feltSafe && wouldMeetAgain,
+      wouldMeetAgain,
     });
   } catch (error) {
     const message =
