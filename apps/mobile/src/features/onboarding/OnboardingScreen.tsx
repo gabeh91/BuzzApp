@@ -1119,7 +1119,16 @@ export const OnboardingScreen = () => {
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, fontStyles, radii, spacing, borderWidths, shadows } = theme;
+  const {
+    colors,
+    fontSizes,
+    fontStyles,
+    lineHeights,
+    radii,
+    spacing,
+    borderWidths,
+    shadows,
+  } = theme;
 
   return StyleSheet.create({
     screen: {
@@ -1129,14 +1138,14 @@ const createStyles = (theme: BuzzTheme) => {
     screenContent: {
       flex: 1,
       flexGrow: 1,
-      gap: 0,
-      padding: 0,
+      gap: spacing[0],
+      padding: spacing[0],
     },
     scrollContent: {
       flexGrow: 1,
-      paddingHorizontal: 22,
-      paddingTop: 18,
-      paddingBottom: 22,
+      paddingHorizontal: spacing[6],
+      paddingTop: spacing[5],
+      paddingBottom: spacing[6],
     },
     stage: {
       flex: 1,
@@ -1145,7 +1154,7 @@ const createStyles = (theme: BuzzTheme) => {
     layout: {
       flexGrow: 1,
       justifyContent: "space-between",
-      gap: 22,
+      gap: spacing[6],
     },
     ambientRoot: {
       position: "absolute",
@@ -1170,10 +1179,10 @@ const createStyles = (theme: BuzzTheme) => {
       backgroundColor: colors.warningSoft,
     },
     fixedHeader: {
-      paddingHorizontal: 22,
-      paddingTop: 18,
-      paddingBottom: 16,
-      gap: 18,
+      paddingHorizontal: spacing[6],
+      paddingTop: spacing[5],
+      paddingBottom: spacing[4],
+      gap: spacing[5],
       backgroundColor: colors.background,
       borderBottomWidth: borderWidths.hairline,
       borderBottomColor: colors.overlay,
@@ -1187,21 +1196,21 @@ const createStyles = (theme: BuzzTheme) => {
     logo: {
       color: colors.text,
       ...fontStyles.display,
-      fontSize: 28,
-      letterSpacing: -1,
+      fontSize: fontSizes["4xl"],
+      letterSpacing: 0,
     },
     envLabel: {
       color: colors.textMuted,
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       fontWeight: "800",
       letterSpacing: 1.1,
       textTransform: "uppercase",
     },
     progressGroup: {
-      gap: 8,
+      gap: spacing[2],
     },
     headerProgressSlot: {
-      height: 38,
+      height: spacing[10],
       overflow: "hidden",
     },
     flowProgressLayer: {
@@ -1211,7 +1220,7 @@ const createStyles = (theme: BuzzTheme) => {
       ...StyleSheet.absoluteFillObject,
     },
     progressTrack: {
-      height: 8,
+      height: spacing[2],
       borderRadius: radii.full,
       backgroundColor: colors.overlay,
       overflow: "hidden",
@@ -1223,15 +1232,15 @@ const createStyles = (theme: BuzzTheme) => {
     },
     progressLabel: {
       color: colors.textMuted,
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       letterSpacing: 1.2,
       textTransform: "uppercase",
     },
     mainCard: {
       backgroundColor: colors.surface,
-      borderRadius: 36,
-      padding: 24,
-      gap: 22,
+      borderRadius: radii["2xl"],
+      padding: spacing[6],
+      gap: spacing[6],
       borderWidth: borderWidths.hairline,
       borderColor: colors.border,
       ...shadows.card,
@@ -1241,11 +1250,11 @@ const createStyles = (theme: BuzzTheme) => {
       justifyContent: "center",
     },
     titleStack: {
-      gap: 10,
+      gap: spacing[3],
     },
     eyebrow: {
       color: colors.accent,
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       fontWeight: "900",
       letterSpacing: 1.4,
       textTransform: "uppercase",
@@ -1253,48 +1262,48 @@ const createStyles = (theme: BuzzTheme) => {
     title: {
       color: colors.text,
       ...fontStyles.display,
-      fontSize: 34,
-      lineHeight: 39,
-      letterSpacing: -1.2,
+      fontSize: fontSizes.hero,
+      lineHeight: lineHeights.hero,
+      letterSpacing: 0,
     },
     contentStack: {
-      gap: 16,
+      gap: spacing[4],
     },
     bodyCopy: {
       color: colors.textMuted,
-      fontSize: 17,
-      lineHeight: 26,
+      fontSize: fontSizes.lg,
+      lineHeight: lineHeights.relaxed,
     },
     profileCard: {
       backgroundColor: colors.background,
-      borderRadius: 24,
-      padding: 18,
+      borderRadius: radii.lg,
+      padding: spacing[5],
     },
     metaLabel: {
       color: colors.textMuted,
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       letterSpacing: 1.2,
       textTransform: "uppercase",
     },
     profileName: {
       color: colors.text,
       ...fontStyles.displayStrong,
-      fontSize: 28,
-      marginTop: 10,
+      fontSize: fontSizes["4xl"],
+      marginTop: spacing[3],
     },
     profileMeta: {
       color: colors.textMuted,
-      marginTop: 8,
+      marginTop: spacing[2],
     },
     howItWorksList: {
-      gap: 12,
+      gap: spacing[3],
     },
     howItWorksItem: {
       backgroundColor: colors.background,
-      borderRadius: 22,
-      padding: 16,
+      borderRadius: radii.lg,
+      padding: spacing[4],
       flexDirection: "row",
-      gap: 14,
+      gap: spacing[4],
       alignItems: "center",
     },
     howItWorksItemFeatured: {
@@ -1307,27 +1316,27 @@ const createStyles = (theme: BuzzTheme) => {
     howItWorksText: {
       color: colors.text,
       flex: 1,
-      fontSize: 16,
+      fontSize: fontSizes.md,
     },
     howItWorksFeaturedText: {
       color: colors.textInverse,
     },
     quizPrompt: {
       color: colors.text,
-      fontSize: 25,
+      fontSize: fontSizes["3xl"],
       fontWeight: "800",
-      lineHeight: 32,
+      lineHeight: lineHeights.title,
     },
     optionsList: {
-      gap: 10,
+      gap: spacing[3],
     },
     optionCard: {
       borderWidth: borderWidths.hairline,
       borderColor: colors.border,
       backgroundColor: colors.surface,
-      borderRadius: 22,
-      padding: 16,
-      gap: 5,
+      borderRadius: radii.lg,
+      padding: spacing[4],
+      gap: spacing[1],
     },
     optionCardSelected: {
       borderColor: colors.accent,
@@ -1335,17 +1344,17 @@ const createStyles = (theme: BuzzTheme) => {
     },
     optionLabel: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSizes.md,
       fontWeight: "800",
     },
     optionCopy: {
       color: colors.textMuted,
-      lineHeight: 20,
+      lineHeight: lineHeights.tight,
     },
     inlineStatus: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: spacing[2],
     },
     statusCopy: {
       color: colors.textMuted,
@@ -1353,12 +1362,12 @@ const createStyles = (theme: BuzzTheme) => {
     interestGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 10,
+      gap: spacing[3],
     },
     interestPill: {
-      paddingVertical: 14,
-      paddingHorizontal: 16,
-      borderRadius: 999,
+      paddingVertical: spacing[3],
+      paddingHorizontal: spacing[4],
+      borderRadius: radii.full,
       backgroundColor: colors.background,
       borderWidth: borderWidths.hairline,
       borderColor: colors.border,
@@ -1376,32 +1385,32 @@ const createStyles = (theme: BuzzTheme) => {
     },
     activationCard: {
       backgroundColor: colors.surfaceInverse,
-      borderRadius: 28,
-      padding: 20,
-      gap: 10,
+      borderRadius: radii.xl,
+      padding: spacing[5],
+      gap: spacing[3],
     },
     activationEyebrow: {
       color: colors.warning,
-      fontSize: 13,
+      fontSize: fontSizes.sm,
       fontWeight: "900",
       letterSpacing: 1.2,
       textTransform: "uppercase",
     },
     activationTitle: {
       color: colors.textInverse,
-      fontSize: 28,
+      fontSize: fontSizes["4xl"],
       fontWeight: "900",
     },
     activationCopy: {
       color: colors.textInverse,
-      lineHeight: 22,
+      lineHeight: lineHeights.body,
     },
     availabilityStack: {
-      gap: 10,
+      gap: spacing[3],
     },
     activationOptionLabel: {
       color: colors.textMuted,
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       fontWeight: "900",
       letterSpacing: 0.8,
       textTransform: "uppercase",
@@ -1409,15 +1418,15 @@ const createStyles = (theme: BuzzTheme) => {
     availabilityGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 10,
+      gap: spacing[3],
     },
     availabilityPill: {
       backgroundColor: colors.background,
       borderColor: colors.border,
       borderRadius: radii.sm,
       borderWidth: borderWidths.hairline,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[3],
     },
     availabilityPillSelected: {
       backgroundColor: colors.accentSoft,
@@ -1425,7 +1434,7 @@ const createStyles = (theme: BuzzTheme) => {
     },
     availabilityPillText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSizes.base,
       fontWeight: "800",
     },
     availabilityPillTextSelected: {
@@ -1433,53 +1442,53 @@ const createStyles = (theme: BuzzTheme) => {
     },
     matchCard: {
       backgroundColor: colors.surfaceMuted,
-      borderRadius: 30,
-      padding: 22,
-      gap: 10,
+      borderRadius: radii.xl,
+      padding: spacing[6],
+      gap: spacing[3],
     },
     matchEyebrow: {
       color: colors.brand,
-      fontSize: 13,
+      fontSize: fontSizes.sm,
       fontWeight: "900",
       letterSpacing: 1.2,
       textTransform: "uppercase",
     },
     matchTitle: {
       color: colors.text,
-      fontSize: 30,
+      fontSize: fontSizes["5xl"],
       fontWeight: "900",
     },
     matchReason: {
       color: colors.brand,
-      lineHeight: 22,
+      lineHeight: lineHeights.body,
     },
     suggestionCard: {
       backgroundColor: colors.background,
-      borderRadius: 24,
-      padding: 18,
+      borderRadius: radii.lg,
+      padding: spacing[5],
     },
     suggestionTitle: {
       color: colors.text,
-      fontSize: 17,
+      fontSize: fontSizes.lg,
       fontWeight: "800",
     },
     suggestionCopy: {
       color: colors.textMuted,
-      marginTop: 8,
-      lineHeight: 22,
+      marginTop: spacing[2],
+      lineHeight: lineHeights.body,
     },
     buttonStack: {
-      gap: 4,
+      gap: spacing[1],
     },
     primaryAction: {
-      borderRadius: 22,
+      borderRadius: radii.lg,
     },
     secondaryAction: {
-      borderRadius: 22,
+      borderRadius: radii.lg,
       marginTop: spacing[2],
     },
     backActionText: {
-      fontSize: 15,
+      fontSize: fontSizes.base,
       fontWeight: "700",
     },
   });
