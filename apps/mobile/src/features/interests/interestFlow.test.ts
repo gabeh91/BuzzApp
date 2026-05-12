@@ -10,14 +10,14 @@ import {
   createInitialInterestFlowState,
   selectInterest,
   setActivationAvailabilityIntent,
-  shouldActivateInterestThroughSupabase
+  shouldActivateInterestThroughSupabase,
 } from "./interestFlow";
 
 const surfing = {
   id: "00000000-0000-0000-0000-000000000001",
   name: "Surfing",
   slug: "surfing",
-  category: "sport"
+  category: "sport",
 };
 
 test("selectInterest stores a replaceable interest selection state", () => {
@@ -33,7 +33,10 @@ test("activateInterestLocally completes activation without creating a fake match
   const activated = activateInterestLocally(selected);
 
   assert.equal(activated.activation.status, "complete");
-  assert.equal(activated.activation.message, "Surfing is active. Your next suggestion can start from this.");
+  assert.equal(
+    activated.activation.message,
+    "Surfing is active. Your next suggestion can start from this.",
+  );
   assert.equal(activated.matchPreview, null);
 });
 
@@ -43,24 +46,30 @@ test("shouldActivateInterestThroughSupabase only sends activation writes for Sup
     displayName: "Mia",
     cityId: "00000000-0000-0000-0000-000000000001",
     cityName: "Melbourne",
-    authSource: "demo"
+    authSource: "demo",
   };
 
   assert.equal(shouldActivateInterestThroughSupabase(user), false);
-  assert.equal(shouldActivateInterestThroughSupabase({ ...user, authSource: "supabase" }), true);
+  assert.equal(
+    shouldActivateInterestThroughSupabase({ ...user, authSource: "supabase" }),
+    true,
+  );
 });
 
 test("setActivationAvailabilityIntent stores pre-activation availability preferences", () => {
-  const state = setActivationAvailabilityIntent(createInitialInterestFlowState(), {
-    availabilityWindow: "weekend",
-    preferredTime: "daytime",
-    urgency: "soon"
-  });
+  const state = setActivationAvailabilityIntent(
+    createInitialInterestFlowState(),
+    {
+      availabilityWindow: "weekend",
+      preferredTime: "daytime",
+      urgency: "soon",
+    },
+  );
 
   assert.deepEqual(state.activationAvailability, {
     availabilityWindow: "weekend",
     preferredTime: "daytime",
-    urgency: "soon"
+    urgency: "soon",
   });
 });
 
@@ -77,17 +86,23 @@ test("completeBackendActivation stores the persisted activation and first backen
         displayName: "Sam",
         reason: "Sam also activated Surfing.",
         suggestedPlan: "Suggest a Surfing plan this week.",
-        score: 0.82
-      }
-    ]
+        score: 0.82,
+      },
+    ],
   });
 
   assert.equal(activated.activation.status, "complete");
-  assert.equal(activated.activation.activationId, "00000000-0000-0000-0000-000000000501");
+  assert.equal(
+    activated.activation.activationId,
+    "00000000-0000-0000-0000-000000000501",
+  );
   assert.equal(activated.activation.source, "supabase");
   assert.equal(activated.matchPreview?.isDemo, false);
   assert.equal(activated.matchPreview?.source, "supabase");
-  assert.equal(activated.matchPreview?.id, "00000000-0000-0000-0000-000000000601");
+  assert.equal(
+    activated.matchPreview?.id,
+    "00000000-0000-0000-0000-000000000601",
+  );
   assert.equal(activated.matchPreview?.score, 0.82);
   assert.equal(activated.matchPreview?.displayName, "Sam");
   assert.equal(activated.matchPreview?.reason, "Sam also activated Surfing.");
@@ -98,7 +113,10 @@ const readOptionalSource = (path: string): string => {
 };
 
 test("accept match edge function authenticates the profile, accepts the candidate, and creates an activity group", () => {
-  const source = readFileSync("../../supabase/functions/accept-match/index.ts", "utf8");
+  const source = readFileSync(
+    "../../supabase/functions/accept-match/index.ts",
+    "utf8",
+  );
 
   assert.match(source, /resolveCurrentProfile/);
   assert.match(source, /match_candidates/);
@@ -109,7 +127,10 @@ test("accept match edge function authenticates the profile, accepts the candidat
 });
 
 test("decline match edge function authenticates the profile and does not create a group", () => {
-  const source = readFileSync("../../supabase/functions/decline-match/index.ts", "utf8");
+  const source = readFileSync(
+    "../../supabase/functions/decline-match/index.ts",
+    "utf8",
+  );
 
   assert.match(source, /resolveCurrentProfile/);
   assert.match(source, /match_candidates/);
@@ -129,7 +150,10 @@ test("mobile match action client calls accept and decline Edge Functions with lo
 });
 
 test("onboarding captures availability intent before activating an interest", () => {
-  const source = readFileSync("src/features/onboarding/OnboardingScreen.tsx", "utf8");
+  const source = readFileSync(
+    "src/features/onboarding/OnboardingStepContent.tsx",
+    "utf8",
+  );
   const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
 
   assert.match(source, /availabilityOptions/);
