@@ -6,13 +6,15 @@ import {
   type ReactNode,
 } from "react";
 
+import { useBuzzAuth } from "@/auth/AuthProvider";
 import {
   createInitialOnboardingState,
   createOnboardingStateForAnonymousDraft,
   goBack,
   goNext,
-  type OnboardingState
+  type OnboardingState,
 } from "./onboardingFlow";
+import { shouldRestoreAnonymousOnboardingDraft } from "./onboardingDraft";
 import { anonymousOnboardingDraftStore } from "./onboardingDraftStorage";
 
 type OnboardingContextValue = {
@@ -27,16 +29,25 @@ type OnboardingContextValue = {
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
+  const { status } = useBuzzAuth();
   const [state, setState] = useState(createInitialOnboardingState);
 
   useEffect(() => {
+    if (status !== "anonymous") {
+      return;
+    }
+
     let active = true;
 
     const restoreOnboardingDraft = async () => {
       const draft = await anonymousOnboardingDraftStore.load();
 
       if (active) {
-        setState(createOnboardingStateForAnonymousDraft(draft));
+        setState(
+          shouldRestoreAnonymousOnboardingDraft(draft)
+            ? createOnboardingStateForAnonymousDraft(draft)
+            : createInitialOnboardingState(),
+        );
       }
     };
 
@@ -45,7 +56,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [status]);
 
   const value: OnboardingContextValue = {
     state,
@@ -59,10 +70,14 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       setState(createInitialOnboardingState());
     },
     isFirstStep: state.index === 0,
-    isLastStep: state.progress.current === state.progress.total
+    isLastStep: state.progress.current === state.progress.total,
   };
 
-  return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
+  return (
+    <OnboardingContext.Provider value={value}>
+      {children}
+    </OnboardingContext.Provider>
+  );
 };
 
 export const useOnboarding = (): OnboardingContextValue => {

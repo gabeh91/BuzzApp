@@ -7,8 +7,12 @@ import {
   type ReactNode,
 } from "react";
 
+import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useI18n } from "@/i18n/I18nProvider";
-import { selectDraftInterest } from "@/features/onboarding/onboardingDraft";
+import {
+  selectDraftInterest,
+  shouldRestoreAnonymousOnboardingDraft,
+} from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
 import {
   activateInterestLocally,
@@ -40,6 +44,7 @@ const InterestFlowContext = createContext<InterestFlowContextValue | null>(
 );
 
 export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
+  const { status } = useBuzzAuth();
   const { LL } = useI18n();
   const copy = useMemo(() => createInterestFlowCopy(LL), [LL]);
   const [state, setState] = useState(() =>
@@ -47,12 +52,24 @@ export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
   );
 
   useEffect(() => {
+    if (status !== "anonymous") {
+      return;
+    }
+
     let active = true;
 
     const restoreSelectedInterest = async () => {
       const draft = await anonymousOnboardingDraftStore.load();
 
-      if (!active || !draft.selectedInterest) {
+      if (!active) {
+        return;
+      }
+
+      if (
+        !shouldRestoreAnonymousOnboardingDraft(draft) ||
+        !draft.selectedInterest
+      ) {
+        setState(createInitialInterestFlowState(copy));
         return;
       }
 
@@ -66,7 +83,7 @@ export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       active = false;
     };
-  }, [copy]);
+  }, [copy, status]);
 
   const value: InterestFlowContextValue = {
     state,

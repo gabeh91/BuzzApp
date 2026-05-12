@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { getInitialAppRoute } from "@/auth/authGate";
 import { OnboardingScreen } from "@/features/onboarding/OnboardingScreen";
-import type { AnonymousOnboardingDraft } from "@/features/onboarding/onboardingDraft";
+import {
+  isAnonymousOnboardingCompleteForCurrentVisitor,
+  shouldRestoreAnonymousOnboardingDraft,
+  type AnonymousOnboardingDraft,
+} from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
 import { routes } from "./routes";
 
@@ -36,8 +40,11 @@ export const AppEntry = () => {
 
   const initialRoute = getInitialAppRoute({
     authStatus: status,
-    hasCompletedAnonymousOnboarding: draft.status === "complete",
-    hasPartialAnonymousDraft: draft.status === "partial",
+    hasCompletedAnonymousOnboarding:
+      isAnonymousOnboardingCompleteForCurrentVisitor(draft),
+    hasPartialAnonymousDraft:
+      draft.status === "partial" &&
+      shouldRestoreAnonymousOnboardingDraft(draft),
   });
 
   if (initialRoute === routes.home) {

@@ -33,6 +33,7 @@ export type InitialAppRouteState = {
 
 export type ClaimableAnonymousDraft = {
   answers: Record<string, string>;
+  claimedUserId?: string;
   selectedInterest: { id: string; name: string } | null;
 };
 
@@ -90,6 +91,10 @@ export const getInitialAppRoute = ({
 export const shouldClaimAnonymousDraft = (
   draft: ClaimableAnonymousDraft,
 ): boolean => {
+  if (draft.claimedUserId) {
+    return false;
+  }
+
   return (
     Object.keys(draft.answers).length > 0 || Boolean(draft.selectedInterest?.id)
   );

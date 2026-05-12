@@ -871,6 +871,10 @@ const OnboardingExperience = () => {
   const canBrowseFromCurrentStep = canBrowseFromOnboardingStep(
     onboarding.state,
   );
+  const showExistingAccountSignIn =
+    !isAuthenticated &&
+    onboarding.isFirstStep &&
+    onboarding.state.step.id === "welcome";
 
   const persistQuizProfile = async (profileUser: BuzzAuthUser = user) => {
     const input = createBuzzProfilePersistenceInput({
@@ -908,6 +912,12 @@ const OnboardingExperience = () => {
   const browseBuzzForNow = async () => {
     await completeAnonymousOnboarding();
     router.replace(routes.home);
+  };
+
+  const handleExistingAccountSignIn = async () => {
+    await requireAuth("save_profile", async () => {
+      router.replace(routes.home);
+    });
   };
 
   const activateSelectedInterest = async () => {
@@ -1062,6 +1072,16 @@ const OnboardingExperience = () => {
                     void browseBuzzForNow();
                   }}
                   variant="tonal"
+                  style={styles.secondaryAction}
+                />
+              ) : null}
+              {showExistingAccountSignIn ? (
+                <Button
+                  label={LL.onboarding.actions.signInExisting()}
+                  onPress={() => {
+                    void handleExistingAccountSignIn();
+                  }}
+                  variant="bordered"
                   style={styles.secondaryAction}
                 />
               ) : null}

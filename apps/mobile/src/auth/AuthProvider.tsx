@@ -15,8 +15,12 @@ import {
 import type { Session } from "@supabase/supabase-js";
 
 import { buzzSupabase } from "@/lib/supabase";
-import { claimAnonymousOnboardingDraft } from "@/features/onboarding/onboardingDraft";
+import {
+  claimAnonymousOnboardingDraft,
+  resetClaimedAnonymousOnboardingDraft,
+} from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
+import { routes } from "@/navigation/routes";
 import type { AuthInteractionIntent } from "./authGate";
 import { getAuthGateDecision, shouldClaimAnonymousDraft } from "./authGate";
 import type {
@@ -391,9 +395,19 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const signOut = useCallback(async () => {
+    const signedOutUserId = user.authSource === "supabase" ? user.id : null;
+
     await buzzSupabase.auth.signOut({ scope: "local" });
+
+    if (signedOutUserId) {
+      await anonymousOnboardingDraftStore.update((draft) =>
+        resetClaimedAnonymousOnboardingDraft(draft, signedOutUserId),
+      );
+    }
+
     await completeSession(null);
-  }, [completeSession]);
+    router.replace(routes.onboarding);
+  }, [completeSession, user]);
 
   const requireAuth = useCallback<BuzzAuthState["requireAuth"]>(
     async (intent, action) => {

@@ -94,4 +94,12 @@ test("partly filled anonymous quiz drafts are claimable after auth", () => {
     }),
     true,
   );
+  assert.equal(
+    shouldClaimAnonymousDraft({
+      answers: { pace: "low" },
+      claimedUserId: "user-1",
+      selectedInterest: null,
+    }),
+    false,
+  );
 });

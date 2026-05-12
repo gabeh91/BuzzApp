@@ -7,8 +7,12 @@ import {
   type ReactNode,
 } from "react";
 
+import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useI18n } from "@/i18n/I18nProvider";
-import { mergeQuizAnswerIntoDraft } from "@/features/onboarding/onboardingDraft";
+import {
+  mergeQuizAnswerIntoDraft,
+  shouldRestoreAnonymousOnboardingDraft,
+} from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
 
 import type { BuzzProfilePersistenceInput } from "./profilePersistence";
@@ -52,6 +56,7 @@ type QuizContextValue = {
 const QuizContext = createContext<QuizContextValue | null>(null);
 
 export const QuizProvider = ({ children }: { children: ReactNode }) => {
+  const { status } = useBuzzAuth();
   const { LL } = useI18n();
   const quizQuestions = useMemo(() => createQuizQuestions(LL), [LL]);
   const [answers, setAnswers] = useState<QuizAnswers>({});
@@ -62,12 +67,23 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   const traits = deriveProfileTraits(answers, quizQuestions, LL);
 
   useEffect(() => {
+    if (status !== "anonymous") {
+      return;
+    }
+
     let active = true;
 
     const restoreQuizDraft = async () => {
       const draft = await anonymousOnboardingDraftStore.load();
 
-      if (!active || draft.status === "empty") {
+      if (!active) {
+        return;
+      }
+
+      if (!shouldRestoreAnonymousOnboardingDraft(draft)) {
+        setAnswers({});
+        setActiveQuestionIndex(0);
+        setProfilePersistence({ status: "idle" });
         return;
       }
 
@@ -85,7 +101,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       active = false;
     };
-  }, [quizQuestions.length]);
+  }, [quizQuestions.length, status]);
 
   if (!activeQuestion) {
     throw new Error("Quiz questions must include at least one question");

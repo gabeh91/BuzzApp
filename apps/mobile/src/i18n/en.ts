@@ -38,6 +38,7 @@ const en = {
       useInterest: "Use this interest",
       activating: "Activating...",
       signInToActivate: "Sign in to activate",
+      signInExisting: "Already have an account? Sign in",
       activateInterest: "Activate interest",
       browseBuzz: "Browse Buzz for now",
       enterBuzz: "Enter Buzz",
@@ -138,8 +139,7 @@ const en = {
     firstPlan: "First plan",
     titleActivated: "You activated {interest:string}.",
     titleReady: "Your Buzz profile is ready.",
-    activatedBody:
-      "You can now see practical next steps around this interest.",
+    activatedBody: "You can now see practical next steps around this interest.",
     readyBody: "Complete onboarding to unlock your first suggested plan.",
     browsingBody:
       "Browse activities now and sign in when you are ready to join or activate a plan.",
@@ -214,8 +214,7 @@ const en = {
         "You are available for a practical plan around this interest.",
       bodySelected:
         "Activate when you are ready for Buzz to look for a real plan.",
-      bodyEmpty:
-        "Start with something that feels easy to say yes to.",
+      bodyEmpty: "Start with something that feels easy to say yes to.",
     },
     plans: {
       title: "Plans",

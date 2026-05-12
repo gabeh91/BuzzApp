@@ -59,3 +59,28 @@ export const claimAnonymousOnboardingDraft = (
   ...draft,
   claimedUserId: userId,
 });
+
+export const isAnonymousOnboardingDraftReusable = (
+  draft: AnonymousOnboardingDraft,
+): boolean => !draft.claimedUserId;
+
+export const shouldRestoreAnonymousOnboardingDraft = (
+  draft: AnonymousOnboardingDraft,
+): boolean =>
+  draft.status !== "empty" && isAnonymousOnboardingDraftReusable(draft);
+
+export const isAnonymousOnboardingCompleteForCurrentVisitor = (
+  draft: AnonymousOnboardingDraft,
+): boolean =>
+  draft.status === "complete" && isAnonymousOnboardingDraftReusable(draft);
+
+export const resetClaimedAnonymousOnboardingDraft = (
+  draft: AnonymousOnboardingDraft,
+  userId: string,
+): AnonymousOnboardingDraft => {
+  if (draft.claimedUserId !== userId) {
+    return draft;
+  }
+
+  return createAnonymousOnboardingDraft();
+};

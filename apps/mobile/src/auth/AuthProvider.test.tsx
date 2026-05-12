@@ -18,9 +18,12 @@ const mockRouterPush = jest.fn();
 const mockRouterReplace = jest.fn();
 const mockRootNavigationCanGoBack = jest.fn();
 const mockRootNavigationGoBack = jest.fn();
+const mockAnonymousDraftUpdate = jest.fn();
+const mockGetSession = jest.fn();
 const mockPendingAuthAction = jest.fn();
 const mockSignInWithPassword = jest.fn();
 const mockSignInWithOtp = jest.fn();
+const mockSignOut = jest.fn();
 const mockSignUp = jest.fn();
 const mockUseLocalSearchParams = jest.fn();
 const mockVerifyOtp = jest.fn();
@@ -34,6 +37,7 @@ jest.mock("expo-router", () => {
       React.createElement(Text, null, `Redirect ${href}`),
     router: {
       push: (...args: unknown[]) => mockRouterPush(...args),
+      replace: (...args: unknown[]) => mockRouterReplace(...args),
     },
     useLocalSearchParams: () => mockUseLocalSearchParams(),
     useNavigation: jest.fn(() => ({
@@ -52,7 +56,7 @@ jest.mock("@/lib/supabase", () => ({
   buzzSupabase: {
     auth: {
       exchangeCodeForSession: jest.fn(),
-      getSession: jest.fn(async () => ({ data: { session: null } })),
+      getSession: (...args: unknown[]) => mockGetSession(...args),
       onAuthStateChange: jest.fn(() => ({
         data: { subscription: { unsubscribe: jest.fn() } },
       })),
@@ -60,7 +64,7 @@ jest.mock("@/lib/supabase", () => ({
       signInWithPassword: (...args: unknown[]) =>
         mockSignInWithPassword(...args),
       signInWithOtp: (...args: unknown[]) => mockSignInWithOtp(...args),
-      signOut: jest.fn(),
+      signOut: (...args: unknown[]) => mockSignOut(...args),
       signUp: (...args: unknown[]) => mockSignUp(...args),
       verifyOtp: (...args: unknown[]) => mockVerifyOtp(...args),
     },
@@ -69,7 +73,7 @@ jest.mock("@/lib/supabase", () => ({
 
 jest.mock("@/features/onboarding/onboardingDraftStorage", () => ({
   anonymousOnboardingDraftStore: {
-    update: jest.fn(async () => undefined),
+    update: (...args: unknown[]) => mockAnonymousDraftUpdate(...args),
   },
 }));
 
@@ -136,17 +140,38 @@ const AuthGateButtonWithPendingAction = () => {
   );
 };
 
+const AuthSignOutButton = () => {
+  const { signOut, user } = useBuzzAuth();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => {
+        void signOut();
+      }}
+    >
+      <NativeText>Sign out {user.id}</NativeText>
+    </Pressable>
+  );
+};
+
 describe("Buzz auth modal flow", () => {
   beforeEach(() => {
     mockRouterDismiss.mockReset();
     mockRouterPush.mockReset();
     mockRouterReplace.mockReset();
+    mockAnonymousDraftUpdate.mockReset();
+    mockAnonymousDraftUpdate.mockResolvedValue(undefined);
+    mockGetSession.mockReset();
+    mockGetSession.mockResolvedValue({ data: { session: null } });
     mockPendingAuthAction.mockReset();
     mockRootNavigationCanGoBack.mockReset();
     mockRootNavigationCanGoBack.mockReturnValue(true);
     mockRootNavigationGoBack.mockReset();
     mockSignInWithPassword.mockReset();
     mockSignInWithOtp.mockReset();
+    mockSignOut.mockReset();
+    mockSignOut.mockResolvedValue({ error: null });
     mockSignUp.mockReset();
     mockUseLocalSearchParams.mockReset();
     mockUseLocalSearchParams.mockReturnValue({
@@ -320,6 +345,38 @@ describe("Buzz auth modal flow", () => {
     });
   });
 
+  it("signs out, clears the claimed onboarding draft, and returns to onboarding", async () => {
+    mockGetSession.mockResolvedValueOnce({
+      data: {
+        session: {
+          access_token: "access-token",
+          user: {
+            email: "sam@example.com",
+            id: "user-1",
+            user_metadata: {},
+          },
+        },
+      },
+    });
+
+    renderWithProviders(<AuthSignOutButton />);
+
+    const signOutButton = await screen.findByRole("button", {
+      name: "Sign out user-1",
+    });
+    mockAnonymousDraftUpdate.mockClear();
+
+    fireEvent.press(signOutButton);
+
+    await waitFor(() => {
+      expect(mockSignOut).toHaveBeenCalledWith({ scope: "local" });
+      expect(mockAnonymousDraftUpdate).toHaveBeenCalledWith(
+        expect.any(Function),
+      );
+      expect(mockRouterReplace).toHaveBeenCalledWith(routes.onboarding);
+    });
+  });
+
   it("verifies an email OTP and closes the parent auth modal", async () => {
     mockVerifyOtp.mockResolvedValue({
       data: {
@@ -337,7 +394,10 @@ describe("Buzz auth modal flow", () => {
 
     renderWithProviders(<AuthCodeScreen />);
 
-    fireEvent.changeText(await screen.findByPlaceholderText("123456"), "123456");
+    fireEvent.changeText(
+      await screen.findByPlaceholderText("123456"),
+      "123456",
+    );
     fireEvent.press(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => {
@@ -369,7 +429,10 @@ describe("Buzz auth modal flow", () => {
 
     renderWithProviders(<AuthCodeScreen />);
 
-    fireEvent.changeText(await screen.findByPlaceholderText("123456"), "123456");
+    fireEvent.changeText(
+      await screen.findByPlaceholderText("123456"),
+      "123456",
+    );
     fireEvent.press(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => {

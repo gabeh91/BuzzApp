@@ -4,8 +4,10 @@ import test from "node:test";
 import {
   createAnonymousOnboardingDraft,
   claimAnonymousOnboardingDraft,
+  isAnonymousOnboardingDraftReusable,
   mergeQuizAnswerIntoDraft,
   markAnonymousOnboardingComplete,
+  resetClaimedAnonymousOnboardingDraft,
   selectDraftInterest,
 } from "./onboardingDraft";
 
@@ -66,4 +68,24 @@ test("anonymous onboarding draft can be claimed after first auth", () => {
   assert.equal(claimed.status, "partial");
   assert.equal(claimed.claimedUserId, "user-1");
   assert.equal(claimed.answers.pace, "low");
+});
+
+test("claimed anonymous onboarding drafts are not reused for a later account", () => {
+  const completed = markAnonymousOnboardingComplete(
+    mergeQuizAnswerIntoDraft(
+      createAnonymousOnboardingDraft(),
+      "pace",
+      "low",
+      19,
+    ),
+    new Date("2026-05-12T00:00:00.000Z"),
+  );
+  const claimed = claimAnonymousOnboardingDraft(completed, "user-1");
+
+  assert.equal(isAnonymousOnboardingDraftReusable(completed), true);
+  assert.equal(isAnonymousOnboardingDraftReusable(claimed), false);
+  assert.deepEqual(
+    resetClaimedAnonymousOnboardingDraft(claimed, "user-1"),
+    createAnonymousOnboardingDraft(),
+  );
 });
