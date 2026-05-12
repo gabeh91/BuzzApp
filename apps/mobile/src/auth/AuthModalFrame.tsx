@@ -39,7 +39,10 @@ export const AuthModalFrame = ({
         style={styles.keyboardRoot}
       >
         <ScrollView
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
           contentContainerStyle={styles.content}
+          contentInsetAdjustmentBehavior="always"
+          keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -85,10 +88,10 @@ const createStyles = (theme: BuzzTheme) => {
     content: {
       flexGrow: 1,
       gap: spacing[6],
-      justifyContent: "center",
-      paddingBottom: spacing[8],
+      justifyContent: "flex-start",
+      paddingBottom: spacing[16],
       paddingHorizontal: spacing[6],
-      paddingTop: spacing[5],
+      paddingTop: spacing[8],
     },
     headerRow: {
       alignItems: "flex-start",

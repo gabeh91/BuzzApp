@@ -7,6 +7,7 @@ test("auth uses a native route modal stack instead of an inline primitive modal"
   const authLayoutSource = readFileSync("app/auth/_layout.tsx", "utf8");
   const startSource = readFileSync("src/auth/AuthStartScreen.tsx", "utf8");
   const codeSource = readFileSync("src/auth/AuthCodeScreen.tsx", "utf8");
+  const frameSource = readFileSync("src/auth/AuthModalFrame.tsx", "utf8");
   const providerSource = readFileSync("src/auth/AuthProvider.tsx", "utf8");
 
   assert.equal(existsSync("app/auth/index.tsx"), true);
@@ -16,6 +17,10 @@ test("auth uses a native route modal stack instead of an inline primitive modal"
   assert.match(rootLayoutSource, /presentation: "modal"/);
   assert.match(rootLayoutSource, /initialRouteName: "index"/);
   assert.match(authLayoutSource, /<Stack/);
+  assert.match(frameSource, /KeyboardAvoidingView/);
+  assert.match(frameSource, /automaticallyAdjustKeyboardInsets/);
+  assert.match(frameSource, /keyboardDismissMode="interactive"/);
+  assert.match(frameSource, /content: \{[\s\S]*justifyContent: "flex-start"/);
   assert.match(startSource, /Send email code/);
   assert.match(startSource, /Sign in/);
   assert.match(startSource, /Create account/);
