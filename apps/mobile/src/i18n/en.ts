@@ -249,6 +249,11 @@ const en = {
       enableBiometric: "Enable biometric unlock",
       biometricSaving: "Enabling...",
       biometricFailed: "Biometric unlock is not available on this device yet.",
+      signOutTitle: "Account",
+      signOutBody: "Sign out on this device when you are done testing.",
+      signOut: "Log out",
+      signingOut: "Logging out...",
+      signOutFailed: "We could not log you out yet. Try again in a moment.",
     },
     cityStartingPoint: {
       eyebrow: "Starting point",

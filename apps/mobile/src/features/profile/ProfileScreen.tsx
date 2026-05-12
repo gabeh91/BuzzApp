@@ -32,6 +32,7 @@ export const ProfileScreen = () => {
     enableBiometricLogin,
     isAuthenticated,
     requireAuth,
+    signOut,
     user,
   } = useBuzzAuth();
   const { traits } = useQuiz();
@@ -92,6 +93,9 @@ export const ProfileScreen = () => {
   const [biometricStatus, setBiometricStatus] = useState<
     "idle" | "saving" | "failed"
   >("idle");
+  const [signOutStatus, setSignOutStatus] = useState<
+    "idle" | "saving" | "failed"
+  >("idle");
 
   const getLandingPlanStatusLabel = (status: LandingPlanItemStatus) => {
     if (status === "completed") {
@@ -138,6 +142,17 @@ export const ProfileScreen = () => {
 
   const handleSaveProfile = async () => {
     await requireAuth("save_profile", async () => undefined);
+  };
+
+  const handleSignOut = async () => {
+    setSignOutStatus("saving");
+
+    try {
+      await signOut();
+      setSignOutStatus("idle");
+    } catch {
+      setSignOutStatus("failed");
+    }
   };
 
   return (
@@ -209,6 +224,28 @@ export const ProfileScreen = () => {
           />
           {settledActionStatus === "error" ? (
             <UiText variant="feedback">{LL.profile.settled.failed()}</UiText>
+          ) : null}
+        </Panel>
+      ) : null}
+
+      {isAuthenticated ? (
+        <Panel variant="plain" style={styles.panel}>
+          <UiText variant="panelTitle">{LL.profile.auth.signOutTitle()}</UiText>
+          <UiText variant="panelBody">{LL.profile.auth.signOutBody()}</UiText>
+          <Button
+            disabled={signOutStatus === "saving"}
+            label={
+              signOutStatus === "saving"
+                ? LL.profile.auth.signingOut()
+                : LL.profile.auth.signOut()
+            }
+            onPress={handleSignOut}
+            variant="bordered"
+          />
+          {signOutStatus === "failed" ? (
+            <UiText variant="feedback">
+              {LL.profile.auth.signOutFailed()}
+            </UiText>
           ) : null}
         </Panel>
       ) : null}

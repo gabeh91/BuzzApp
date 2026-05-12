@@ -45,3 +45,17 @@ test("profile hides matching availability controls for anonymous browsing", () =
   );
   assert.match(profileSource, /await requireAuth\("save_profile"/);
 });
+
+test("profile exposes sign out only for authenticated users", () => {
+  const profileSource = readFileSync("src/features/profile/ProfileScreen.tsx", "utf8");
+  const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
+
+  assert.match(profileSource, /signOut,/);
+  assert.match(profileSource, /const handleSignOut = async \(\) =>/);
+  assert.match(profileSource, /await signOut\(\)/);
+  assert.match(
+    profileSource,
+    /\{isAuthenticated \? \(\s*<Panel variant="plain" style=\{styles\.panel\}>[\s\S]*LL\.profile\.auth\.signOut/,
+  );
+  assert.match(translationsSource, /signOut:/);
+});
