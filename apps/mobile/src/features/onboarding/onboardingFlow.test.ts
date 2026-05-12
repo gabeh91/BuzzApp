@@ -11,14 +11,12 @@ import {
   onboardingSteps,
 } from "./onboardingFlow";
 
-test("onboarding includes warm intro steps before the quiz starts", () => {
+test("onboarding keeps a compact intro before the quiz starts", () => {
   assert.deepEqual(
     onboardingSteps.map((step) => step.id),
     [
       "welcome",
-      "intent",
       "howItWorks",
-      "profile",
       "quizIntro",
       "quiz",
       "interests",
@@ -36,12 +34,12 @@ test("onboarding includes warm intro steps before the quiz starts", () => {
 test("onboarding state advances and retreats without leaking step indexes into screens", () => {
   const initial = createInitialOnboardingState();
   const afterWelcome = goNext(initial);
-  const afterIntent = goNext(afterWelcome);
+  const afterHowItWorks = goNext(afterWelcome);
 
   assert.equal(initial.step.id, "welcome");
-  assert.equal(afterWelcome.step.id, "intent");
-  assert.equal(afterIntent.step.id, "howItWorks");
-  assert.equal(goBack(afterIntent).step.id, "intent");
+  assert.equal(afterWelcome.step.id, "howItWorks");
+  assert.equal(afterHowItWorks.step.id, "quizIntro");
+  assert.equal(goBack(afterHowItWorks).step.id, "howItWorks");
   assert.equal(goBack(initial).step.id, "welcome");
 });
 

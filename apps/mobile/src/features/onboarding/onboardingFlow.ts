@@ -1,8 +1,6 @@
 export type OnboardingStepId =
   | "welcome"
-  | "intent"
   | "howItWorks"
-  | "profile"
   | "quizIntro"
   | "quiz"
   | "interests"
@@ -24,17 +22,17 @@ export type OnboardingState = {
 
 export const onboardingStepIds: OnboardingStepId[] = [
   "welcome",
-  "intent",
   "howItWorks",
-  "profile",
   "quizIntro",
   "quiz",
   "interests",
   "activation",
-  "matchPreview"
+  "matchPreview",
 ];
 
-export const onboardingSteps: OnboardingStep[] = onboardingStepIds.map((id) => ({ id }));
+export const onboardingSteps: OnboardingStep[] = onboardingStepIds.map(
+  (id) => ({ id }),
+);
 
 type AnonymousDraftResumeState = {
   answers: Record<string, string>;
@@ -55,8 +53,8 @@ const createState = (index: number): OnboardingState => {
     step,
     progress: {
       current: clampedIndex + 1,
-      total: onboardingSteps.length
-    }
+      total: onboardingSteps.length,
+    },
   };
 };
 

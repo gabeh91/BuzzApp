@@ -1,7 +1,5 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
-import { useBuzzAuth } from "@/auth/AuthProvider";
-import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import type {
   ActivationAvailabilityIntent,
@@ -16,30 +14,8 @@ import { useOnboardingTheme } from "./OnboardingTheme";
 const IntroContent = () => {
   const { styles } = useOnboardingTheme();
   const { state } = useOnboarding();
-  const { user } = useBuzzAuth();
-  const cityContext = createCityContextFallback({
-    cityId: user.cityId,
-    cityName: user.cityName,
-  });
   const { LL } = useI18n();
   const stepCopy = LL.onboarding.steps[state.step.id];
-
-  if (state.step.id === "profile") {
-    return (
-      <View style={styles.contentStack}>
-        <View style={styles.profileCard}>
-          <Text style={styles.metaLabel}>
-            {LL.onboarding.profile.metaLabel()}
-          </Text>
-          <Text style={styles.profileName}>{user.displayName}</Text>
-          <Text style={styles.profileMeta}>
-            {LL.onboarding.profile.meta({ city: cityContext.city.name })}
-          </Text>
-        </View>
-        <Text style={styles.bodyCopy}>{LL.onboarding.profile.body()}</Text>
-      </View>
-    );
-  }
 
   if (state.step.id === "howItWorks") {
     return (

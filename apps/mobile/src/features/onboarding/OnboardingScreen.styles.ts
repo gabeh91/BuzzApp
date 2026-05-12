@@ -158,27 +158,6 @@ export const createOnboardingStyles = (theme: BuzzTheme) => {
       fontSize: fontSizes.lg,
       lineHeight: lineHeights.relaxed,
     },
-    profileCard: {
-      backgroundColor: colors.background,
-      borderRadius: radii.lg,
-      padding: spacing[5],
-    },
-    metaLabel: {
-      color: colors.textMuted,
-      fontSize: fontSizes.xs,
-      letterSpacing: 1.2,
-      textTransform: "uppercase",
-    },
-    profileName: {
-      color: colors.text,
-      ...fontStyles.displayStrong,
-      fontSize: fontSizes["4xl"],
-      marginTop: spacing[3],
-    },
-    profileMeta: {
-      color: colors.textMuted,
-      marginTop: spacing[2],
-    },
     howItWorksList: {
       gap: spacing[3],
     },

@@ -56,11 +56,6 @@ const en = {
       browseBuzz: "Browse Buzz for now",
       enterBuzz: "Enter Buzz",
     },
-    profile: {
-      metaLabel: "Your starting point",
-      meta: "{city:string} - Ready to meet around real plans",
-      body: "Add your city, pace, and interests so first suggestions feel useful.",
-    },
     howItWorks: {
       itemOne: "Choose what you actually want to do.",
       itemTwo: "Activate when you are open to a plan.",
@@ -92,20 +87,10 @@ const en = {
         title: "A softer way to find your people in a new city.",
         body: "Buzz helps you find like-minded people to join you in the things you love to do.",
       },
-      intent: {
-        eyebrow: "Your intent",
-        title: "Tell us why you are here.",
-        body: "New to town, returning after time away, or just widening your circle. The activity comes first.",
-      },
       howItWorks: {
         eyebrow: "How it works",
         title: "Pick interests, activate one, then meet around a plan.",
         body: "Match around shared momentum: tennis, coffee, climbing, singing, or whatever feels right.",
-      },
-      profile: {
-        eyebrow: "Profile basics",
-        title: "Create a lightweight local profile.",
-        body: "Add just enough context for suggestions around where you are and how you like to spend time.",
       },
       quizIntro: {
         eyebrow: "Discovery quiz",
