@@ -95,6 +95,8 @@ test("onboarding start exposes sign in for existing accounts", () => {
   assert.match(source, /handleExistingAccountSignIn/);
   assert.match(source, /LL\.onboarding\.actions\.signInExisting/);
   assert.match(source, /await requireAuth\("save_profile"/);
+  assert.match(source, /const showBackAction = !onboarding\.isFirstStep/);
+  assert.match(source, /variant="tonal"/);
   assert.match(translationsSource, /signInExisting:/);
 });
 

@@ -875,6 +875,7 @@ const OnboardingExperience = () => {
     !isAuthenticated &&
     onboarding.isFirstStep &&
     onboarding.state.step.id === "welcome";
+  const showBackAction = !onboarding.isFirstStep;
 
   const persistQuizProfile = async (profileUser: BuzzAuthUser = user) => {
     const input = createBuzzProfilePersistenceInput({
@@ -1081,20 +1082,19 @@ const OnboardingExperience = () => {
                   onPress={() => {
                     void handleExistingAccountSignIn();
                   }}
-                  variant="bordered"
+                  variant="tonal"
                   style={styles.secondaryAction}
                 />
               ) : null}
-              <Button
-                label={LL.common.back()}
-                disabled={
-                  onboarding.isFirstStep && onboarding.state.step.id !== "quiz"
-                }
-                onPress={handleBack}
-                variant="plain"
-                style={styles.secondaryAction}
-                textStyle={styles.backActionText}
-              />
+              {showBackAction ? (
+                <Button
+                  label={LL.common.back()}
+                  onPress={handleBack}
+                  variant="plain"
+                  style={styles.secondaryAction}
+                  textStyle={styles.backActionText}
+                />
+              ) : null}
             </View>
           </View>
         </Animated.ScrollView>
