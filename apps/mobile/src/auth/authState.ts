@@ -10,6 +10,7 @@ export const createBuzzAuthState = (
     accessToken: undefined,
     authSheetVisible: false,
     biometricEnabled: false,
+    completePendingAuthAction: async () => undefined,
     enableBiometricLogin: async () => false,
     isAuthenticated: user.authSource === "supabase",
     isLocked: false,

@@ -28,7 +28,8 @@ export const AuthCodeScreen = () => {
     email?: string | string[];
     intent?: string | string[];
   }>();
-  const { sendEmailOtp, verifyEmailOtp } = useBuzzAuth();
+  const { completePendingAuthAction, sendEmailOtp, verifyEmailOtp } =
+    useBuzzAuth();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const email = getEmailParam(params.email).trim();
@@ -48,6 +49,7 @@ export const AuthCodeScreen = () => {
     try {
       await verifyEmailOtp(email, normalizedCode);
       closeAuthModal();
+      await completePendingAuthAction();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "That code did not work.",

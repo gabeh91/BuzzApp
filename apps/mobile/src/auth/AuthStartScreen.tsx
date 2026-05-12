@@ -31,6 +31,7 @@ export const AuthStartScreen = () => {
   const params = useLocalSearchParams<{ intent?: string | string[] }>();
   const closeAuthModal = useCloseAuthModal();
   const {
+    completePendingAuthAction,
     sendEmailOtp,
     signInWithEmailPassword,
     signInWithOAuth,
@@ -67,6 +68,7 @@ export const AuthStartScreen = () => {
     try {
       await signInWithOAuth(provider);
       closeAuthModal();
+      await completePendingAuthAction();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Unable to start sign in.",
@@ -104,6 +106,7 @@ export const AuthStartScreen = () => {
       if (action === "signIn") {
         await signInWithEmailPassword(normalizedEmail, password);
         closeAuthModal();
+        await completePendingAuthAction();
         return;
       }
 
@@ -117,6 +120,7 @@ export const AuthStartScreen = () => {
       }
 
       closeAuthModal();
+      await completePendingAuthAction();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Unable to sign in.",

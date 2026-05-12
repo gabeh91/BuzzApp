@@ -18,6 +18,7 @@ const mockRouterPush = jest.fn();
 const mockRouterReplace = jest.fn();
 const mockRootNavigationCanGoBack = jest.fn();
 const mockRootNavigationGoBack = jest.fn();
+const mockPendingAuthAction = jest.fn();
 const mockSignInWithPassword = jest.fn();
 const mockSignInWithOtp = jest.fn();
 const mockSignUp = jest.fn();
@@ -118,11 +119,29 @@ const AuthGateButton = () => {
   );
 };
 
+const AuthGateButtonWithPendingAction = () => {
+  const { requireAuth } = useBuzzAuth();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => {
+        void requireAuth("chat", async () => {
+          mockPendingAuthAction();
+        });
+      }}
+    >
+      <NativeText>Say hi</NativeText>
+    </Pressable>
+  );
+};
+
 describe("Buzz auth modal flow", () => {
   beforeEach(() => {
     mockRouterDismiss.mockReset();
     mockRouterPush.mockReset();
     mockRouterReplace.mockReset();
+    mockPendingAuthAction.mockReset();
     mockRootNavigationCanGoBack.mockReset();
     mockRootNavigationCanGoBack.mockReturnValue(true);
     mockRootNavigationGoBack.mockReset();
@@ -215,6 +234,57 @@ describe("Buzz auth modal flow", () => {
       );
       expect(mockRootNavigationGoBack).toHaveBeenCalled();
     });
+  });
+
+  it("runs the pending auth action after closing the auth modal on account creation", async () => {
+    mockSignUp.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "access-token",
+          user: {
+            email: "sam@example.com",
+            id: "user-1",
+            user_metadata: {},
+          },
+        },
+      },
+      error: null,
+    });
+
+    renderWithProviders(
+      <>
+        <AuthGateButtonWithPendingAction />
+        <AuthStartScreen />
+      </>,
+    );
+
+    fireEvent.press(await screen.findByRole("button", { name: "Say hi" }));
+
+    await waitFor(() => {
+      expect(mockRouterPush).toHaveBeenCalledWith({
+        pathname: routes.auth,
+        params: { intent: "chat" },
+      });
+    });
+
+    fireEvent.changeText(
+      screen.getByPlaceholderText("you@example.com"),
+      "sam@example.com",
+    );
+    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.press(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() => {
+      expect(mockRootNavigationGoBack).toHaveBeenCalled();
+      expect(mockPendingAuthAction).toHaveBeenCalledTimes(1);
+    });
+
+    const closeCallOrder = mockRootNavigationGoBack.mock.invocationCallOrder[0];
+    const pendingCallOrder = mockPendingAuthAction.mock.invocationCallOrder[0];
+
+    expect(closeCallOrder).toBeDefined();
+    expect(pendingCallOrder).toBeDefined();
+    expect(closeCallOrder ?? 0).toBeLessThan(pendingCallOrder ?? 0);
   });
 
   it("signs in an existing email password account and closes auth", async () => {

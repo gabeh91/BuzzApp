@@ -25,6 +25,7 @@ export type BuzzAuthState = {
   accessToken?: string | undefined;
   authSheetVisible: boolean;
   biometricEnabled: boolean;
+  completePendingAuthAction: () => Promise<void>;
   enableBiometricLogin: () => Promise<boolean>;
   isAuthenticated: boolean;
   isLocked: boolean;

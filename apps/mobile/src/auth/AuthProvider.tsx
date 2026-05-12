@@ -79,20 +79,24 @@ const claimAnonymousDraftForUser = async (userId: string): Promise<void> => {
 };
 
 export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
+  const initialUserRef = useRef(createAnonymousBuzzUser());
+  const currentSessionRef = useRef<Session | null>(null);
+  const currentUserRef = useRef<BuzzAuthUser>(initialUserRef.current);
   const pendingActionRef = useRef<
     ((user: BuzzAuthUser, accessToken?: string) => Promise<void> | void) | null
   >(null);
-  const [user, setUser] = useState<BuzzAuthUser>(() =>
-    createAnonymousBuzzUser(),
-  );
+  const [user, setUser] = useState<BuzzAuthUser>(initialUserRef.current);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<BuzzAuthState["status"]>("loading");
   const [biometricEnabled, setBiometricEnabled] = useState(false);
 
   const completeSession = useCallback(async (nextSession: Session | null) => {
     if (!nextSession) {
+      const anonymousUser = createAnonymousBuzzUser();
+      currentSessionRef.current = null;
+      currentUserRef.current = anonymousUser;
       setSession(null);
-      setUser(createAnonymousBuzzUser());
+      setUser(anonymousUser);
       setBiometricEnabled(false);
       setStatus("anonymous");
       return;
@@ -103,6 +107,8 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
 
     await claimAnonymousDraftForUser(nextUser.id);
 
+    currentSessionRef.current = nextSession;
+    currentUserRef.current = nextUser;
     setSession(nextSession);
     setUser(nextUser);
     setBiometricEnabled(nextBiometricEnabled);
@@ -145,13 +151,6 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       (_event, nextSession) => {
         const handleAuthStateChange = async () => {
           await completeSession(nextSession);
-
-          if (nextSession) {
-            await runPendingAction(
-              createUserFromSession(nextSession),
-              nextSession.access_token,
-            );
-          }
         };
 
         void handleAuthStateChange();
@@ -229,13 +228,19 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
   const completeSignedInSession = useCallback(
     async (nextSession: Session) => {
       await completeSession(nextSession);
-      await runPendingAction(
-        createUserFromSession(nextSession),
-        nextSession.access_token,
-      );
     },
-    [completeSession, runPendingAction],
+    [completeSession],
   );
+
+  const completePendingAuthAction = useCallback(async () => {
+    const nextUser = currentUserRef.current;
+
+    if (nextUser.authSource !== "supabase") {
+      return;
+    }
+
+    await runPendingAction(nextUser, currentSessionRef.current?.access_token);
+  }, [runPendingAction]);
 
   const signInWithEmailPassword = useCallback(
     async (email: string, password: string) => {
@@ -428,6 +433,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
     accessToken: session?.access_token,
     authSheetVisible: false,
     biometricEnabled,
+    completePendingAuthAction,
     enableBiometricLogin,
     isAuthenticated: status !== "loading" && user.authSource === "supabase",
     isLocked: status === "locked",
