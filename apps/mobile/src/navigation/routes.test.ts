@@ -10,6 +10,7 @@ test("routes define Expo Router paths for onboarding, root tabs, and activity gr
   assert.equal(routes.activities, "/activities");
   assert.equal(routes.chats, "/chats");
   assert.equal(routes.profile, "/profile");
+  assert.equal(routes.profileQuiz, "/profile/quiz");
   assert.equal(routes.auth, "/auth");
   assert.equal(routes.authCode, "/auth/code");
   assert.equal(routes.group("group-123"), "/groups/group-123");
@@ -26,6 +27,7 @@ test("isOnboardingRoute identifies the guided onboarding entry route", () => {
   assert.equal(isOnboardingRoute(routes.activities), false);
   assert.equal(isOnboardingRoute(routes.chats), false);
   assert.equal(isOnboardingRoute(routes.profile), false);
+  assert.equal(isOnboardingRoute(routes.profileQuiz), false);
   assert.equal(isOnboardingRoute(routes.group("group-123")), false);
   assert.equal(isOnboardingRoute(routes.peopleConnect("profile-123")), false);
 });

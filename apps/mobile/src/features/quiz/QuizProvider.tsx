@@ -118,23 +118,28 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
         ...current,
         [questionId]: optionId,
       }));
-      void anonymousOnboardingDraftStore.update((draft) =>
-        mergeQuizAnswerIntoDraft(
-          draft,
-          questionId,
-          optionId,
-          activeQuestionIndex,
-        ),
-      );
+
+      if (status === "anonymous") {
+        void anonymousOnboardingDraftStore.update((draft) =>
+          mergeQuizAnswerIntoDraft(
+            draft,
+            questionId,
+            optionId,
+            activeQuestionIndex,
+          ),
+        );
+      }
     },
     nextQuestion: () => {
       setActiveQuestionIndex((current) => {
         const nextIndex = Math.min(current + 1, quizQuestions.length - 1);
 
-        void anonymousOnboardingDraftStore.update((draft) => ({
-          ...draft,
-          activeQuestionIndex: nextIndex,
-        }));
+        if (status === "anonymous") {
+          void anonymousOnboardingDraftStore.update((draft) => ({
+            ...draft,
+            activeQuestionIndex: nextIndex,
+          }));
+        }
 
         return nextIndex;
       });
@@ -143,10 +148,12 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
       setActiveQuestionIndex((current) => {
         const nextIndex = Math.max(current - 1, 0);
 
-        void anonymousOnboardingDraftStore.update((draft) => ({
-          ...draft,
-          activeQuestionIndex: nextIndex,
-        }));
+        if (status === "anonymous") {
+          void anonymousOnboardingDraftStore.update((draft) => ({
+            ...draft,
+            activeQuestionIndex: nextIndex,
+          }));
+        }
 
         return nextIndex;
       });

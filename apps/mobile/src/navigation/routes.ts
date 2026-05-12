@@ -5,11 +5,11 @@ export const routes = {
   activities: "/activities",
   chats: "/chats",
   profile: "/profile",
+  profileQuiz: "/profile/quiz",
   auth: "/auth",
   authCode: "/auth/code",
   group: (id: string) => `/groups/${id}` as const,
-  peopleConnect: (profileId: string) =>
-    `/people/${profileId}/connect` as const,
+  peopleConnect: (profileId: string) => `/people/${profileId}/connect` as const,
 } as const;
 
 export type BuzzRoute =
@@ -19,6 +19,7 @@ export type BuzzRoute =
   | typeof routes.activities
   | typeof routes.chats
   | typeof routes.profile
+  | typeof routes.profileQuiz
   | typeof routes.auth
   | typeof routes.authCode
   | ReturnType<typeof routes.group>

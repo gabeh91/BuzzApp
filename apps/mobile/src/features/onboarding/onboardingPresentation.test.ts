@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const onboardingScreenSource = readFileSync("src/features/onboarding/OnboardingScreen.tsx", "utf8");
+const onboardingScreenSource = readFileSync(
+  "src/features/onboarding/OnboardingScreen.tsx",
+  "utf8",
+);
 const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
   dependencies?: Record<string, string>;
 };
@@ -36,49 +39,94 @@ test("onboarding keeps header and progress fixed above scrollable card content",
   assert.match(onboardingScreenSource, /const FixedOnboardingHeader =/);
   assert.match(
     onboardingScreenSource,
-    /<SafeAreaView[\s\S]*?<FixedOnboardingHeader[\s\S]*?<Animated\.ScrollView[\s\S]*?<Animated\.View style=\{\[styles\.mainCard, transition\.cardStyle\]\}/
+    /<(?:SafeAreaView|Screen)[\s\S]*?<FixedOnboardingHeader[\s\S]*?<Animated\.ScrollView[\s\S]*?<Animated\.View style=\{\[styles\.mainCard, transition\.cardStyle\]\}/,
   );
   assert.match(onboardingScreenSource, /quizProgress/);
-  assert.doesNotMatch(onboardingScreenSource, /const QuizContent[\s\S]*?<ProgressBar/);
+  assert.doesNotMatch(
+    onboardingScreenSource,
+    /const QuizContent[\s\S]*?<ProgressBar/,
+  );
 });
 
 test("ambient background is scoped below the fixed onboarding header", () => {
   assert.match(
     onboardingScreenSource,
-    /<FixedOnboardingHeader[\s\S]*?<View style=\{styles\.stage\}>[\s\S]*?<AmbientBackground[\s\S]*?<Animated\.ScrollView[\s\S]*?<View style=\{styles\.layout\}>/
+    /<FixedOnboardingHeader[\s\S]*?<View style=\{styles\.stage\}>[\s\S]*?<AmbientBackground[\s\S]*?<Animated\.ScrollView[\s\S]*?<View style=\{styles\.layout\}>/,
   );
-  assert.doesNotMatch(onboardingScreenSource, /<SafeAreaView[\s\S]*?<AmbientBackground[\s\S]*?<FixedOnboardingHeader/);
+  assert.doesNotMatch(
+    onboardingScreenSource,
+    /<SafeAreaView[\s\S]*?<AmbientBackground[\s\S]*?<FixedOnboardingHeader/,
+  );
   assert.match(onboardingScreenSource, /stage: \{[\s\S]*position: "relative"/);
 });
 
 test("ambient background lets decorative blobs overflow the content frame", () => {
-  assert.match(onboardingScreenSource, /ambientRoot: \{[\s\S]*position: "absolute"/);
-  assert.doesNotMatch(onboardingScreenSource, /ambientRoot: \{[\s\S]*overflow: "hidden"[\s\S]*\},\n  ambientSky/);
-  assert.match(onboardingScreenSource, /ambientSky: \{[\s\S]*top: -80[\s\S]*right: -70/);
+  assert.match(
+    onboardingScreenSource,
+    /ambientRoot: \{[\s\S]*position: "absolute"/,
+  );
+  assert.doesNotMatch(
+    onboardingScreenSource,
+    /ambientRoot: \{[\s\S]*overflow: "hidden"[\s\S]*\},\n  ambientSky/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /ambientSky: \{[\s\S]*top: -80[\s\S]*right: -70/,
+  );
   assert.match(onboardingScreenSource, /ambientGold: \{[\s\S]*left: -95/);
 });
 
 test("ambient background uses different parallax scroll speeds than the card", () => {
   assert.match(onboardingScreenSource, /useAnimatedScrollHandler/);
   assert.match(onboardingScreenSource, /const scrollY = useSharedValue\(0\)/);
-  assert.match(onboardingScreenSource, /scrollY\.value = event\.contentOffset\.y/);
-  assert.match(onboardingScreenSource, /<Animated\.ScrollView[\s\S]*onScroll=\{scrollHandler\}[\s\S]*scrollEventThrottle=\{16\}/);
-  assert.match(onboardingScreenSource, /<AmbientBackground scrollY=\{scrollY\}/);
-  assert.match(onboardingScreenSource, /skyParallaxY = scrollY\.value \* 0\.34/);
-  assert.match(onboardingScreenSource, /goldParallaxY = scrollY\.value \* 0\.18/);
-  assert.match(onboardingScreenSource, /translateY: 16 \* ambient\.value - skyParallaxY/);
-  assert.match(onboardingScreenSource, /translateY: -14 \* ambient\.value - goldParallaxY/);
+  assert.match(
+    onboardingScreenSource,
+    /scrollY\.value = event\.contentOffset\.y/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /<Animated\.ScrollView[\s\S]*onScroll=\{scrollHandler\}[\s\S]*scrollEventThrottle=\{16\}/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /<AmbientBackground scrollY=\{scrollY\}/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /skyParallaxY = scrollY\.value \* 0\.34/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /goldParallaxY = scrollY\.value \* 0\.18/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /translateY: 16 \* ambient\.value - skyParallaxY/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /translateY: -14 \* ambient\.value - goldParallaxY/,
+  );
 });
 
 test("onboarding header crossfades progress bars when entering and leaving quiz", () => {
-  assert.match(onboardingScreenSource, /const useHeaderProgressTransition = \(isQuizStep: boolean\)/);
-  assert.match(onboardingScreenSource, /quizMode = useSharedValue\(isQuizStep \? 1 : 0\)/);
+  assert.match(
+    onboardingScreenSource,
+    /const useHeaderProgressTransition = \(isQuizStep: boolean\)/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /quizMode = useSharedValue\(isQuizStep \? 1 : 0\)/,
+  );
   assert.match(onboardingScreenSource, /flowProgressStyle/);
   assert.match(onboardingScreenSource, /quizProgressStyle/);
   assert.match(onboardingScreenSource, /opacity: 1 - quizMode\.value/);
   assert.match(onboardingScreenSource, /opacity: quizMode\.value/);
   assert.match(onboardingScreenSource, /translateY: -12 \* quizMode\.value/);
-  assert.match(onboardingScreenSource, /translateY: 12 \* \(1 - quizMode\.value\)/);
+  assert.match(
+    onboardingScreenSource,
+    /translateY: 12 \* \(1 - quizMode\.value\)/,
+  );
   assert.match(onboardingScreenSource, /lastQuizProgress/);
   assert.match(onboardingScreenSource, /visibleQuizProgress/);
   assert.match(onboardingScreenSource, /styles\.headerProgressSlot/);
@@ -89,7 +137,10 @@ test("onboarding header crossfades progress bars when entering and leaving quiz"
 test("onboarding progress label noun is configurable per progress context", () => {
   assert.match(onboardingScreenSource, /type ProgressBarProps =/);
   assert.match(onboardingScreenSource, /label: string/);
-  assert.match(onboardingScreenSource, /<Text style=\{styles\.progressLabel\}>\{label\}<\/Text>/);
+  assert.match(
+    onboardingScreenSource,
+    /<Text style=\{styles\.progressLabel\}>\{label\}<\/Text>/,
+  );
   assert.match(onboardingScreenSource, /LL\.common\.progress\.step/);
   assert.match(onboardingScreenSource, /LL\.common\.progress\.question/);
   assert.doesNotMatch(onboardingScreenSource, /LL\.onboarding\.progress/);

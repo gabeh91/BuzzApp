@@ -31,6 +31,19 @@ const en = {
     completeQuiz: "Complete quiz",
     notNow: "Not now",
   },
+  profileQuiz: {
+    eyebrow: "Profile quiz",
+    title: "Complete your quiz",
+    body: "Answer the remaining questions now, or close this and come back when you have a moment.",
+    saving: "Saving...",
+    saved: "Quiz saved.",
+    failed: "We could not save your quiz yet. Try again.",
+    actions: {
+      close: "Close",
+      finish: "Finish quiz",
+      next: "Next question",
+    },
+  },
   onboarding: {
     actions: {
       finishQuiz: "Finish quiz",
@@ -77,7 +90,7 @@ const en = {
       welcome: {
         eyebrow: "Welcome to Buzz",
         title: "A softer way to find your people in a new city.",
-        body: "Start with what you actually want to do, then turn one interest into an easy reason to meet.",
+        body: "Buzz helps you find like-minded people to join you in the things you love to do.",
       },
       intent: {
         eyebrow: "Your intent",

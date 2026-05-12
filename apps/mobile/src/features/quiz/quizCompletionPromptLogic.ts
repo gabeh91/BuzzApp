@@ -3,6 +3,7 @@ export type QuizCompletionPromptState = {
   isAuthenticated: boolean;
   isInviteAcceptRoute: boolean;
   isOnboardingRoute: boolean;
+  isProfileQuizRoute: boolean;
   quizCompleted: boolean;
 };
 
@@ -11,6 +12,7 @@ export const shouldShowQuizCompletionPrompt = ({
   isAuthenticated,
   isInviteAcceptRoute,
   isOnboardingRoute,
+  isProfileQuizRoute,
   quizCompleted,
 }: QuizCompletionPromptState): boolean => {
   return (
@@ -18,6 +20,7 @@ export const shouldShowQuizCompletionPrompt = ({
     !quizCompleted &&
     !dismissedForSession &&
     !isInviteAcceptRoute &&
-    !isOnboardingRoute
+    !isOnboardingRoute &&
+    !isProfileQuizRoute
   );
 };

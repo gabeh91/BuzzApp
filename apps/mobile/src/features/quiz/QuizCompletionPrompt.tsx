@@ -26,12 +26,13 @@ export const QuizCompletionPrompt = () => {
     isInviteAcceptRoute: pathname.startsWith("/join/group"),
     isOnboardingRoute:
       pathname === routes.onboarding || pathname === routes.onboardingQuiz,
+    isProfileQuizRoute: pathname === routes.profileQuiz,
     quizCompleted: traits.quizCompleted,
   });
 
   const handleCompleteQuiz = () => {
     setDismissedForSession(true);
-    router.push(routes.onboardingQuiz);
+    router.push(routes.profileQuiz);
   };
 
   return (
