@@ -226,6 +226,61 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithMagicLink = sendEmailOtp;
 
+  const completeSignedInSession = useCallback(
+    async (nextSession: Session) => {
+      await completeSession(nextSession);
+      await runPendingAction(
+        createUserFromSession(nextSession),
+        nextSession.access_token,
+      );
+    },
+    [completeSession, runPendingAction],
+  );
+
+  const signInWithEmailPassword = useCallback(
+    async (email: string, password: string) => {
+      const { data, error } = await buzzSupabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data.session) {
+        throw new Error("Check your email before signing in.");
+      }
+
+      await completeSignedInSession(data.session);
+    },
+    [completeSignedInSession],
+  );
+
+  const signUpWithEmailPassword = useCallback(
+    async (email: string, password: string) => {
+      const { data, error } = await buzzSupabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: createRedirectUrl(),
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data.session) {
+        return { needsEmailConfirmation: true };
+      }
+
+      await completeSignedInSession(data.session);
+      return { needsEmailConfirmation: false };
+    },
+    [completeSignedInSession],
+  );
+
   const exchangeAuthCode = useCallback(
     async (code: string) => {
       const exchanged = await buzzSupabase.auth.exchangeCodeForSession(code);
@@ -235,14 +290,10 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (exchanged.data.session) {
-        await completeSession(exchanged.data.session);
-        await runPendingAction(
-          createUserFromSession(exchanged.data.session),
-          exchanged.data.session.access_token,
-        );
+        await completeSignedInSession(exchanged.data.session);
       }
     },
-    [completeSession, runPendingAction],
+    [completeSignedInSession],
   );
 
   const verifyEmailOtp = useCallback(
@@ -258,14 +309,10 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.session) {
-        await completeSession(data.session);
-        await runPendingAction(
-          createUserFromSession(data.session),
-          data.session.access_token,
-        );
+        await completeSignedInSession(data.session);
       }
     },
-    [completeSession, runPendingAction],
+    [completeSignedInSession],
   );
 
   const completeAuthUrl = useCallback(
@@ -388,8 +435,10 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
     requireAuth,
     sendEmailOtp,
     verifyEmailOtp,
+    signInWithEmailPassword,
     signInWithMagicLink,
     signInWithOAuth,
+    signUpWithEmailPassword,
     signOut,
     status,
     unlockWithBiometrics,

@@ -18,7 +18,9 @@ const mockRouterPush = jest.fn();
 const mockRouterReplace = jest.fn();
 const mockRootNavigationCanGoBack = jest.fn();
 const mockRootNavigationGoBack = jest.fn();
+const mockSignInWithPassword = jest.fn();
 const mockSignInWithOtp = jest.fn();
+const mockSignUp = jest.fn();
 const mockUseLocalSearchParams = jest.fn();
 const mockVerifyOtp = jest.fn();
 
@@ -54,9 +56,11 @@ jest.mock("@/lib/supabase", () => ({
         data: { subscription: { unsubscribe: jest.fn() } },
       })),
       signInWithOAuth: jest.fn(),
+      signInWithPassword: (...args: unknown[]) =>
+        mockSignInWithPassword(...args),
       signInWithOtp: (...args: unknown[]) => mockSignInWithOtp(...args),
       signOut: jest.fn(),
-      signUp: jest.fn(),
+      signUp: (...args: unknown[]) => mockSignUp(...args),
       verifyOtp: (...args: unknown[]) => mockVerifyOtp(...args),
     },
   },
@@ -122,7 +126,9 @@ describe("Buzz auth modal flow", () => {
     mockRootNavigationCanGoBack.mockReset();
     mockRootNavigationCanGoBack.mockReturnValue(true);
     mockRootNavigationGoBack.mockReset();
+    mockSignInWithPassword.mockReset();
     mockSignInWithOtp.mockReset();
+    mockSignUp.mockReset();
     mockUseLocalSearchParams.mockReset();
     mockUseLocalSearchParams.mockReturnValue({
       email: "sam@example.com",
@@ -173,6 +179,74 @@ describe("Buzz auth modal flow", () => {
         pathname: routes.authCode,
         params: { email: "sam@example.com", intent: "save_profile" },
       });
+    });
+  });
+
+  it("creates an email password account and closes auth when a session is returned", async () => {
+    mockSignUp.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "access-token",
+          user: {
+            email: "sam@example.com",
+            id: "user-1",
+            user_metadata: {},
+          },
+        },
+      },
+      error: null,
+    });
+
+    renderWithProviders(<AuthStartScreen />);
+
+    fireEvent.changeText(
+      await screen.findByPlaceholderText("you@example.com"),
+      "sam@example.com",
+    );
+    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.press(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() => {
+      expect(mockSignUp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "sam@example.com",
+          password: "password1",
+        }),
+      );
+      expect(mockRootNavigationGoBack).toHaveBeenCalled();
+    });
+  });
+
+  it("signs in an existing email password account and closes auth", async () => {
+    mockSignInWithPassword.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "access-token",
+          user: {
+            email: "sam@example.com",
+            id: "user-1",
+            user_metadata: {},
+          },
+        },
+      },
+      error: null,
+    });
+
+    renderWithProviders(<AuthStartScreen />);
+
+    fireEvent.changeText(
+      await screen.findByPlaceholderText("you@example.com"),
+      "sam@example.com",
+    );
+    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.press(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => {
+      expect(mockSignInWithPassword).toHaveBeenCalledWith({
+        email: "sam@example.com",
+        password: "password1",
+      });
+      expect(mockRootNavigationGoBack).toHaveBeenCalled();
     });
   });
 

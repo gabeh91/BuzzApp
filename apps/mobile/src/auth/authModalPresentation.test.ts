@@ -17,11 +17,12 @@ test("auth uses a native route modal stack instead of an inline primitive modal"
   assert.match(rootLayoutSource, /initialRouteName: "index"/);
   assert.match(authLayoutSource, /<Stack/);
   assert.match(startSource, /Send email code/);
+  assert.match(startSource, /Sign in/);
+  assert.match(startSource, /Create account/);
+  assert.match(startSource, /secureTextEntry/);
   assert.match(startSource, /getAuthModalIntentParam/);
   assert.match(startSource, /createAuthCodeRoute/);
   assert.match(codeSource, /Enter your code/);
   assert.match(codeSource, /verifyEmailOtp/);
   assert.match(providerSource, /createAuthStartRoute\(decision\.intent\)/);
-  assert.doesNotMatch(startSource, /Continue with password/);
-  assert.doesNotMatch(startSource, /secureTextEntry/);
 });

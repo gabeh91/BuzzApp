@@ -30,18 +30,30 @@ export const AuthStartScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ intent?: string | string[] }>();
   const closeAuthModal = useCloseAuthModal();
-  const { sendEmailOtp, signInWithOAuth } = useBuzzAuth();
+  const {
+    sendEmailOtp,
+    signInWithEmailPassword,
+    signInWithOAuth,
+    signUpWithEmailPassword,
+  } = useBuzzAuth();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const authIntent = getAuthModalIntentParam(params.intent);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [busyProvider, setBusyProvider] = useState<SocialAuthProvider | null>(
     null,
   );
-  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailAction, setEmailAction] = useState<
+    "code" | "signIn" | "signUp" | null
+  >(null);
+  const [noticeMessage, setNoticeMessage] = useState<string | undefined>();
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const normalizedEmail = email.trim();
-  const emailDisabled = !normalizedEmail || emailBusy || Boolean(busyProvider);
+  const emailBusy = Boolean(emailAction);
+  const passwordDisabled =
+    !normalizedEmail || password.length < 6 || emailBusy || Boolean(busyProvider);
+  const otpDisabled = !normalizedEmail || emailBusy || Boolean(busyProvider);
 
   if (!authIntent) {
     return <Redirect href={routes.onboarding} />;
@@ -50,6 +62,7 @@ export const AuthStartScreen = () => {
   const handleSocial = async (provider: SocialAuthProvider) => {
     setBusyProvider(provider);
     setErrorMessage(undefined);
+    setNoticeMessage(undefined);
 
     try {
       await signInWithOAuth(provider);
@@ -64,8 +77,9 @@ export const AuthStartScreen = () => {
   };
 
   const handleEmail = async () => {
-    setEmailBusy(true);
+    setEmailAction("code");
     setErrorMessage(undefined);
+    setNoticeMessage(undefined);
 
     try {
       await sendEmailOtp(normalizedEmail);
@@ -77,13 +91,44 @@ export const AuthStartScreen = () => {
         error instanceof Error ? error.message : "Unable to send the code.",
       );
     } finally {
-      setEmailBusy(false);
+      setEmailAction(null);
+    }
+  };
+
+  const handleEmailPassword = async (action: "signIn" | "signUp") => {
+    setEmailAction(action);
+    setErrorMessage(undefined);
+    setNoticeMessage(undefined);
+
+    try {
+      if (action === "signIn") {
+        await signInWithEmailPassword(normalizedEmail, password);
+        closeAuthModal();
+        return;
+      }
+
+      const result = await signUpWithEmailPassword(normalizedEmail, password);
+
+      if (result.needsEmailConfirmation) {
+        setNoticeMessage(
+          "Account created. Check your email, then come back and sign in.",
+        );
+        return;
+      }
+
+      closeAuthModal();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to sign in.",
+      );
+    } finally {
+      setEmailAction(null);
     }
   };
 
   return (
     <AuthModalFrame
-      body="Use a social account or get a one-time email code. No password needed."
+      body="Create an account or sign in to keep your profile, requests, and chats in sync."
       title="Save your Buzz profile"
     >
       <View style={styles.socialStack}>
@@ -136,14 +181,56 @@ export const AuthStartScreen = () => {
           />
         </View>
 
+        <View style={styles.fieldStack}>
+          <UiText style={styles.fieldLabel}>Password</UiText>
+          <TextInput
+            autoCapitalize="none"
+            autoComplete="password"
+            editable={!emailBusy && !busyProvider}
+            onChangeText={setPassword}
+            placeholder="Password"
+            placeholderTextColor={theme.colors.textMuted}
+            secureTextEntry
+            style={styles.input}
+            textContentType="password"
+            value={password}
+          />
+        </View>
+
         <Button
-          disabled={emailDisabled}
-          label={emailBusy ? "Sending code..." : "Send email code"}
+          disabled={passwordDisabled}
+          label={emailAction === "signIn" ? "Signing in..." : "Sign in"}
+          onPress={() => {
+            void handleEmailPassword("signIn");
+          }}
+        />
+
+        <Button
+          disabled={passwordDisabled}
+          label={
+            emailAction === "signUp" ? "Creating account..." : "Create account"
+          }
+          onPress={() => {
+            void handleEmailPassword("signUp");
+          }}
+          variant="tonal"
+        />
+
+        <Button
+          disabled={otpDisabled}
+          label={emailAction === "code" ? "Sending code..." : "Send email code"}
           onPress={() => {
             void handleEmail();
           }}
+          variant="plain"
         />
       </View>
+
+      {noticeMessage ? (
+        <View style={styles.noticeCard}>
+          <UiText style={styles.noticeText}>{noticeMessage}</UiText>
+        </View>
+      ) : null}
 
       {errorMessage ? (
         <UiText variant="feedback">{errorMessage}</UiText>
@@ -230,6 +317,18 @@ const createStyles = (theme: BuzzTheme) => {
     },
     disabledButton: {
       opacity: 0.55,
+    },
+    noticeCard: {
+      backgroundColor: colors.warningSoft,
+      borderRadius: radii.lg,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+    },
+    noticeText: {
+      color: colors.text,
+      fontSize: fontSizes.sm,
+      fontWeight: "800",
+      lineHeight: lineHeights.tight,
     },
   });
 };

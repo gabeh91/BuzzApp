@@ -20,8 +20,12 @@ export const createBuzzAuthState = (
     },
     sendEmailOtp: async () => undefined,
     verifyEmailOtp: async () => undefined,
+    signInWithEmailPassword: async () => undefined,
     signInWithMagicLink: async () => undefined,
     signInWithOAuth: async () => undefined,
+    signUpWithEmailPassword: async () => ({
+      needsEmailConfirmation: false,
+    }),
     signOut: async () => undefined,
     status: user.authSource === "supabase" ? "authenticated" : "anonymous",
     unlockWithBiometrics: async () => true,

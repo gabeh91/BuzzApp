@@ -17,6 +17,10 @@ export type BuzzAuthUser = {
   authSource: BuzzAuthMode;
 };
 
+export type EmailPasswordSignUpResult = {
+  needsEmailConfirmation: boolean;
+};
+
 export type BuzzAuthState = {
   accessToken?: string | undefined;
   authSheetVisible: boolean;
@@ -31,8 +35,13 @@ export type BuzzAuthState = {
   ) => Promise<boolean>;
   sendEmailOtp: (email: string) => Promise<void>;
   verifyEmailOtp: (email: string, token: string) => Promise<void>;
+  signInWithEmailPassword: (email: string, password: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
   signInWithOAuth: (provider: SocialAuthProvider) => Promise<void>;
+  signUpWithEmailPassword: (
+    email: string,
+    password: string,
+  ) => Promise<EmailPasswordSignUpResult>;
   signOut: () => Promise<void>;
   status: BuzzAuthStatus;
   unlockWithBiometrics: () => Promise<boolean>;
