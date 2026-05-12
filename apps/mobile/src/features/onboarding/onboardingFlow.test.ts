@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createInitialOnboardingState, goBack, goNext, onboardingSteps } from "./onboardingFlow";
+import {
+  canBrowseFromOnboardingStep,
+  createInitialOnboardingState,
+  createOnboardingStateForAnonymousDraft,
+  goBack,
+  goNext,
+  onboardingSteps,
+} from "./onboardingFlow";
 
 test("onboarding includes warm intro steps before the quiz starts", () => {
   assert.deepEqual(
@@ -31,4 +38,32 @@ test("onboarding progress is clamped at completion", () => {
   assert.equal(goNext(completed).step.id, "matchPreview");
   assert.equal(completed.progress.current, onboardingSteps.length);
   assert.equal(completed.progress.total, onboardingSteps.length);
+});
+
+test("onboarding resumes at quiz when an anonymous quiz draft exists", () => {
+  const resumed = createOnboardingStateForAnonymousDraft({
+    answers: { pace: "low" },
+    selectedInterest: null,
+    status: "partial",
+  });
+
+  assert.equal(resumed.step.id, "quiz");
+});
+
+test("onboarding allows anonymous browsing from the activation step", () => {
+  const activation = onboardingSteps.reduce((state) => {
+    if (state.step.id === "activation") {
+      return state;
+    }
+
+    return goNext(state);
+  }, createInitialOnboardingState());
+
+  assert.equal(activation.step.id, "activation");
+  assert.equal(canBrowseFromOnboardingStep(activation), true);
+  assert.equal(
+    canBrowseFromOnboardingStep(createInitialOnboardingState()),
+    false,
+  );
+  assert.equal(canBrowseFromOnboardingStep(goNext(activation)), false);
 });

@@ -82,6 +82,59 @@ For mobile screen work, treat this as a required pre-flight check, not a cleanup
 end. Reusable structure should be part of the first implementation, not something agents add
 only after drift is visible.
 
+## Feed and List Performance
+
+App performance and memory management are high-priority design constraints.
+
+Use the shared `List` primitive from `apps/mobile/src/ui` for unbounded or server-backed list
+surfaces. `List` wraps Shopify FlashList so long feeds recycle rows instead of mounting every card
+at once.
+
+Use `List` for:
+
+- people/discover feeds
+- activity feeds
+- chat/message timelines
+- search results
+- notification/request lists
+- any server-backed list that can grow over time
+
+Do not use array `.map()` in screen JSX for unbounded data. Mapping a long feed mounts every row,
+re-runs row construction on render, and increases memory pressure on mobile devices.
+
+Keep `.map()` only for small, bounded UI collections such as:
+
+- quiz answer options
+- short chip rows
+- bottom tab metadata
+- two or three action buttons
+- fixed local summary rows
+
+Virtualized list rules:
+
+- Do not nest `List`/FlashList inside `ScrollView`. Set `Screen` to `scroll={false}` and let the
+  list own scrolling.
+- Use a stable `keyExtractor`.
+- Keep `renderItem` stable with `useCallback` when it closes over state or handlers.
+- Pass external row state through `extraData` when the list needs to re-render rows.
+- Put page chrome in `ListHeaderComponent`/`ListFooterComponent` instead of wrapping the list in
+  another scroll container.
+- Prefer shared row/card components over defining row layout directly inside `renderItem`.
+
+## UI Testing Strategy
+
+Prefer component tests and feature-level tests for meaningful UI behavior.
+
+- Test that shared components, navigation surfaces, auth gates, and feature flows render and behave
+  correctly.
+- Avoid adding a new brittle regression test for every small visual permutation, tuning constant,
+  copy tweak, or animation micro-adjustment.
+- Use exact-value tests only when the value is part of a real contract, such as accessibility,
+  route structure, auth gating, persistence, or a design-system primitive that other screens depend
+  on.
+- For visual polish changes, keep verification lightweight unless the change fixes a user-visible
+  regression that is likely to recur.
+
 ## Hooks and State Guidelines
 
 Use hooks deliberately and consistently.
@@ -110,6 +163,29 @@ Avoid:
 - copying the same `useState`/`try`/`catch` action flow into multiple screens
 - creating hooks that only wrap a single local variable
 - making shared UI primitives depend on feature-specific providers
+
+## Async Code Style
+
+Prefer `async`/`await` over promise chaining in application code.
+
+- Use small inner async functions inside effects and event handlers when async work is needed.
+- Keep cancellation guards explicit in effects, for example `let active = true` plus an `if (active)`
+  check after awaited work.
+- Avoid `.then(...)` chains for flow control; they make loading, error, and cancellation paths harder
+  to scan.
+- Reserve promise chaining for narrow cases where an API specifically benefits from it, and keep the
+  reason obvious in the local code.
+
+## User-Facing Copy
+
+Write UI copy for what the user can do, see, or decide next.
+
+- Do not use translations to describe Buzz's product positioning, implementation, or strategy.
+- Avoid phrases like "without turning Buzz into...", "Buzz can shape...", or "Buzz avoids...".
+- Prefer direct user value: nearby areas, useful interests, next actions, availability, safety,
+  and plan status.
+- Do not mention implementation services, provider names, hooks, storage, GraphQL, Supabase, or
+  feature flags in rendered copy.
 
 ## Context and Provider Guidelines
 
@@ -184,12 +260,17 @@ If the same name or visual treatment appears in more than one place, prefer a sh
 
 Root-level navigation should use the bottom tab bar.
 
-- Use bottom tabs for root destinations such as activity discovery and profile/progress.
+- Use bottom tabs for root destinations: `Discover`, `Activities`, `Chats`, and `Profile`.
+- Keep `Discover` as the home/default surface for finding people and activities. It should not become narrowly named around one temporary MVP feed.
+- Keep `Activities` focused on active interest availability, activate/deactivate flows, current plans, accepted activities, and plan status.
+- Keep `Chats` focused on connection requests, accepted request threads, group chats, and plan coordination conversations.
+- Keep `Profile` focused on personal state: quiz/profile context, landing or starting-point content, matching availability, auth/account state, and settings.
 - Do not add top-button navigation between root screens when the tab bar already owns that job.
 - Keep detail or workflow routes, such as groups and invite joins, outside the root tabs when
   they are contextual.
-- Put content where users expect it: discovery/activity surfaces on Home, profile/progress and
-  personal plan context on Profile.
+- Put content where users expect it: connection requests can start from Discover/profile detail,
+  but their ongoing state belongs in Chats; landing/progress and personal plan context belong in
+  Profile; activation and plan state belong in Activities.
 
 ## UX Density and Onboarding
 
@@ -317,6 +398,8 @@ Before finishing screen/UI work, check:
 - Did I create a shared component for repeated patterns?
 - Did I avoid hardcoding repeated padding/radius/shadow values in screen styles?
 - Are differences between screens driven by props rather than copied styles?
+- Did I use `List`/FlashList for unbounded feeds instead of `.map()`?
+- Did I avoid nesting a virtualized list inside `ScrollView`?
 - Did I use theme tokens and `StyleSheet.create` instead of ad hoc styling?
 - Did I extract repeated hook/state logic instead of copying it between screens?
 - Is root navigation handled by the bottom tabs rather than top buttons?

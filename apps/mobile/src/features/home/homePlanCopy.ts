@@ -2,6 +2,7 @@ import type { MatchCandidatePreview } from "@/features/matching/matchCandidate.t
 
 export type HomePlanCopyInput = {
   activationComplete: boolean;
+  hasSelectedInterest: boolean;
   interestName: string;
   match: MatchCandidatePreview | null;
   traitsSummary: string;
@@ -10,7 +11,9 @@ export type HomePlanCopyInput = {
     titleReady: () => string;
     activatedBody: () => string;
     readyBody: () => string;
+    browsingBody: () => string;
     emptyPlan: () => string;
+    inactiveInterestTitle: (params: { interest: string }) => string;
     waitingForCandidateTitle: () => string;
     waitingForCandidateBody: (params: { interest: string }) => string;
   };
@@ -26,6 +29,7 @@ export type HomePlanCopy = {
 
 export const createHomePlanCopy = ({
   activationComplete,
+  hasSelectedInterest,
   interestName,
   match,
   traitsSummary,
@@ -47,6 +51,16 @@ export const createHomePlanCopy = ({
       body: copy.activatedBody(),
       suggestedTitle: copy.waitingForCandidateTitle(),
       suggestedBody: copy.waitingForCandidateBody({ interest: interestName }),
+      canActOnMatch: false
+    };
+  }
+
+  if (hasSelectedInterest) {
+    return {
+      title: copy.titleReady(),
+      body: copy.browsingBody(),
+      suggestedTitle: copy.inactiveInterestTitle({ interest: interestName }),
+      suggestedBody: traitsSummary,
       canActOnMatch: false
     };
   }

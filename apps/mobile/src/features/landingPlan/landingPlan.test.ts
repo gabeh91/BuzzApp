@@ -68,7 +68,7 @@ test("profile screen gates the full landing plan and shows the city starting poi
   assert.match(profileSource, /createLandingPlan/);
   assert.match(profileSource, /getTopSuburbMatchesForTraits/);
   assert.match(profileSource, /topSuburbMatches\.map/);
-  assert.match(homeSource, /LL\.home\.suburbFit\.title/);
+  assert.match(homeSource, /LL\.home\.people\.title/);
   assert.match(profileSource, /landing_plan_enabled/);
   assert.match(profileSource, /city_starting_point_enabled/);
   assert.match(profileSource, /showFullLandingPlan/);

@@ -1,15 +1,16 @@
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
-import { Share, StyleSheet, Text, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Share, StyleSheet, View } from "react-native";
 
 import {
+  useActivityGroupSummaryQuery,
   useGroupMessagesQuery,
   useSendGroupMessageMutation,
 } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { ChatComposer } from "@/features/chat/ChatComposer";
 import { createChatDraft } from "@/features/chat/chatModel";
-import { MessageList, type ChatMessage } from "@/features/chat/MessageList";
+import { MessageBubble, type ChatMessage } from "@/features/chat/MessageBubble";
 import { useGroupMessages } from "@/features/chat/useGroupMessages";
 import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
@@ -39,7 +40,14 @@ import {
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button, Header, Screen, Text as UiText } from "@/ui";
+import {
+  Button,
+  Header,
+  List,
+  Screen,
+  Text as UiText,
+  type ListRenderItem,
+} from "@/ui";
 
 import type { ActivityGroupSummary } from "./group.types";
 
@@ -77,13 +85,35 @@ const createGroupSummary = ({
   return summary;
 };
 
+const normalizeGroupStatus = (
+  status: string | undefined,
+): ActivityGroupSummary["status"] => {
+  if (status === "active" || status === "archived" || status === "forming") {
+    return status;
+  }
+
+  return "forming";
+};
+
+type GroupScreenRow =
+  | { type: "context" }
+  | { type: "plan" }
+  | { type: "safety" }
+  | { type: "invite" }
+  | { type: "attendance" }
+  | { type: "chatHeader" }
+  | { type: "chatEmpty" }
+  | { type: "chatMessage"; message: ChatMessage }
+  | { type: "chatFooter" }
+  | { type: "backHome" };
+
 export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const router = useRouter();
-  const { user } = useBuzzAuth();
+  const { requireAuth, user } = useBuzzAuth();
   const { state } = useInterestFlow();
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const match = state.matchPreview;
   const isLocalGroup = groupId.startsWith("local-");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
@@ -101,15 +131,23 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     useState<ActivityPlanConfirmationStatus>("pending");
   const { markAttendanceConfirmed, markFeedbackCompleted, markGroupJoined } =
     useSettlingProgressState();
-  const { data } = useGroupMessagesQuery({
+  const { data: groupSummaryData } = useActivityGroupSummaryQuery({
+    variables: { groupId },
+    skip: isLocalGroup,
+  });
+  const { data: messagesData } = useGroupMessagesQuery({
     variables: { groupId },
     skip: isLocalGroup,
   });
   const [sendGroupMessage, { loading: sendingMessage }] =
     useSendGroupMessageMutation();
+  const remoteGroup =
+    groupSummaryData?.activityGroupsCollection?.edges[0]?.node ?? null;
+  const remotePlan =
+    remoteGroup?.activityPlansCollection?.edges[0]?.node ?? null;
   const groupInput: Parameters<typeof createGroupSummary>[0] = {
     groupId,
-    fallbackInterest: LL.home.fallbackInterest(),
+    fallbackInterest: remoteGroup?.title ?? LL.home.fallbackInterest(),
   };
 
   if (match?.displayName) {
@@ -120,31 +158,63 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     groupInput.selectedInterestName = state.selectedInterest.name;
   }
 
+  if (remoteGroup?.interest?.name) {
+    groupInput.selectedInterestName = remoteGroup.interest.name;
+  }
+
   if (match?.suggestedPlan) {
     groupInput.suggestedPlan = match.suggestedPlan;
   }
 
+  if (remotePlan?.description) {
+    groupInput.suggestedPlan = remotePlan.description;
+  }
+
   const group = createGroupSummary(groupInput);
+  group.status = normalizeGroupStatus(remoteGroup?.status);
   const cityContext = createCityContextFallback({
-    cityId: user.cityId,
-    cityName: user.cityName,
+    cityId: remoteGroup?.city?.id ?? user.cityId,
+    cityName: remoteGroup?.city?.name ?? user.cityName,
   });
-  const activityPlan = createDefaultActivityPlan({
+  const defaultActivityPlan = createDefaultActivityPlan({
     cityContext,
     interestName: group.interestName,
     matchSuggestion: group.suggestedPlan ?? LL.groups.nextStepBody(),
   });
+  const activityPlan = remotePlan
+    ? {
+        ...defaultActivityPlan,
+        capacityMax: remotePlan.capacityMax,
+        capacityMin: remotePlan.capacityMin,
+        matchSuggestion:
+          remotePlan.description ??
+          group.suggestedPlan ??
+          LL.groups.nextStepBody(),
+        publicLocationName: remotePlan.publicLocationName,
+        safetyGuidance: remotePlan.safetyGuidance,
+        suggestedTiming: remotePlan.startsAt ?? remotePlan.venueType,
+        title: remotePlan.title,
+      }
+    : defaultActivityPlan;
   const exactLocationVisible = canShowExactLocation(false);
   const remoteMessages: ChatMessage[] = useMemo(
-    () =>
-      data?.groupMessagesCollection?.edges.map(({ node }) => ({
-        id: node.id,
-        body: node.body,
-        createdAt: node.createdAt,
-        isOwnMessage: node.senderId === user.id,
-        moderationStatus: node.moderationStatus,
-      })) ?? [],
-    [data, user.id],
+    () => {
+      const edges = messagesData?.groupMessagesCollection?.edges ?? [];
+      const mappedMessages: ChatMessage[] = [];
+
+      for (const { node } of edges) {
+        mappedMessages.push({
+          id: node.id,
+          body: node.body,
+          createdAt: node.createdAt,
+          isOwnMessage: node.senderId === user.id,
+          moderationStatus: node.moderationStatus,
+        });
+      }
+
+      return mappedMessages;
+    },
+    [messagesData?.groupMessagesCollection?.edges, user.id],
   );
   const realtimeMessages = useGroupMessages({
     currentUserId: user.id,
@@ -158,27 +228,29 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     const draft = createChatDraft(body);
     if (!draft.canSend) return;
 
-    if (isLocalGroup) {
-      setLocalMessages((current) => [
-        ...current,
-        {
-          id: `local-message-${current.length + 1}`,
-          body: draft.body,
-          createdAt: new Date().toISOString(),
-          isOwnMessage: true,
-          moderationStatus: draft.moderationStatus,
-        },
-      ]);
-      return;
-    }
+    await requireAuth("chat", async (authUser) => {
+      if (isLocalGroup) {
+        setLocalMessages((current) => [
+          ...current,
+          {
+            id: `local-message-${current.length + 1}`,
+            body: draft.body,
+            createdAt: new Date().toISOString(),
+            isOwnMessage: true,
+            moderationStatus: draft.moderationStatus,
+          },
+        ]);
+        return;
+      }
 
-    await sendGroupMessage({
-      variables: {
-        activityGroupId: groupId,
-        body: draft.body,
-        moderationStatus: draft.moderationStatus,
-        senderId: user.id,
-      },
+      await sendGroupMessage({
+        variables: {
+          activityGroupId: groupId,
+          body: draft.body,
+          moderationStatus: draft.moderationStatus,
+          senderId: authUser.id,
+        },
+      });
     });
   };
 
@@ -195,38 +267,41 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   };
 
   const handlePrepareReport = async () => {
-    const draft = createReportDraft({
-      activityGroupId: group.id,
-      category: "unsafe",
-      reason: "Group safety check",
-      reporterId: user.id,
-    });
-
-    if (!draft.canSubmit) {
-      setSafetyFeedback(LL.groups.safety.reportUnavailable());
-      return;
-    }
-
-    if (isLocalGroup) {
-      setSafetyFeedback(LL.groups.safety.reportSubmitted());
-      return;
-    }
-
-    setSafetySubmitting(true);
-
-    try {
-      await runReportAction({
+    await requireAuth("safety_action", async (authUser, accessToken) => {
+      const draft = createReportDraft({
         activityGroupId: group.id,
-        category: draft.category,
-        profileId: user.id,
-        reason: draft.reason,
+        category: "unsafe",
+        reason: "Group safety check",
+        reporterId: authUser.id,
       });
-      setSafetyFeedback(LL.groups.safety.reportSubmitted());
-    } catch {
-      setSafetyFeedback(LL.groups.safety.reportFailed());
-    } finally {
-      setSafetySubmitting(false);
-    }
+
+      if (!draft.canSubmit) {
+        setSafetyFeedback(LL.groups.safety.reportUnavailable());
+        return;
+      }
+
+      if (isLocalGroup) {
+        setSafetyFeedback(LL.groups.safety.reportSubmitted());
+        return;
+      }
+
+      setSafetySubmitting(true);
+
+      try {
+        await runReportAction({
+          accessToken,
+          activityGroupId: group.id,
+          category: draft.category,
+          profileId: authUser.id,
+          reason: draft.reason,
+        });
+        setSafetyFeedback(LL.groups.safety.reportSubmitted());
+      } catch {
+        setSafetyFeedback(LL.groups.safety.reportFailed());
+      } finally {
+        setSafetySubmitting(false);
+      }
+    });
   };
 
   const handlePrepareBlock = async () => {
@@ -235,380 +310,597 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
       return;
     }
 
-    const payload = createBlockPayload({
-      activityGroupId: group.id,
-      blockedId: match.id,
-      blockerId: user.id,
-    });
-
-    if (payload.source !== "group") {
-      setSafetyFeedback(LL.groups.safety.blockUnavailable());
-      return;
-    }
-
-    if (isLocalGroup) {
-      setSafetyFeedback(
-        LL.groups.safety.blockSaved({ name: match.displayName }),
-      );
-      return;
-    }
-
-    setSafetySubmitting(true);
-
-    try {
-      await runBlockAction({
+    await requireAuth("safety_action", async (authUser, accessToken) => {
+      const payload = createBlockPayload({
         activityGroupId: group.id,
-        blockedId: payload.blockedId,
-        profileId: user.id,
+        blockedId: match.id,
+        blockerId: authUser.id,
       });
-      setSafetyFeedback(
-        LL.groups.safety.blockSaved({ name: match.displayName }),
-      );
-    } catch {
-      setSafetyFeedback(LL.groups.safety.blockFailed());
-    } finally {
-      setSafetySubmitting(false);
-    }
+
+      if (payload.source !== "group") {
+        setSafetyFeedback(LL.groups.safety.blockUnavailable());
+        return;
+      }
+
+      if (isLocalGroup) {
+        setSafetyFeedback(
+          LL.groups.safety.blockSaved({ name: match.displayName }),
+        );
+        return;
+      }
+
+      setSafetySubmitting(true);
+
+      try {
+        await runBlockAction({
+          accessToken,
+          activityGroupId: group.id,
+          blockedId: payload.blockedId,
+          profileId: authUser.id,
+        });
+        setSafetyFeedback(
+          LL.groups.safety.blockSaved({ name: match.displayName }),
+        );
+      } catch {
+        setSafetyFeedback(LL.groups.safety.blockFailed());
+      } finally {
+        setSafetySubmitting(false);
+      }
+    });
   };
 
   const handlePrepareLeave = async () => {
-    if (isLocalGroup) {
-      setSafetyFeedback(LL.groups.safety.leaveConfirmed());
-      return;
-    }
+    await requireAuth("safety_action", async (authUser, accessToken) => {
+      if (isLocalGroup) {
+        setSafetyFeedback(LL.groups.safety.leaveConfirmed());
+        return;
+      }
 
-    setSafetySubmitting(true);
+      setSafetySubmitting(true);
 
-    try {
-      await runLeaveGroupAction({
-        activityGroupId: group.id,
-        profileId: user.id,
-      });
-      setSafetyFeedback(LL.groups.safety.leaveConfirmed());
-    } catch {
-      setSafetyFeedback(LL.groups.safety.leaveFailed());
-    } finally {
-      setSafetySubmitting(false);
-    }
+      try {
+        await runLeaveGroupAction({
+          accessToken,
+          activityGroupId: group.id,
+          profileId: authUser.id,
+        });
+        setSafetyFeedback(LL.groups.safety.leaveConfirmed());
+      } catch {
+        setSafetyFeedback(LL.groups.safety.leaveFailed());
+      } finally {
+        setSafetySubmitting(false);
+      }
+    });
   };
 
   const handlePrepareInvite = async () => {
-    const inviteDraft = createInviteDraft({
-      activityGroupId: group.id,
-      inviterId: user.id,
-    });
-
-    setInviteCreating(true);
-    setInviteFeedback(null);
-
-    try {
-      const token = isLocalGroup
-        ? `${inviteDraft.activityGroupId}:${inviteDraft.inviterId}`
-        : (
-            await runCreateInviteAction({
-              activityGroupId: inviteDraft.activityGroupId,
-              profileId: user.id,
-            })
-          ).token;
-      const link = createGroupInviteLink({
-        origin: process.env.EXPO_PUBLIC_INVITE_ORIGIN ?? "https://buzz.local",
-        token,
+    await requireAuth("invite_friend", async (authUser, accessToken) => {
+      const inviteDraft = createInviteDraft({
+        activityGroupId: group.id,
+        inviterId: authUser.id,
       });
 
-      setInviteLink(link);
-      await Share.share({ message: link });
-      setInviteFeedback(LL.groups.invites.shared());
-    } catch {
-      setInviteFeedback(LL.groups.invites.failed());
-    } finally {
-      setInviteCreating(false);
-    }
+      setInviteCreating(true);
+      setInviteFeedback(null);
+
+      try {
+        const token = isLocalGroup
+          ? `${inviteDraft.activityGroupId}:${inviteDraft.inviterId}`
+          : (
+              await runCreateInviteAction({
+                accessToken,
+                activityGroupId: inviteDraft.activityGroupId,
+                profileId: authUser.id,
+              })
+            ).token;
+        const link = createGroupInviteLink({
+          origin: process.env.EXPO_PUBLIC_INVITE_ORIGIN ?? "https://buzz.local",
+          token,
+        });
+
+        setInviteLink(link);
+        await Share.share({ message: link });
+        setInviteFeedback(LL.groups.invites.shared());
+      } catch {
+        setInviteFeedback(LL.groups.invites.failed());
+      } finally {
+        setInviteCreating(false);
+      }
+    });
   };
 
   const confirmAttendance = async () => {
-    markGroupJoined();
+    await requireAuth("attend_activity", async (authUser, accessToken) => {
+      markGroupJoined();
 
-    if (isLocalGroup) {
-      markAttendanceConfirmed();
-      setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
-      return;
-    }
+      if (isLocalGroup) {
+        markAttendanceConfirmed();
+        setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
+        return;
+      }
 
-    setAttendanceSubmitting(true);
+      setAttendanceSubmitting(true);
 
-    try {
-      await runAttendanceAction({
-        activityGroupId: group.id,
-        profileId: user.id,
-      });
-      markAttendanceConfirmed();
-      setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
-    } catch {
-      setAttendanceFeedback(LL.groups.attendance.attendanceFailed());
-    } finally {
-      setAttendanceSubmitting(false);
-    }
+      try {
+        await runAttendanceAction({
+          accessToken,
+          activityGroupId: group.id,
+          profileId: authUser.id,
+        });
+        markAttendanceConfirmed();
+        setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
+      } catch {
+        setAttendanceFeedback(LL.groups.attendance.attendanceFailed());
+      } finally {
+        setAttendanceSubmitting(false);
+      }
+    });
   };
 
   const postPlanSafety = async () => {
-    markGroupJoined();
+    await requireAuth(
+      "post_activity_feedback",
+      async (authUser, accessToken) => {
+        markGroupJoined();
 
-    if (isLocalGroup) {
-      markFeedbackCompleted();
-      setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
-      return;
-    }
+        if (isLocalGroup) {
+          markFeedbackCompleted();
+          setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
+          return;
+        }
 
-    setFeedbackSubmitting(true);
+        setFeedbackSubmitting(true);
 
-    try {
-      await runFeedbackAction({
-        activityGroupId: group.id,
-        feltSafe: true,
-        profileId: user.id,
-        wouldMeetAgain: true,
-      });
-      markFeedbackCompleted();
-      setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
-    } catch {
-      setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
-    } finally {
-      setFeedbackSubmitting(false);
-    }
+        try {
+          await runFeedbackAction({
+            accessToken,
+            activityGroupId: group.id,
+            feltSafe: true,
+            profileId: authUser.id,
+            wouldMeetAgain: true,
+          });
+          markFeedbackCompleted();
+          setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
+        } catch {
+          setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
+        } finally {
+          setFeedbackSubmitting(false);
+        }
+      },
+    );
   };
 
   const postPlanIssue = async () => {
-    markGroupJoined();
+    await requireAuth(
+      "post_activity_feedback",
+      async (authUser, accessToken) => {
+        markGroupJoined();
 
-    if (isLocalGroup) {
-      markFeedbackCompleted();
-      setAttendanceFeedback(LL.groups.attendance.issueReported());
-      return;
-    }
+        if (isLocalGroup) {
+          markFeedbackCompleted();
+          setAttendanceFeedback(LL.groups.attendance.issueReported());
+          return;
+        }
 
-    setFeedbackSubmitting(true);
+        setFeedbackSubmitting(true);
 
-    try {
-      await runFeedbackAction({
-        activityGroupId: group.id,
-        feltSafe: false,
-        profileId: user.id,
-        wouldMeetAgain: false,
-      });
-      await runReportAction({
-        activityGroupId: group.id,
-        category: "unsafe",
-        profileId: user.id,
-        reason: "Post-plan safety issue",
-      });
-      markFeedbackCompleted();
-      setAttendanceFeedback(LL.groups.attendance.issueReported());
-    } catch {
-      setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
-    } finally {
-      setFeedbackSubmitting(false);
-    }
+        try {
+          await runFeedbackAction({
+            accessToken,
+            activityGroupId: group.id,
+            feltSafe: false,
+            profileId: authUser.id,
+            wouldMeetAgain: false,
+          });
+          await runReportAction({
+            accessToken,
+            activityGroupId: group.id,
+            category: "unsafe",
+            profileId: authUser.id,
+            reason: "Post-plan safety issue",
+          });
+          markFeedbackCompleted();
+          setAttendanceFeedback(LL.groups.attendance.issueReported());
+        } catch {
+          setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
+        } finally {
+          setFeedbackSubmitting(false);
+        }
+      },
+    );
   };
 
-  return (
-    <Screen contentStyle={styles.content}>
-      <Header
-        left={<UiText variant="eyebrow">{LL.groups.eyebrow()}</UiText>}
-        right={
-          <UiText variant="status" style={styles.status}>
-            {LL.groups.formingStatus()}
-          </UiText>
-        }
-      />
+  const handlePlanConfirmation = async (
+    nextStatus: ActivityPlanConfirmationStatus,
+  ) => {
+    await requireAuth("attend_activity", async () => {
+      setConfirmationStatus(nextStatus);
+    });
+  };
 
-      <View style={styles.hero}>
-        <Text style={styles.title}>
-          {LL.groups.title({ interest: group.interestName })}
-        </Text>
-        <Text style={styles.body}>{LL.groups.formingBody()}</Text>
-      </View>
+  const groupRows = useMemo<GroupScreenRow[]>(() => {
+    const rows: GroupScreenRow[] = [
+      { type: "context" },
+      { type: "plan" },
+      { type: "safety" },
+      { type: "invite" },
+      { type: "attendance" },
+      { type: "chatHeader" },
+    ];
 
-      <View style={styles.panel}>
-        <Text style={styles.panelLabel}>
-          {group.matchName
-            ? LL.groups.matchedWith({ name: group.matchName })
-            : LL.groups.emptyMatch()}
-        </Text>
-        {group.suggestedPlan ? (
-          <View style={styles.detailStack}>
-            <Text style={styles.detailTitle}>{LL.groups.suggestedPlan()}</Text>
-            <Text style={styles.detailBody}>{group.suggestedPlan}</Text>
-          </View>
-        ) : null}
-        <View style={styles.detailStack}>
-          <Text style={styles.detailTitle}>{LL.groups.nextStep()}</Text>
-          <Text style={styles.detailBody}>{LL.groups.nextStepBody()}</Text>
-        </View>
-      </View>
+    if (messages.length === 0) {
+      rows.push({ type: "chatEmpty" });
+    } else {
+      for (const message of messages) {
+        rows.push({ type: "chatMessage", message });
+      }
+    }
 
-      <View style={styles.planCard}>
-        <Text style={styles.detailTitle}>{LL.groups.planCard.title()}</Text>
-        <Text style={styles.planCardTitle}>{activityPlan.title}</Text>
-        <View style={styles.planMetaRow}>
-          <Text style={styles.planMeta}>
-            {LL.groups.planCard.timing({
-              timing: activityPlan.suggestedTiming,
-            })}
-          </Text>
-          <Text style={styles.planMeta}>
-            {LL.groups.planCard.capacity({
-              min: activityPlan.capacityMin,
-              max: activityPlan.capacityMax,
-            })}
-          </Text>
-        </View>
-        <Text style={styles.detailBody}>
-          {LL.groups.planCard.location({
-            location: activityPlan.publicLocationName,
-          })}
-        </Text>
-        <Text style={styles.detailBody}>{activityPlan.matchSuggestion}</Text>
-        <Text style={styles.planSafety}>{activityPlan.safetyGuidance}</Text>
-        <View style={styles.confirmationActions}>
-          <Button
-            label={LL.groups.planCard.confirm()}
-            onPress={() => {
-              setConfirmationStatus("confirmed");
-            }}
-            style={styles.confirmationAction}
-            variant="neutral"
-          />
-          <Button
-            label={LL.groups.planCard.requestChanges()}
-            onPress={() => {
-              setConfirmationStatus("needs_changes");
-            }}
-            style={styles.confirmationAction}
-            variant="neutral"
-          />
-        </View>
-        <Text style={styles.safetyFeedback}>{getConfirmationStatusCopy()}</Text>
-      </View>
+    rows.push({ type: "chatFooter" }, { type: "backHome" });
 
-      <View style={styles.safetyPanel}>
-        <View style={styles.detailStack}>
-          <Text style={styles.detailTitle}>{LL.groups.safety.title()}</Text>
-          <Text style={styles.detailBody}>
-            {exactLocationVisible
-              ? LL.groups.safety.locationVisible()
-              : LL.groups.safety.locationHidden()}
-          </Text>
-        </View>
-        <View style={styles.safetyActions}>
-          <Button
-            disabled={safetySubmitting}
-            label={LL.groups.safety.report()}
-            onPress={handlePrepareReport}
-            style={styles.safetyAction}
-            variant="neutral"
-          />
-          <Button
-            disabled={safetySubmitting}
-            label={LL.groups.safety.block()}
-            onPress={handlePrepareBlock}
-            style={styles.safetyAction}
-            variant="neutral"
-          />
-          <Button
-            disabled={safetySubmitting}
-            label={LL.groups.safety.leave()}
-            onPress={handlePrepareLeave}
-            style={styles.safetyAction}
-            variant="neutral"
-          />
-        </View>
-        {safetyFeedback ? (
-          <Text style={styles.safetyFeedback}>{safetyFeedback}</Text>
-        ) : null}
-      </View>
+    return rows;
+  }, [messages]);
 
-      <View style={styles.invitePanel}>
-        <View style={styles.detailStack}>
-          <Text style={styles.detailTitle}>
-            {LL.groups.invites.bringFriend()}
-          </Text>
-          <Text style={styles.detailBody}>{LL.groups.invites.body()}</Text>
-        </View>
-        <Button
-          disabled={inviteCreating}
-          label={
-            inviteCreating
-              ? LL.groups.invites.creating()
-              : LL.groups.invites.create()
+  const getGroupRowKey = useCallback((row: GroupScreenRow) => {
+    if (row.type === "chatMessage") {
+      return `message-${row.message.id}`;
+    }
+
+    return row.type;
+  }, []);
+
+  const listHeader = useMemo(
+    () => (
+      <View style={styles.headerStack}>
+        <Header
+          left={<UiText variant="eyebrow">{LL.groups.eyebrow()}</UiText>}
+          right={
+            <UiText variant="status" style={styles.status}>
+              {LL.groups.formingStatus()}
+            </UiText>
           }
-          onPress={handlePrepareInvite}
-          style={styles.inviteAction}
-          variant="neutral"
         />
-        {inviteLink ? (
-          <View style={styles.inviteLinkBox}>
-            <Text style={styles.detailTitle}>{LL.groups.invites.ready()}</Text>
-            <Text selectable style={styles.inviteLink}>
-              {inviteLink}
-            </Text>
-          </View>
-        ) : null}
-        {inviteFeedback ? (
-          <Text style={styles.safetyFeedback}>{inviteFeedback}</Text>
-        ) : null}
-      </View>
 
-      <View style={styles.attendancePanel}>
-        <View style={styles.detailStack}>
-          <Text style={styles.detailTitle}>{LL.groups.attendance.title()}</Text>
-          <Text style={styles.detailBody}>{LL.groups.attendance.body()}</Text>
+        <View style={styles.hero}>
+          <UiText style={styles.title}>
+            {LL.groups.title({ interest: group.interestName })}
+          </UiText>
+          <UiText style={styles.body}>{LL.groups.formingBody()}</UiText>
         </View>
-        <View style={styles.safetyActions}>
-          <Button
-            disabled={attendanceSubmitting}
-            label={LL.groups.attendance.confirmAttendance()}
-            onPress={confirmAttendance}
-            style={styles.safetyAction}
-            variant="neutral"
-          />
-          <Button
-            disabled={feedbackSubmitting}
-            label={LL.groups.attendance.postPlanSafety()}
-            onPress={postPlanSafety}
-            style={styles.safetyAction}
-            variant="neutral"
-          />
-          <Button
-            disabled={feedbackSubmitting}
-            label={LL.groups.attendance.reportIssue()}
-            onPress={postPlanIssue}
-            style={styles.safetyAction}
-            variant="neutral"
-          />
-        </View>
-        {attendanceFeedback ? (
-          <Text style={styles.safetyFeedback}>{attendanceFeedback}</Text>
-        ) : null}
       </View>
+    ),
+    [
+      LL,
+      group.interestName,
+      styles.body,
+      styles.headerStack,
+      styles.hero,
+      styles.status,
+      styles.title,
+    ],
+  );
 
-      <View style={styles.chatPanel}>
-        <MessageList emptyLabel={LL.chat.empty()} messages={messages} />
-        <ChatComposer
-          blockedLabel={LL.chat.blocked()}
-          disabled={sendingMessage}
-          onSend={handleSendMessage}
-          placeholder={LL.chat.composerPlaceholder()}
-          sendLabel={LL.chat.send()}
-          sendingLabel={LL.chat.sending()}
-        />
-      </View>
+  const listExtraData = useMemo(
+    () => ({
+      attendanceFeedback,
+      attendanceSubmitting,
+      confirmationStatus,
+      feedbackSubmitting,
+      inviteCreating,
+      inviteFeedback,
+      inviteLink,
+      safetyFeedback,
+      safetySubmitting,
+      sendingMessage,
+    }),
+    [
+      attendanceFeedback,
+      attendanceSubmitting,
+      confirmationStatus,
+      feedbackSubmitting,
+      inviteCreating,
+      inviteFeedback,
+      inviteLink,
+      safetyFeedback,
+      safetySubmitting,
+      sendingMessage,
+    ],
+  );
 
-      <Button
-        label={LL.groups.backHome()}
-        onPress={() => {
-          router.replace(routes.home);
-        }}
-        style={styles.button}
+  const renderGroupRow = useCallback<ListRenderItem<GroupScreenRow>>(
+    ({ item }) => {
+      switch (item.type) {
+        case "context":
+          return (
+            <View style={[styles.panel, styles.section]}>
+              <UiText style={styles.panelLabel}>
+                {group.matchName
+                  ? LL.groups.matchedWith({ name: group.matchName })
+                  : LL.groups.emptyMatch()}
+              </UiText>
+              {group.suggestedPlan ? (
+                <View style={styles.detailStack}>
+                  <UiText style={styles.detailTitle}>
+                    {LL.groups.suggestedPlan()}
+                  </UiText>
+                  <UiText style={styles.detailBody}>
+                    {group.suggestedPlan}
+                  </UiText>
+                </View>
+              ) : null}
+              <View style={styles.detailStack}>
+                <UiText style={styles.detailTitle}>
+                  {LL.groups.nextStep()}
+                </UiText>
+                <UiText style={styles.detailBody}>
+                  {LL.groups.nextStepBody()}
+                </UiText>
+              </View>
+            </View>
+          );
+
+        case "plan":
+          return (
+            <View style={[styles.planCard, styles.section]}>
+              <UiText style={styles.detailTitle}>
+                {LL.groups.planCard.title()}
+              </UiText>
+              <UiText style={styles.planCardTitle}>
+                {activityPlan.title}
+              </UiText>
+              <View style={styles.planMetaRow}>
+                <UiText style={styles.planMeta}>
+                  {LL.groups.planCard.timing({
+                    timing: activityPlan.suggestedTiming,
+                  })}
+                </UiText>
+                <UiText style={styles.planMeta}>
+                  {LL.groups.planCard.capacity({
+                    min: activityPlan.capacityMin,
+                    max: activityPlan.capacityMax,
+                  })}
+                </UiText>
+              </View>
+              <UiText style={styles.detailBody}>
+                {LL.groups.planCard.location({
+                  location: activityPlan.publicLocationName,
+                })}
+              </UiText>
+              <UiText style={styles.detailBody}>
+                {activityPlan.matchSuggestion}
+              </UiText>
+              <UiText style={styles.planSafety}>
+                {activityPlan.safetyGuidance}
+              </UiText>
+              <View style={styles.confirmationActions}>
+                <Button
+                  label={LL.groups.planCard.confirm()}
+                  onPress={() => void handlePlanConfirmation("confirmed")}
+                  style={styles.confirmationAction}
+                  variant="neutral"
+                />
+                <Button
+                  label={LL.groups.planCard.requestChanges()}
+                  onPress={() => void handlePlanConfirmation("needs_changes")}
+                  style={styles.confirmationAction}
+                  variant="neutral"
+                />
+              </View>
+              <UiText style={styles.safetyFeedback}>
+                {getConfirmationStatusCopy()}
+              </UiText>
+            </View>
+          );
+
+        case "safety":
+          return (
+            <View style={[styles.safetyPanel, styles.section]}>
+              <View style={styles.detailStack}>
+                <UiText style={styles.detailTitle}>
+                  {LL.groups.safety.title()}
+                </UiText>
+                <UiText style={styles.detailBody}>
+                  {exactLocationVisible
+                    ? LL.groups.safety.locationVisible()
+                    : LL.groups.safety.locationHidden()}
+                </UiText>
+              </View>
+              <View style={styles.safetyActions}>
+                <Button
+                  disabled={safetySubmitting}
+                  label={LL.groups.safety.report()}
+                  onPress={handlePrepareReport}
+                  style={styles.safetyAction}
+                  variant="neutral"
+                />
+                <Button
+                  disabled={safetySubmitting}
+                  label={LL.groups.safety.block()}
+                  onPress={handlePrepareBlock}
+                  style={styles.safetyAction}
+                  variant="neutral"
+                />
+                <Button
+                  disabled={safetySubmitting}
+                  label={LL.groups.safety.leave()}
+                  onPress={handlePrepareLeave}
+                  style={styles.safetyAction}
+                  variant="neutral"
+                />
+              </View>
+              {safetyFeedback ? (
+                <UiText style={styles.safetyFeedback}>{safetyFeedback}</UiText>
+              ) : null}
+            </View>
+          );
+
+        case "invite":
+          return (
+            <View style={[styles.invitePanel, styles.section]}>
+              <View style={styles.detailStack}>
+                <UiText style={styles.detailTitle}>
+                  {LL.groups.invites.bringFriend()}
+                </UiText>
+                <UiText style={styles.detailBody}>
+                  {LL.groups.invites.body()}
+                </UiText>
+              </View>
+              <Button
+                disabled={inviteCreating}
+                label={
+                  inviteCreating
+                    ? LL.groups.invites.creating()
+                    : LL.groups.invites.create()
+                }
+                onPress={handlePrepareInvite}
+                style={styles.inviteAction}
+                variant="neutral"
+              />
+              {inviteLink ? (
+                <View style={styles.inviteLinkBox}>
+                  <UiText style={styles.detailTitle}>
+                    {LL.groups.invites.ready()}
+                  </UiText>
+                  <UiText selectable style={styles.inviteLink}>
+                    {inviteLink}
+                  </UiText>
+                </View>
+              ) : null}
+              {inviteFeedback ? (
+                <UiText style={styles.safetyFeedback}>
+                  {inviteFeedback}
+                </UiText>
+              ) : null}
+            </View>
+          );
+
+        case "attendance":
+          return (
+            <View style={[styles.attendancePanel, styles.section]}>
+              <View style={styles.detailStack}>
+                <UiText style={styles.detailTitle}>
+                  {LL.groups.attendance.title()}
+                </UiText>
+                <UiText style={styles.detailBody}>
+                  {LL.groups.attendance.body()}
+                </UiText>
+              </View>
+              <View style={styles.safetyActions}>
+                <Button
+                  disabled={attendanceSubmitting}
+                  label={LL.groups.attendance.confirmAttendance()}
+                  onPress={confirmAttendance}
+                  style={styles.safetyAction}
+                  variant="neutral"
+                />
+                <Button
+                  disabled={feedbackSubmitting}
+                  label={LL.groups.attendance.postPlanSafety()}
+                  onPress={postPlanSafety}
+                  style={styles.safetyAction}
+                  variant="neutral"
+                />
+                <Button
+                  disabled={feedbackSubmitting}
+                  label={LL.groups.attendance.reportIssue()}
+                  onPress={postPlanIssue}
+                  style={styles.safetyAction}
+                  variant="neutral"
+                />
+              </View>
+              {attendanceFeedback ? (
+                <UiText style={styles.safetyFeedback}>
+                  {attendanceFeedback}
+                </UiText>
+              ) : null}
+            </View>
+          );
+
+        case "chatHeader":
+          return <View style={styles.chatPanelHeader} />;
+
+        case "chatEmpty":
+          return (
+            <View style={styles.chatEmptyRow}>
+              <UiText style={styles.chatEmpty}>{LL.chat.empty()}</UiText>
+            </View>
+          );
+
+        case "chatMessage":
+          return (
+            <View style={styles.chatMessageRow}>
+              <MessageBubble message={item.message} />
+            </View>
+          );
+
+        case "chatFooter":
+          return (
+            <View style={[styles.chatPanelFooter, styles.section]}>
+              <ChatComposer
+                blockedLabel={LL.chat.blocked()}
+                disabled={sendingMessage}
+                onSend={handleSendMessage}
+                placeholder={LL.chat.composerPlaceholder()}
+                sendLabel={LL.chat.send()}
+                sendingLabel={LL.chat.sending()}
+              />
+            </View>
+          );
+
+        case "backHome":
+          return (
+            <Button
+              label={LL.groups.backHome()}
+              onPress={() => {
+                router.replace(routes.home);
+              }}
+              style={styles.button}
+            />
+          );
+      }
+
+      return null;
+    },
+    [
+      LL,
+      activityPlan,
+      attendanceFeedback,
+      attendanceSubmitting,
+      confirmAttendance,
+      exactLocationVisible,
+      feedbackSubmitting,
+      getConfirmationStatusCopy,
+      group.matchName,
+      group.suggestedPlan,
+      handlePlanConfirmation,
+      handlePrepareBlock,
+      handlePrepareInvite,
+      handlePrepareLeave,
+      handlePrepareReport,
+      handleSendMessage,
+      inviteCreating,
+      inviteFeedback,
+      inviteLink,
+      postPlanIssue,
+      postPlanSafety,
+      router,
+      safetyFeedback,
+      safetySubmitting,
+      sendingMessage,
+      styles,
+    ],
+  );
+
+  return (
+    <Screen contentStyle={styles.content} scroll={false}>
+      <List
+        contentContainerStyle={styles.listContent}
+        data={groupRows}
+        extraData={listExtraData}
+        keyExtractor={getGroupRowKey}
+        ListHeaderComponent={listHeader}
+        renderItem={renderGroupRow}
+        style={styles.list}
       />
     </Screen>
   );
@@ -632,9 +924,24 @@ const createStyles = (theme: BuzzTheme) => {
       backgroundColor: colors.background,
     },
     content: {
+      flex: 1,
       flexGrow: 1,
-      gap: spacing[5],
+      gap: 0,
+      padding: 0,
+    },
+    list: {
+      flex: 1,
+    },
+    listContent: {
       padding: spacing[6],
+      paddingBottom: spacing[8],
+    },
+    headerStack: {
+      gap: spacing[5],
+      marginBottom: spacing[5],
+    },
+    section: {
+      marginBottom: spacing[5],
     },
     header: {
       alignItems: "center",
@@ -689,6 +996,35 @@ const createStyles = (theme: BuzzTheme) => {
       borderRadius: radii.xl,
       gap: spacing[5],
       padding: spacing[5],
+    },
+    chatPanelHeader: {
+      backgroundColor: colors.surfaceMuted,
+      borderTopLeftRadius: radii.xl,
+      borderTopRightRadius: radii.xl,
+      height: spacing[5],
+    },
+    chatEmptyRow: {
+      backgroundColor: colors.surfaceMuted,
+      paddingHorizontal: spacing[5],
+      paddingBottom: spacing[3],
+    },
+    chatEmpty: {
+      color: colors.brand,
+      fontSize: fontSizes.base,
+      lineHeight: lineHeights.body,
+    },
+    chatMessageRow: {
+      backgroundColor: colors.surfaceMuted,
+      paddingHorizontal: spacing[5],
+      paddingBottom: spacing[3],
+    },
+    chatPanelFooter: {
+      backgroundColor: colors.surfaceMuted,
+      borderBottomLeftRadius: radii.xl,
+      borderBottomRightRadius: radii.xl,
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[2],
+      paddingBottom: spacing[5],
     },
     planCard: {
       backgroundColor: colors.surface,

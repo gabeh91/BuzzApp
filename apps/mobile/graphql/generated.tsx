@@ -26,6 +26,111 @@ export type Scalars = {
   UUID: { input: string; output: string; }
 };
 
+export type ActivityGroupCheckins = Node & {
+  activityGroup: ActivityGroups;
+  activityGroupId: Scalars['UUID']['output'];
+  createdAt: Scalars['Datetime']['output'];
+  didHappen: Scalars['Boolean']['output'];
+  feltSafe: Scalars['Boolean']['output'];
+  id: Scalars['UUID']['output'];
+  metadataJson: Scalars['JSON']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  reportRequested: Scalars['Boolean']['output'];
+  updatedAt: Scalars['Datetime']['output'];
+  user?: Maybe<Profiles>;
+  userId: Scalars['UUID']['output'];
+  wouldMeetAgain: Scalars['Boolean']['output'];
+};
+
+export type ActivityGroupCheckinsConnection = {
+  edges: Array<ActivityGroupCheckinsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type ActivityGroupCheckinsDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivityGroupCheckins>;
+};
+
+export type ActivityGroupCheckinsEdge = {
+  cursor: Scalars['String']['output'];
+  node: ActivityGroupCheckins;
+};
+
+export type ActivityGroupCheckinsFilter = {
+  activityGroupId?: InputMaybe<UuidFilter>;
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<ActivityGroupCheckinsFilter>>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  didHappen?: InputMaybe<BooleanFilter>;
+  feltSafe?: InputMaybe<BooleanFilter>;
+  id?: InputMaybe<UuidFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<ActivityGroupCheckinsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<ActivityGroupCheckinsFilter>>;
+  reportRequested?: InputMaybe<BooleanFilter>;
+  updatedAt?: InputMaybe<DatetimeFilter>;
+  userId?: InputMaybe<UuidFilter>;
+  wouldMeetAgain?: InputMaybe<BooleanFilter>;
+};
+
+export type ActivityGroupCheckinsInsertInput = {
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  didHappen?: InputMaybe<Scalars['Boolean']['input']>;
+  feltSafe?: InputMaybe<Scalars['Boolean']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  metadataJson?: InputMaybe<Scalars['JSON']['input']>;
+  reportRequested?: InputMaybe<Scalars['Boolean']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  userId?: InputMaybe<Scalars['UUID']['input']>;
+  wouldMeetAgain?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type ActivityGroupCheckinsInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivityGroupCheckins>;
+};
+
+export type ActivityGroupCheckinsOrderBy = {
+  activityGroupId?: InputMaybe<OrderByDirection>;
+  createdAt?: InputMaybe<OrderByDirection>;
+  didHappen?: InputMaybe<OrderByDirection>;
+  feltSafe?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  reportRequested?: InputMaybe<OrderByDirection>;
+  updatedAt?: InputMaybe<OrderByDirection>;
+  userId?: InputMaybe<OrderByDirection>;
+  wouldMeetAgain?: InputMaybe<OrderByDirection>;
+};
+
+export type ActivityGroupCheckinsUpdateInput = {
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  didHappen?: InputMaybe<Scalars['Boolean']['input']>;
+  feltSafe?: InputMaybe<Scalars['Boolean']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  metadataJson?: InputMaybe<Scalars['JSON']['input']>;
+  reportRequested?: InputMaybe<Scalars['Boolean']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  userId?: InputMaybe<Scalars['UUID']['input']>;
+  wouldMeetAgain?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type ActivityGroupCheckinsUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivityGroupCheckins>;
+};
+
 export type ActivityGroupMembers = Node & {
   activityGroup: ActivityGroups;
   activityGroupId: Scalars['UUID']['output'];
@@ -124,12 +229,14 @@ export type ActivityGroupMembersUpdateResponse = {
 };
 
 export type ActivityGroups = Node & {
+  activityGroupCheckinsCollection?: Maybe<ActivityGroupCheckinsConnection>;
   activityGroupMembersCollection?: Maybe<ActivityGroupMembersConnection>;
   activityPlansCollection?: Maybe<ActivityPlansConnection>;
   city?: Maybe<Cities>;
   cityId?: Maybe<Scalars['UUID']['output']>;
   createdAt: Scalars['Datetime']['output'];
   createdBy?: Maybe<Scalars['UUID']['output']>;
+  groupInviteEventsCollection?: Maybe<GroupInviteEventsConnection>;
   groupInvitesCollection?: Maybe<GroupInvitesConnection>;
   groupMessagesCollection?: Maybe<GroupMessagesConnection>;
   id: Scalars['UUID']['output'];
@@ -143,6 +250,17 @@ export type ActivityGroups = Node & {
   reportsCollection?: Maybe<ReportsConnection>;
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
+};
+
+
+export type ActivityGroupsActivityGroupCheckinsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivityGroupCheckinsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivityGroupCheckinsOrderBy>>;
 };
 
 
@@ -165,6 +283,17 @@ export type ActivityGroupsActivityPlansCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<ActivityPlansOrderBy>>;
+};
+
+
+export type ActivityGroupsGroupInviteEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<GroupInviteEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<GroupInviteEventsOrderBy>>;
 };
 
 
@@ -1152,6 +1281,7 @@ export type Cities = Node & {
   defaultLatitude?: Maybe<Scalars['BigFloat']['output']>;
   defaultLongitude?: Maybe<Scalars['BigFloat']['output']>;
   eventsCollection?: Maybe<EventsConnection>;
+  featureFlagsCollection?: Maybe<FeatureFlagsConnection>;
   id: Scalars['UUID']['output'];
   interestActivationsCollection?: Maybe<InterestActivationsConnection>;
   landingPlansCollection?: Maybe<LandingPlansConnection>;
@@ -1231,6 +1361,17 @@ export type CitiesEventsCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<EventsOrderBy>>;
+};
+
+
+export type CitiesFeatureFlagsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<FeatureFlagsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<FeatureFlagsOrderBy>>;
 };
 
 
@@ -1394,6 +1535,7 @@ export type CityFeatureFlags = Node & {
   cityId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   enabled: Scalars['Boolean']['output'];
+  environment: Scalars['String']['output'];
   featureKey: Scalars['String']['output'];
   id: Scalars['UUID']['output'];
   /** Globally Unique Record Identifier */
@@ -1425,6 +1567,7 @@ export type CityFeatureFlagsFilter = {
   cityId?: InputMaybe<UuidFilter>;
   createdAt?: InputMaybe<DatetimeFilter>;
   enabled?: InputMaybe<BooleanFilter>;
+  environment?: InputMaybe<StringFilter>;
   featureKey?: InputMaybe<StringFilter>;
   id?: InputMaybe<UuidFilter>;
   nodeId?: InputMaybe<IdFilter>;
@@ -1439,6 +1582,7 @@ export type CityFeatureFlagsInsertInput = {
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  environment?: InputMaybe<Scalars['String']['input']>;
   featureKey?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   payloadJson?: InputMaybe<Scalars['JSON']['input']>;
@@ -1456,6 +1600,7 @@ export type CityFeatureFlagsOrderBy = {
   cityId?: InputMaybe<OrderByDirection>;
   createdAt?: InputMaybe<OrderByDirection>;
   enabled?: InputMaybe<OrderByDirection>;
+  environment?: InputMaybe<OrderByDirection>;
   featureKey?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
   updatedAt?: InputMaybe<OrderByDirection>;
@@ -1465,6 +1610,7 @@ export type CityFeatureFlagsUpdateInput = {
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  environment?: InputMaybe<Scalars['String']['input']>;
   featureKey?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   payloadJson?: InputMaybe<Scalars['JSON']['input']>;
@@ -1880,12 +2026,18 @@ export type EventsUpdateResponse = {
 };
 
 export type FeatureFlags = Node & {
+  city?: Maybe<Cities>;
+  cityId?: Maybe<Scalars['UUID']['output']>;
   createdAt: Scalars['Datetime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   enabled: Scalars['Boolean']['output'];
+  environment: Scalars['String']['output'];
+  id?: Maybe<Scalars['UUID']['output']>;
   key: Scalars['String']['output'];
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
+  payloadJson: Scalars['JSON']['output'];
+  updatedAt: Scalars['Datetime']['output'];
 };
 
 export type FeatureFlagsConnection = {
@@ -1908,22 +2060,31 @@ export type FeatureFlagsEdge = {
 export type FeatureFlagsFilter = {
   /** Returns true only if all its inner filters are true, otherwise returns false */
   and?: InputMaybe<Array<FeatureFlagsFilter>>;
+  cityId?: InputMaybe<UuidFilter>;
   createdAt?: InputMaybe<DatetimeFilter>;
   description?: InputMaybe<StringFilter>;
   enabled?: InputMaybe<BooleanFilter>;
+  environment?: InputMaybe<StringFilter>;
+  id?: InputMaybe<UuidFilter>;
   key?: InputMaybe<StringFilter>;
   nodeId?: InputMaybe<IdFilter>;
   /** Negates a filter */
   not?: InputMaybe<FeatureFlagsFilter>;
   /** Returns true if at least one of its inner filters is true, otherwise returns false */
   or?: InputMaybe<Array<FeatureFlagsFilter>>;
+  updatedAt?: InputMaybe<DatetimeFilter>;
 };
 
 export type FeatureFlagsInsertInput = {
+  cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  environment?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
   key?: InputMaybe<Scalars['String']['input']>;
+  payloadJson?: InputMaybe<Scalars['JSON']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
 };
 
 export type FeatureFlagsInsertResponse = {
@@ -1934,17 +2095,26 @@ export type FeatureFlagsInsertResponse = {
 };
 
 export type FeatureFlagsOrderBy = {
+  cityId?: InputMaybe<OrderByDirection>;
   createdAt?: InputMaybe<OrderByDirection>;
   description?: InputMaybe<OrderByDirection>;
   enabled?: InputMaybe<OrderByDirection>;
+  environment?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
   key?: InputMaybe<OrderByDirection>;
+  updatedAt?: InputMaybe<OrderByDirection>;
 };
 
 export type FeatureFlagsUpdateInput = {
+  cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  environment?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
   key?: InputMaybe<Scalars['String']['input']>;
+  payloadJson?: InputMaybe<Scalars['JSON']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
 };
 
 export type FeatureFlagsUpdateResponse = {
@@ -1980,6 +2150,97 @@ export type FloatListFilter = {
   overlaps?: InputMaybe<Array<Scalars['Float']['input']>>;
 };
 
+export type GroupInviteEvents = Node & {
+  activityGroup: ActivityGroups;
+  activityGroupId: Scalars['UUID']['output'];
+  actor?: Maybe<Profiles>;
+  actorId?: Maybe<Scalars['UUID']['output']>;
+  createdAt: Scalars['Datetime']['output'];
+  eventType: Scalars['String']['output'];
+  id: Scalars['UUID']['output'];
+  invite: GroupInvites;
+  inviteId: Scalars['UUID']['output'];
+  metadataJson: Scalars['JSON']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+};
+
+export type GroupInviteEventsConnection = {
+  edges: Array<GroupInviteEventsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type GroupInviteEventsDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<GroupInviteEvents>;
+};
+
+export type GroupInviteEventsEdge = {
+  cursor: Scalars['String']['output'];
+  node: GroupInviteEvents;
+};
+
+export type GroupInviteEventsFilter = {
+  activityGroupId?: InputMaybe<UuidFilter>;
+  actorId?: InputMaybe<UuidFilter>;
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<GroupInviteEventsFilter>>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  eventType?: InputMaybe<StringFilter>;
+  id?: InputMaybe<UuidFilter>;
+  inviteId?: InputMaybe<UuidFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<GroupInviteEventsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<GroupInviteEventsFilter>>;
+};
+
+export type GroupInviteEventsInsertInput = {
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
+  actorId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  eventType?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  inviteId?: InputMaybe<Scalars['UUID']['input']>;
+  metadataJson?: InputMaybe<Scalars['JSON']['input']>;
+};
+
+export type GroupInviteEventsInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<GroupInviteEvents>;
+};
+
+export type GroupInviteEventsOrderBy = {
+  activityGroupId?: InputMaybe<OrderByDirection>;
+  actorId?: InputMaybe<OrderByDirection>;
+  createdAt?: InputMaybe<OrderByDirection>;
+  eventType?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  inviteId?: InputMaybe<OrderByDirection>;
+};
+
+export type GroupInviteEventsUpdateInput = {
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
+  actorId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  eventType?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  inviteId?: InputMaybe<Scalars['UUID']['input']>;
+  metadataJson?: InputMaybe<Scalars['JSON']['input']>;
+};
+
+export type GroupInviteEventsUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<GroupInviteEvents>;
+};
+
 export type GroupInvites = Node & {
   acceptedAt?: Maybe<Scalars['Datetime']['output']>;
   acceptedBy?: Maybe<Scalars['UUID']['output']>;
@@ -1989,6 +2250,7 @@ export type GroupInvites = Node & {
   activityPlanId?: Maybe<Scalars['UUID']['output']>;
   createdAt: Scalars['Datetime']['output'];
   expiresAt: Scalars['Datetime']['output'];
+  groupInviteEventsCollection?: Maybe<GroupInviteEventsConnection>;
   id: Scalars['UUID']['output'];
   inviter?: Maybe<Profiles>;
   inviterId: Scalars['UUID']['output'];
@@ -2001,6 +2263,17 @@ export type GroupInvites = Node & {
   tokenHash: Scalars['String']['output'];
   tokenPreview: Scalars['String']['output'];
   useCount: Scalars['Int']['output'];
+};
+
+
+export type GroupInvitesGroupInviteEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<GroupInviteEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<GroupInviteEventsOrderBy>>;
 };
 
 export type GroupInvitesConnection = {
@@ -2973,6 +3246,8 @@ export type ModerationActionsUpdateResponse = {
 /** The root type for creating and mutating data */
 export type Mutation = {
   activateInterest?: Maybe<Scalars['JSON']['output']>;
+  /** Deletes zero or more records from the `ActivityGroupCheckins` collection */
+  deleteFromActivityGroupCheckinsCollection: ActivityGroupCheckinsDeleteResponse;
   /** Deletes zero or more records from the `ActivityGroupMembers` collection */
   deleteFromActivityGroupMembersCollection: ActivityGroupMembersDeleteResponse;
   /** Deletes zero or more records from the `ActivityGroups` collection */
@@ -3007,6 +3282,8 @@ export type Mutation = {
   deleteFromEventsCollection: EventsDeleteResponse;
   /** Deletes zero or more records from the `FeatureFlags` collection */
   deleteFromFeatureFlagsCollection: FeatureFlagsDeleteResponse;
+  /** Deletes zero or more records from the `GroupInviteEvents` collection */
+  deleteFromGroupInviteEventsCollection: GroupInviteEventsDeleteResponse;
   /** Deletes zero or more records from the `GroupInvites` collection */
   deleteFromGroupInvitesCollection: GroupInvitesDeleteResponse;
   /** Deletes zero or more records from the `GroupMessages` collection */
@@ -3058,6 +3335,8 @@ export type Mutation = {
   disablelongtransactions?: Maybe<Scalars['String']['output']>;
   enablelongtransactions?: Maybe<Scalars['String']['output']>;
   gettransactionid?: Maybe<Scalars['Opaque']['output']>;
+  /** Adds one or more `ActivityGroupCheckins` records to the collection */
+  insertIntoActivityGroupCheckinsCollection?: Maybe<ActivityGroupCheckinsInsertResponse>;
   /** Adds one or more `ActivityGroupMembers` records to the collection */
   insertIntoActivityGroupMembersCollection?: Maybe<ActivityGroupMembersInsertResponse>;
   /** Adds one or more `ActivityGroups` records to the collection */
@@ -3092,6 +3371,8 @@ export type Mutation = {
   insertIntoEventsCollection?: Maybe<EventsInsertResponse>;
   /** Adds one or more `FeatureFlags` records to the collection */
   insertIntoFeatureFlagsCollection?: Maybe<FeatureFlagsInsertResponse>;
+  /** Adds one or more `GroupInviteEvents` records to the collection */
+  insertIntoGroupInviteEventsCollection?: Maybe<GroupInviteEventsInsertResponse>;
   /** Adds one or more `GroupInvites` records to the collection */
   insertIntoGroupInvitesCollection?: Maybe<GroupInvitesInsertResponse>;
   /** Adds one or more `GroupMessages` records to the collection */
@@ -3145,6 +3426,8 @@ export type Mutation = {
   postgisSelectivity?: Maybe<Scalars['Float']['output']>;
   stClusterkmeans?: Maybe<Scalars['Int']['output']>;
   stSymmetricdifference?: Maybe<Scalars['Opaque']['output']>;
+  /** Updates zero or more records in the `ActivityGroupCheckins` collection */
+  updateActivityGroupCheckinsCollection: ActivityGroupCheckinsUpdateResponse;
   /** Updates zero or more records in the `ActivityGroupMembers` collection */
   updateActivityGroupMembersCollection: ActivityGroupMembersUpdateResponse;
   /** Updates zero or more records in the `ActivityGroups` collection */
@@ -3179,6 +3462,8 @@ export type Mutation = {
   updateEventsCollection: EventsUpdateResponse;
   /** Updates zero or more records in the `FeatureFlags` collection */
   updateFeatureFlagsCollection: FeatureFlagsUpdateResponse;
+  /** Updates zero or more records in the `GroupInviteEvents` collection */
+  updateGroupInviteEventsCollection: GroupInviteEventsUpdateResponse;
   /** Updates zero or more records in the `GroupInvites` collection */
   updateGroupInvitesCollection: GroupInvitesUpdateResponse;
   /** Updates zero or more records in the `GroupMessages` collection */
@@ -3234,6 +3519,13 @@ export type Mutation = {
 /** The root type for creating and mutating data */
 export type MutationActivateInterestArgs = {
   interestId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromActivityGroupCheckinsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ActivityGroupCheckinsFilter>;
 };
 
 
@@ -3353,6 +3645,13 @@ export type MutationDeleteFromEventsCollectionArgs = {
 export type MutationDeleteFromFeatureFlagsCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<FeatureFlagsFilter>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromGroupInviteEventsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<GroupInviteEventsFilter>;
 };
 
 
@@ -3525,6 +3824,12 @@ export type MutationDeleteFromUserVerificationsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationInsertIntoActivityGroupCheckinsCollectionArgs = {
+  objects: Array<ActivityGroupCheckinsInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationInsertIntoActivityGroupMembersCollectionArgs = {
   objects: Array<ActivityGroupMembersInsertInput>;
 };
@@ -3623,6 +3928,12 @@ export type MutationInsertIntoEventsCollectionArgs = {
 /** The root type for creating and mutating data */
 export type MutationInsertIntoFeatureFlagsCollectionArgs = {
   objects: Array<FeatureFlagsInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationInsertIntoGroupInviteEventsCollectionArgs = {
+  objects: Array<GroupInviteEventsInsertInput>;
 };
 
 
@@ -3795,6 +4106,14 @@ export type MutationStSymmetricdifferenceArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationUpdateActivityGroupCheckinsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ActivityGroupCheckinsFilter>;
+  set: ActivityGroupCheckinsUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationUpdateActivityGroupMembersCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<ActivityGroupMembersFilter>;
@@ -3927,6 +4246,14 @@ export type MutationUpdateFeatureFlagsCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<FeatureFlagsFilter>;
   set: FeatureFlagsUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateGroupInviteEventsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<GroupInviteEventsFilter>;
+  set: GroupInviteEventsUpdateInput;
 };
 
 
@@ -4383,6 +4710,7 @@ export type PlanSafetyChecksUpdateResponse = {
 };
 
 export type Profiles = Node & {
+  activityGroupCheckinsCollection?: Maybe<ActivityGroupCheckinsConnection>;
   activityGroupMembersCollection?: Maybe<ActivityGroupMembersConnection>;
   activityGroupsCollection?: Maybe<ActivityGroupsConnection>;
   activityPlansCollection?: Maybe<ActivityPlansConnection>;
@@ -4394,6 +4722,7 @@ export type Profiles = Node & {
   cityId?: Maybe<Scalars['UUID']['output']>;
   createdAt: Scalars['Datetime']['output'];
   displayName?: Maybe<Scalars['String']['output']>;
+  groupInviteEventsCollection?: Maybe<GroupInviteEventsConnection>;
   groupInvitesCollection?: Maybe<GroupInvitesConnection>;
   groupMessagesCollection?: Maybe<GroupMessagesConnection>;
   id: Scalars['UUID']['output'];
@@ -4417,6 +4746,17 @@ export type Profiles = Node & {
   userSuburbMatchesCollection?: Maybe<UserSuburbMatchesConnection>;
   userVerificationsCollection?: Maybe<UserVerificationsConnection>;
   visible: Scalars['Boolean']['output'];
+};
+
+
+export type ProfilesActivityGroupCheckinsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivityGroupCheckinsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivityGroupCheckinsOrderBy>>;
 };
 
 
@@ -4483,6 +4823,17 @@ export type ProfilesBusinessImpressionsCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<BusinessImpressionsOrderBy>>;
+};
+
+
+export type ProfilesGroupInviteEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<GroupInviteEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<GroupInviteEventsOrderBy>>;
 };
 
 
@@ -4698,6 +5049,8 @@ export type ProfilesUpdateResponse = {
 
 /** The root type for querying data */
 export type Query = {
+  /** A pagable collection of type `ActivityGroupCheckins` */
+  activityGroupCheckinsCollection?: Maybe<ActivityGroupCheckinsConnection>;
   /** A pagable collection of type `ActivityGroupMembers` */
   activityGroupMembersCollection?: Maybe<ActivityGroupMembersConnection>;
   /** A pagable collection of type `ActivityGroups` */
@@ -4757,6 +5110,8 @@ export type Query = {
   geometrySame?: Maybe<Scalars['Boolean']['output']>;
   geometrySame3d?: Maybe<Scalars['Boolean']['output']>;
   geometryWithin?: Maybe<Scalars['Boolean']['output']>;
+  /** A pagable collection of type `GroupInviteEvents` */
+  groupInviteEventsCollection?: Maybe<GroupInviteEventsConnection>;
   /** A pagable collection of type `GroupInvites` */
   groupInvitesCollection?: Maybe<GroupInvitesConnection>;
   /** A pagable collection of type `GroupMessages` */
@@ -4907,6 +5262,18 @@ export type Query = {
   userSuburbMatchesCollection?: Maybe<UserSuburbMatchesConnection>;
   /** A pagable collection of type `UserVerifications` */
   userVerificationsCollection?: Maybe<UserVerificationsConnection>;
+};
+
+
+/** The root type for querying data */
+export type QueryActivityGroupCheckinsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivityGroupCheckinsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivityGroupCheckinsOrderBy>>;
 };
 
 
@@ -5286,6 +5653,18 @@ export type QueryGeometrySame3dArgs = {
 export type QueryGeometryWithinArgs = {
   geom1: Scalars['Opaque']['input'];
   geom2: Scalars['Opaque']['input'];
+};
+
+
+/** The root type for querying data */
+export type QueryGroupInviteEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<GroupInviteEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<GroupInviteEventsOrderBy>>;
 };
 
 
@@ -7608,6 +7987,13 @@ export type GroupMessagesQueryVariables = Exact<{
 
 export type GroupMessagesQuery = { groupMessagesCollection: { edges: Array<{ node: { id: string, activityGroupId: string, senderId: string, body: string, messageType: string, moderationStatus: string, createdAt: string } }> } | null };
 
+export type ActivityGroupSummaryQueryVariables = Exact<{
+  groupId: string;
+}>;
+
+
+export type ActivityGroupSummaryQuery = { activityGroupsCollection: { edges: Array<{ node: { id: string, title: string, status: string, city: { id: string, name: string } | null, interest: { id: string, name: string } | null, activityPlansCollection: { edges: Array<{ node: { id: string, title: string, description: string | null, startsAt: string | null, venueType: string, publicLocationName: string, capacityMin: number, capacityMax: number, safetyGuidance: string } }> } | null } }> } | null };
+
 export type SendGroupMessageMutationVariables = Exact<{
   activityGroupId: string;
   senderId: string;
@@ -7797,6 +8183,78 @@ export type GroupMessagesQueryHookResult = ReturnType<typeof useGroupMessagesQue
 export type GroupMessagesLazyQueryHookResult = ReturnType<typeof useGroupMessagesLazyQuery>;
 export type GroupMessagesSuspenseQueryHookResult = ReturnType<typeof useGroupMessagesSuspenseQuery>;
 export type GroupMessagesQueryResult = ApolloReactCommon.QueryResult<GroupMessagesQuery, GroupMessagesQueryVariables>;
+export const ActivityGroupSummaryDocument = gql`
+    query ActivityGroupSummary($groupId: UUID!) {
+  activityGroupsCollection(first: 1, filter: {id: {eq: $groupId}}) {
+    edges {
+      node {
+        id
+        title
+        status
+        city {
+          id
+          name
+        }
+        interest {
+          id
+          name
+        }
+        activityPlansCollection(first: 1, orderBy: [{createdAt: DescNullsLast}]) {
+          edges {
+            node {
+              id
+              title
+              description
+              startsAt
+              venueType
+              publicLocationName
+              capacityMin
+              capacityMax
+              safetyGuidance
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useActivityGroupSummaryQuery__
+ *
+ * To run a query within a React component, call `useActivityGroupSummaryQuery` and pass it any options that fit your needs.
+ * When your component renders, `useActivityGroupSummaryQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useActivityGroupSummaryQuery({
+ *   variables: {
+ *      groupId: // value for 'groupId'
+ *   },
+ * });
+ */
+export function useActivityGroupSummaryQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables> & ({ variables: ActivityGroupSummaryQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>(ActivityGroupSummaryDocument, options);
+      }
+export function useActivityGroupSummaryLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>(ActivityGroupSummaryDocument, options);
+        }
+// @ts-ignore
+export function useActivityGroupSummarySuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>;
+export function useActivityGroupSummarySuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>): ApolloReactHooks.UseSuspenseQueryResult<ActivityGroupSummaryQuery | undefined, ActivityGroupSummaryQueryVariables>;
+export function useActivityGroupSummarySuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>(ActivityGroupSummaryDocument, options);
+        }
+export type ActivityGroupSummaryQueryHookResult = ReturnType<typeof useActivityGroupSummaryQuery>;
+export type ActivityGroupSummaryLazyQueryHookResult = ReturnType<typeof useActivityGroupSummaryLazyQuery>;
+export type ActivityGroupSummarySuspenseQueryHookResult = ReturnType<typeof useActivityGroupSummarySuspenseQuery>;
+export type ActivityGroupSummaryQueryResult = ApolloReactCommon.QueryResult<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>;
 export const SendGroupMessageDocument = gql`
     mutation SendGroupMessage($activityGroupId: UUID!, $senderId: UUID!, $body: String!, $moderationStatus: String!) {
   insertIntoGroupMessagesCollection(

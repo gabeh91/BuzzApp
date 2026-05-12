@@ -1,6 +1,13 @@
 import { createContext, useContext, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import Animated, {
   Easing,
   type SharedValue,
@@ -9,91 +16,264 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withSequence,
-  withTiming
+  withTiming,
 } from "react-native-reanimated";
 
-import { useActivateInterestMutation, useBuzzHomeQuery, useUpsertBuzzProfileMutation } from "@graphql/generated";
+import {
+  useActivateInterestMutation,
+  useBuzzHomeQuery,
+  useUpsertBuzzProfileMutation,
+} from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
+import type { BuzzAuthUser } from "@/auth/auth.types";
 import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import {
   isBackendActivationResult,
   shouldActivateInterestThroughSupabase,
   type ActivationAvailabilityIntent,
-  type BuzzInterest
+  type BuzzInterest,
 } from "@/features/interests/interestFlow";
 import { useQuiz } from "@/features/quiz/QuizProvider";
-import { createBuzzProfilePersistenceInput, shouldPersistProfileToSupabase } from "@/features/quiz/profilePersistence";
+import {
+  createBuzzProfilePersistenceInput,
+  shouldPersistProfileToSupabase,
+} from "@/features/quiz/profilePersistence";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
+import { Button } from "@/ui";
 import { useOnboarding } from "@/features/onboarding/OnboardingProvider";
+import { canBrowseFromOnboardingStep } from "@/features/onboarding/onboardingFlow";
+import { markAnonymousOnboardingComplete } from "@/features/onboarding/onboardingDraft";
+import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
 
 type OnboardingThemeContextValue = {
   colors: BuzzTheme["colors"];
   styles: ReturnType<typeof createStyles>;
 };
 
-const OnboardingThemeContext = createContext<OnboardingThemeContextValue | null>(null);
+const OnboardingThemeContext =
+  createContext<OnboardingThemeContextValue | null>(null);
 
 const useOnboardingTheme = (): OnboardingThemeContextValue => {
   const value = useContext(OnboardingThemeContext);
 
   if (!value) {
-    throw new Error("useOnboardingTheme must be used within OnboardingThemeContext.Provider");
+    throw new Error(
+      "useOnboardingTheme must be used within OnboardingThemeContext.Provider",
+    );
   }
 
   return value;
 };
 
 const fallbackInterests: BuzzInterest[] = [
-  { id: "00000000-0000-0000-0000-000000000001", name: "Surfing", slug: "surfing", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000002", name: "Tennis", slug: "tennis", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000003", name: "Singing", slug: "singing", category: "music" },
-  { id: "00000000-0000-0000-0000-000000000004", name: "Running", slug: "running", category: "fitness" },
-  { id: "00000000-0000-0000-0000-000000000005", name: "Climbing", slug: "climbing", category: "fitness" },
+  {
+    id: "00000000-0000-0000-0000-000000000001",
+    name: "Surfing",
+    slug: "surfing",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000002",
+    name: "Tennis",
+    slug: "tennis",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000003",
+    name: "Singing",
+    slug: "singing",
+    category: "music",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000004",
+    name: "Running",
+    slug: "running",
+    category: "fitness",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000005",
+    name: "Climbing",
+    slug: "climbing",
+    category: "fitness",
+  },
   {
     id: "00000000-0000-0000-0000-000000000006",
     name: "Language Exchange",
     slug: "language-exchange",
-    category: "learning"
+    category: "learning",
   },
-  { id: "00000000-0000-0000-0000-000000000007", name: "Board Games", slug: "board-games", category: "social" },
-  { id: "00000000-0000-0000-0000-000000000008", name: "Coffee", slug: "coffee", category: "food" },
-  { id: "00000000-0000-0000-0000-000000000009", name: "Cooking Classes", slug: "cooking-classes", category: "food" },
-  { id: "00000000-0000-0000-0000-000000000010", name: "Gym / Fitness", slug: "gym-fitness", category: "fitness" },
-  { id: "00000000-0000-0000-0000-000000000011", name: "Golf", slug: "golf", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000012", name: "Knitting", slug: "knitting", category: "creative" },
-  { id: "00000000-0000-0000-0000-000000000013", name: "Chess", slug: "chess", category: "social" },
-  { id: "00000000-0000-0000-0000-000000000014", name: "Walking", slug: "walking", category: "fitness" },
-  { id: "00000000-0000-0000-0000-000000000015", name: "Hackathons", slug: "hackathons", category: "learning" },
-  { id: "00000000-0000-0000-0000-000000000016", name: "Book Clubs", slug: "book-clubs", category: "social" },
-  { id: "00000000-0000-0000-0000-000000000017", name: "Wine Clubs", slug: "wine-clubs", category: "food" },
-  { id: "00000000-0000-0000-0000-000000000018", name: "Pottery Classes", slug: "pottery-classes", category: "creative" },
-  { id: "00000000-0000-0000-0000-000000000019", name: "Rock Climbing", slug: "rock-climbing", category: "fitness" },
-  { id: "00000000-0000-0000-0000-000000000020", name: "Soccer", slug: "soccer", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000021", name: "Archery", slug: "archery", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000022", name: "Basketball", slug: "basketball", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000023", name: "Netball", slug: "netball", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000024", name: "Volleyball", slug: "volleyball", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000025", name: "Ultimate Frisbee", slug: "ultimate-frisbee", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000026", name: "Touch Rugby", slug: "touch-rugby", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000027", name: "Pickleball", slug: "pickleball", category: "sport" },
-  { id: "00000000-0000-0000-0000-000000000028", name: "Yoga", slug: "yoga", category: "fitness" },
-  { id: "00000000-0000-0000-0000-000000000029", name: "Photography Walks", slug: "photography-walks", category: "creative" },
-  { id: "00000000-0000-0000-0000-000000000030", name: "Trivia Nights", slug: "trivia-nights", category: "social" },
-  { id: "00000000-0000-0000-0000-000000000031", name: "Gardening", slug: "gardening", category: "lifestyle" }
+  {
+    id: "00000000-0000-0000-0000-000000000007",
+    name: "Board Games",
+    slug: "board-games",
+    category: "social",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000008",
+    name: "Coffee",
+    slug: "coffee",
+    category: "food",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000009",
+    name: "Cooking Classes",
+    slug: "cooking-classes",
+    category: "food",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000010",
+    name: "Gym / Fitness",
+    slug: "gym-fitness",
+    category: "fitness",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000011",
+    name: "Golf",
+    slug: "golf",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000012",
+    name: "Knitting",
+    slug: "knitting",
+    category: "creative",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000013",
+    name: "Chess",
+    slug: "chess",
+    category: "social",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000014",
+    name: "Walking",
+    slug: "walking",
+    category: "fitness",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000015",
+    name: "Hackathons",
+    slug: "hackathons",
+    category: "learning",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000016",
+    name: "Book Clubs",
+    slug: "book-clubs",
+    category: "social",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000017",
+    name: "Wine Clubs",
+    slug: "wine-clubs",
+    category: "food",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000018",
+    name: "Pottery Classes",
+    slug: "pottery-classes",
+    category: "creative",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000019",
+    name: "Rock Climbing",
+    slug: "rock-climbing",
+    category: "fitness",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000020",
+    name: "Soccer",
+    slug: "soccer",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000021",
+    name: "Archery",
+    slug: "archery",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000022",
+    name: "Basketball",
+    slug: "basketball",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000023",
+    name: "Netball",
+    slug: "netball",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000024",
+    name: "Volleyball",
+    slug: "volleyball",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000025",
+    name: "Ultimate Frisbee",
+    slug: "ultimate-frisbee",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000026",
+    name: "Touch Rugby",
+    slug: "touch-rugby",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000027",
+    name: "Pickleball",
+    slug: "pickleball",
+    category: "sport",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000028",
+    name: "Yoga",
+    slug: "yoga",
+    category: "fitness",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000029",
+    name: "Photography Walks",
+    slug: "photography-walks",
+    category: "creative",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000030",
+    name: "Trivia Nights",
+    slug: "trivia-nights",
+    category: "social",
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000031",
+    name: "Gardening",
+    slug: "gardening",
+    category: "lifestyle",
+  },
 ];
 
 const isBuzzInterest = (value: unknown): value is BuzzInterest => {
   const interest = value as Partial<BuzzInterest>;
 
-  return Boolean(interest.id && interest.name && interest.slug && interest.category);
+  return Boolean(
+    interest.id && interest.name && interest.slug && interest.category,
+  );
 };
 
-const getInterestsFromGraphql = (data: ReturnType<typeof useBuzzHomeQuery>["data"]): BuzzInterest[] => {
-  return data?.interestsCollection?.edges.map((edge) => edge.node).filter(isBuzzInterest) ?? fallbackInterests;
+const getInterestsFromGraphql = (
+  data: ReturnType<typeof useBuzzHomeQuery>["data"],
+): BuzzInterest[] => {
+  return (
+    data?.interestsCollection?.edges
+      .map((edge) => edge.node)
+      .filter(isBuzzInterest) ?? fallbackInterests
+  );
 };
 
 const useAmbientMotion = (scrollY: SharedValue<number>) => {
@@ -104,15 +284,15 @@ const useAmbientMotion = (scrollY: SharedValue<number>) => {
       withSequence(
         withTiming(1, {
           duration: 3600,
-          easing: Easing.inOut(Easing.sin)
+          easing: Easing.inOut(Easing.sin),
         }),
         withTiming(0, {
           duration: 3600,
-          easing: Easing.inOut(Easing.sin)
-        })
+          easing: Easing.inOut(Easing.sin),
+        }),
       ),
       -1,
-      false
+      false,
     );
   }, [ambient]);
 
@@ -122,12 +302,12 @@ const useAmbientMotion = (scrollY: SharedValue<number>) => {
     return {
       transform: [
         {
-          translateX: -18 * ambient.value
+          translateX: -18 * ambient.value,
         },
         {
-          translateY: 16 * ambient.value - skyParallaxY
-        }
-      ]
+          translateY: 16 * ambient.value - skyParallaxY,
+        },
+      ],
     };
   });
 
@@ -137,18 +317,18 @@ const useAmbientMotion = (scrollY: SharedValue<number>) => {
     return {
       transform: [
         {
-          translateX: 22 * ambient.value
+          translateX: 22 * ambient.value,
         },
         {
-          translateY: -14 * ambient.value - goldParallaxY
-        }
-      ]
+          translateY: -14 * ambient.value - goldParallaxY,
+        },
+      ],
     };
   });
 
   return {
     skyStyle,
-    goldStyle
+    goldStyle,
   };
 };
 
@@ -162,7 +342,7 @@ const useContentSlideTransition = (transitionIndex: number) => {
     translateX.value = direction * 34;
     translateX.value = withTiming(0, {
       duration: 240,
-      easing: Easing.out(Easing.cubic)
+      easing: Easing.out(Easing.cubic),
     });
   }, [previousIndex, transitionIndex, translateX]);
 
@@ -170,14 +350,14 @@ const useContentSlideTransition = (transitionIndex: number) => {
     return {
       transform: [
         {
-          translateX: translateX.value
-        }
-      ]
+          translateX: translateX.value,
+        },
+      ],
     };
   });
 
   return {
-    cardStyle
+    cardStyle,
   };
 };
 
@@ -187,18 +367,18 @@ const useAnimatedProgress = (current: number, total: number) => {
   useEffect(() => {
     progress.value = withTiming(total > 0 ? current / total : 0, {
       duration: 260,
-      easing: Easing.out(Easing.cubic)
+      easing: Easing.out(Easing.cubic),
     });
   }, [current, progress, total]);
 
   const progressFillStyle = useAnimatedStyle(() => {
     return {
-      width: `${Math.min(Math.max(progress.value, 0), 1) * 100}%`
+      width: `${Math.min(Math.max(progress.value, 0), 1) * 100}%`,
     };
   });
 
   return {
-    progressFillStyle
+    progressFillStyle,
   };
 };
 
@@ -208,7 +388,7 @@ const useHeaderProgressTransition = (isQuizStep: boolean) => {
   useEffect(() => {
     quizMode.value = withTiming(isQuizStep ? 1 : 0, {
       duration: 260,
-      easing: Easing.out(Easing.cubic)
+      easing: Easing.out(Easing.cubic),
     });
   }, [isQuizStep, quizMode]);
 
@@ -217,9 +397,9 @@ const useHeaderProgressTransition = (isQuizStep: boolean) => {
       opacity: 1 - quizMode.value,
       transform: [
         {
-          translateY: -12 * quizMode.value
-        }
-      ]
+          translateY: -12 * quizMode.value,
+        },
+      ],
     };
   });
 
@@ -228,15 +408,15 @@ const useHeaderProgressTransition = (isQuizStep: boolean) => {
       opacity: quizMode.value,
       transform: [
         {
-          translateY: 12 * (1 - quizMode.value)
-        }
-      ]
+          translateY: 12 * (1 - quizMode.value),
+        },
+      ],
     };
   });
 
   return {
     flowProgressStyle,
-    quizProgressStyle
+    quizProgressStyle,
   };
 };
 
@@ -260,34 +440,6 @@ const ProgressBar = ({ current, total, label }: ProgressBarProps) => {
   );
 };
 
-const PrimaryButton = ({
-  label,
-  disabled,
-  onPress
-}: {
-  label: string;
-  disabled?: boolean;
-  onPress: () => void;
-}) => {
-  const { styles } = useOnboardingTheme();
-
-  return (
-    <Pressable disabled={disabled} onPress={onPress} style={[styles.primaryButton, disabled ? styles.primaryButtonDisabled : null]}>
-      <Text style={styles.primaryButtonText}>{label}</Text>
-    </Pressable>
-  );
-};
-
-const SecondaryButton = ({ label, disabled, onPress }: { label: string; disabled?: boolean; onPress: () => void }) => {
-  const { styles } = useOnboardingTheme();
-
-  return (
-    <Pressable disabled={disabled} onPress={onPress} style={styles.secondaryButton}>
-      <Text style={[styles.secondaryButtonText, disabled ? styles.secondaryButtonTextDisabled : null]}>{label}</Text>
-    </Pressable>
-  );
-};
-
 const AmbientBackground = ({ scrollY }: { scrollY: SharedValue<number> }) => {
   const { styles } = useOnboardingTheme();
   const transition = useAmbientMotion(scrollY);
@@ -303,7 +455,7 @@ const AmbientBackground = ({ scrollY }: { scrollY: SharedValue<number> }) => {
 const FixedOnboardingHeader = ({
   cityName,
   flowProgress,
-  quizProgress
+  quizProgress,
 }: {
   cityName: string;
   flowProgress: { current: number; total: number };
@@ -313,7 +465,8 @@ const FixedOnboardingHeader = ({
   const { LL } = useI18n();
   const isQuizStep = Boolean(quizProgress);
   const lastQuizProgress = useRef(quizProgress);
-  const { flowProgressStyle, quizProgressStyle } = useHeaderProgressTransition(isQuizStep);
+  const { flowProgressStyle, quizProgressStyle } =
+    useHeaderProgressTransition(isQuizStep);
 
   useEffect(() => {
     if (quizProgress) {
@@ -324,12 +477,12 @@ const FixedOnboardingHeader = ({
   const visibleQuizProgress = quizProgress ?? lastQuizProgress.current;
   const flowProgressLabel = LL.common.progress.step({
     current: flowProgress.current,
-    total: flowProgress.total
+    total: flowProgress.total,
   });
   const quizProgressLabel = visibleQuizProgress
     ? LL.common.progress.question({
         current: visibleQuizProgress.current,
-        total: visibleQuizProgress.total
+        total: visibleQuizProgress.total,
       })
     : undefined;
 
@@ -341,11 +494,22 @@ const FixedOnboardingHeader = ({
       </View>
       <View style={styles.headerProgressSlot}>
         <Animated.View style={[styles.flowProgressLayer, flowProgressStyle]}>
-          <ProgressBar current={flowProgress.current} total={flowProgress.total} label={flowProgressLabel} />
+          <ProgressBar
+            current={flowProgress.current}
+            total={flowProgress.total}
+            label={flowProgressLabel}
+          />
         </Animated.View>
         {visibleQuizProgress ? (
-          <Animated.View pointerEvents="none" style={[styles.quizProgressLayer, quizProgressStyle]}>
-            <ProgressBar current={visibleQuizProgress.current} total={visibleQuizProgress.total} label={quizProgressLabel ?? ""} />
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.quizProgressLayer, quizProgressStyle]}
+          >
+            <ProgressBar
+              current={visibleQuizProgress.current}
+              total={visibleQuizProgress.total}
+              label={quizProgressLabel ?? ""}
+            />
           </Animated.View>
         ) : null}
       </View>
@@ -357,7 +521,10 @@ const IntroContent = () => {
   const { styles } = useOnboardingTheme();
   const { state } = useOnboarding();
   const { user } = useBuzzAuth();
-  const cityContext = createCityContextFallback({ cityId: user.cityId, cityName: user.cityName });
+  const cityContext = createCityContextFallback({
+    cityId: user.cityId,
+    cityName: user.cityName,
+  });
   const { LL } = useI18n();
   const stepCopy = LL.onboarding.steps[state.step.id];
 
@@ -365,9 +532,13 @@ const IntroContent = () => {
     return (
       <View style={styles.contentStack}>
         <View style={styles.profileCard}>
-          <Text style={styles.metaLabel}>{LL.onboarding.profile.metaLabel()}</Text>
+          <Text style={styles.metaLabel}>
+            {LL.onboarding.profile.metaLabel()}
+          </Text>
           <Text style={styles.profileName}>{user.displayName}</Text>
-          <Text style={styles.profileMeta}>{LL.onboarding.profile.meta({ city: cityContext.city.name })}</Text>
+          <Text style={styles.profileMeta}>
+            {LL.onboarding.profile.meta({ city: cityContext.city.name })}
+          </Text>
         </View>
         <Text style={styles.bodyCopy}>{LL.onboarding.profile.body()}</Text>
       </View>
@@ -377,14 +548,36 @@ const IntroContent = () => {
   if (state.step.id === "howItWorks") {
     return (
       <View style={styles.howItWorksList}>
-        {[LL.onboarding.howItWorks.itemOne(), LL.onboarding.howItWorks.itemTwo(), LL.onboarding.howItWorks.itemThree()].map(
-          (item, index) => (
-            <View key={item} style={[styles.howItWorksItem, index === 1 ? styles.howItWorksItemFeatured : null]}>
-              <Text style={[styles.howItWorksNumber, index === 1 ? styles.howItWorksFeaturedText : null]}>0{index + 1}</Text>
-              <Text style={[styles.howItWorksText, index === 1 ? styles.howItWorksFeaturedText : null]}>{item}</Text>
-            </View>
-          )
-        )}
+        {[
+          LL.onboarding.howItWorks.itemOne(),
+          LL.onboarding.howItWorks.itemTwo(),
+          LL.onboarding.howItWorks.itemThree(),
+        ].map((item, index) => (
+          <View
+            key={item}
+            style={[
+              styles.howItWorksItem,
+              index === 1 ? styles.howItWorksItemFeatured : null,
+            ]}
+          >
+            <Text
+              style={[
+                styles.howItWorksNumber,
+                index === 1 ? styles.howItWorksFeaturedText : null,
+              ]}
+            >
+              0{index + 1}
+            </Text>
+            <Text
+              style={[
+                styles.howItWorksText,
+                index === 1 ? styles.howItWorksFeaturedText : null,
+              ]}
+            >
+              {item}
+            </Text>
+          </View>
+        ))}
       </View>
     );
   }
@@ -410,7 +603,10 @@ const QuizContent = () => {
               onPress={() => {
                 quiz.answerQuestion(quiz.activeQuestion.id, option.id);
               }}
-              style={[styles.optionCard, selected ? styles.optionCardSelected : null]}
+              style={[
+                styles.optionCard,
+                selected ? styles.optionCardSelected : null,
+              ]}
             >
               <Text style={styles.optionLabel}>{option.label}</Text>
               <Text style={styles.optionCopy}>{option.supportingText}</Text>
@@ -425,7 +621,7 @@ const QuizContent = () => {
 const InterestsContent = ({
   interests,
   loading,
-  error
+  error,
 }: {
   interests: BuzzInterest[];
   loading: boolean;
@@ -449,7 +645,8 @@ const InterestsContent = ({
       </View>
       <View style={styles.interestGrid}>
         {interests.map((interest) => {
-          const selected = interestFlow.state.selectedInterest?.id === interest.id;
+          const selected =
+            interestFlow.state.selectedInterest?.id === interest.id;
 
           return (
             <Pressable
@@ -457,9 +654,19 @@ const InterestsContent = ({
               onPress={() => {
                 interestFlow.select(interest);
               }}
-              style={[styles.interestPill, selected ? styles.interestPillSelected : null]}
+              style={[
+                styles.interestPill,
+                selected ? styles.interestPillSelected : null,
+              ]}
             >
-              <Text style={[styles.interestPillText, selected ? styles.interestPillTextSelected : null]}>{interest.name}</Text>
+              <Text
+                style={[
+                  styles.interestPillText,
+                  selected ? styles.interestPillTextSelected : null,
+                ]}
+              >
+                {interest.name}
+              </Text>
             </Pressable>
           );
         })}
@@ -475,38 +682,64 @@ const ActivationContent = () => {
   const { LL } = useI18n();
   const selected = interestFlow.state.selectedInterest;
   const selectedAvailability = interestFlow.state.activationAvailability;
-  const availabilityOptions: Array<{ id: string; label: string; intent: ActivationAvailabilityIntent }> = [
+  const availabilityOptions: Array<{
+    id: string;
+    label: string;
+    intent: ActivationAvailabilityIntent;
+  }> = [
     {
       id: "this-week",
       label: LL.onboarding.activation.availability.thisWeek(),
-      intent: { availabilityWindow: "this_week", preferredTime: "flexible", urgency: "soon" }
+      intent: {
+        availabilityWindow: "this_week",
+        preferredTime: "flexible",
+        urgency: "soon",
+      },
     },
     {
       id: "weekend",
       label: LL.onboarding.activation.availability.weekend(),
-      intent: { availabilityWindow: "weekend", preferredTime: "daytime", urgency: "soon" }
+      intent: {
+        availabilityWindow: "weekend",
+        preferredTime: "daytime",
+        urgency: "soon",
+      },
     },
     {
       id: "daytime",
       label: LL.onboarding.activation.availability.daytime(),
-      intent: { availabilityWindow: "weekdays", preferredTime: "daytime", urgency: "low" }
-    }
+      intent: {
+        availabilityWindow: "weekdays",
+        preferredTime: "daytime",
+        urgency: "low",
+      },
+    },
   ];
 
   return (
     <View style={styles.contentStack}>
       <View style={styles.activationCard}>
-        <Text style={styles.activationEyebrow}>{LL.onboarding.activation.eyebrow()}</Text>
-        <Text style={styles.activationTitle}>{selected ? selected.name : LL.onboarding.activation.chooseInterestFirst()}</Text>
+        <Text style={styles.activationEyebrow}>
+          {LL.onboarding.activation.eyebrow()}
+        </Text>
+        <Text style={styles.activationTitle}>
+          {selected
+            ? selected.name
+            : LL.onboarding.activation.chooseInterestFirst()}
+        </Text>
         <Text style={styles.activationCopy}>{quiz.traits.summary}</Text>
       </View>
       <View style={styles.availabilityStack}>
-        <Text style={styles.activationOptionLabel}>{LL.onboarding.activation.availability.label()}</Text>
+        <Text style={styles.activationOptionLabel}>
+          {LL.onboarding.activation.availability.label()}
+        </Text>
         <View style={styles.availabilityGrid}>
           {availabilityOptions.map((option) => {
             const isSelected =
-              selectedAvailability.availabilityWindow === option.intent.availabilityWindow &&
-              selectedAvailability.preferredTime === option.intent.preferredTime &&
+              selectedAvailability.availabilityWindow ===
+                option.intent.availabilityWindow &&
+              selectedAvailability.preferredTime ===
+                option.intent.preferredTime &&
               selectedAvailability.urgency === option.intent.urgency;
 
             return (
@@ -516,9 +749,17 @@ const ActivationContent = () => {
                 onPress={() => {
                   interestFlow.setAvailabilityIntent(option.intent);
                 }}
-                style={[styles.availabilityPill, isSelected ? styles.availabilityPillSelected : null]}
+                style={[
+                  styles.availabilityPill,
+                  isSelected ? styles.availabilityPillSelected : null,
+                ]}
               >
-                <Text style={[styles.availabilityPillText, isSelected ? styles.availabilityPillTextSelected : null]}>
+                <Text
+                  style={[
+                    styles.availabilityPillText,
+                    isSelected ? styles.availabilityPillTextSelected : null,
+                  ]}
+                >
                   {option.label}
                 </Text>
               </Pressable>
@@ -526,7 +767,9 @@ const ActivationContent = () => {
           })}
         </View>
       </View>
-      <Text style={styles.bodyCopy}>{interestFlow.state.activation.message}</Text>
+      <Text style={styles.bodyCopy}>
+        {interestFlow.state.activation.message}
+      </Text>
     </View>
   );
 };
@@ -538,18 +781,24 @@ const MatchPreviewContent = () => {
   const match = interestFlow.state.matchPreview;
 
   if (!match) {
-    return <Text style={styles.bodyCopy}>{LL.onboarding.matchPreview.empty()}</Text>;
+    return (
+      <Text style={styles.bodyCopy}>{LL.onboarding.matchPreview.empty()}</Text>
+    );
   }
 
   return (
     <View style={styles.contentStack}>
       <View style={styles.matchCard}>
-        <Text style={styles.matchEyebrow}>{LL.onboarding.matchPreview.eyebrow()}</Text>
+        <Text style={styles.matchEyebrow}>
+          {LL.onboarding.matchPreview.eyebrow()}
+        </Text>
         <Text style={styles.matchTitle}>{match.headline}</Text>
         <Text style={styles.matchReason}>{match.reason}</Text>
       </View>
       <View style={styles.suggestionCard}>
-        <Text style={styles.suggestionTitle}>{LL.onboarding.matchPreview.suggestedNextStep()}</Text>
+        <Text style={styles.suggestionTitle}>
+          {LL.onboarding.matchPreview.suggestedNextStep()}
+        </Text>
         <Text style={styles.suggestionCopy}>{match.suggestedPlan}</Text>
       </View>
     </View>
@@ -559,7 +808,7 @@ const MatchPreviewContent = () => {
 const StepContent = ({
   interests,
   loading,
-  error
+  error,
 }: {
   interests: BuzzInterest[];
   loading: boolean;
@@ -572,7 +821,9 @@ const StepContent = ({
   }
 
   if (state.step.id === "interests") {
-    return <InterestsContent interests={interests} loading={loading} error={error} />;
+    return (
+      <InterestsContent interests={interests} loading={loading} error={error} />
+    );
   }
 
   if (state.step.id === "activation") {
@@ -590,90 +841,119 @@ const OnboardingExperience = () => {
   const { styles } = useOnboardingTheme();
   const router = useRouter();
   const onboarding = useOnboarding();
-  const { user } = useBuzzAuth();
-  const cityContext = createCityContextFallback({ cityId: user.cityId, cityName: user.cityName });
+  const { isAuthenticated, requireAuth, user } = useBuzzAuth();
+  const cityContext = createCityContextFallback({
+    cityId: user.cityId,
+    cityName: user.cityName,
+  });
   const { LL } = useI18n();
   const quiz = useQuiz();
   const interestFlow = useInterestFlow();
   const { data, loading, error } = useBuzzHomeQuery();
-  const [activateInterest, { loading: activating }] = useActivateInterestMutation();
+  const [activateInterest, { loading: activating }] =
+    useActivateInterestMutation();
   const [upsertBuzzProfile] = useUpsertBuzzProfileMutation();
   const interests = getInterestsFromGraphql(data);
   const selectedInterest = interestFlow.state.selectedInterest;
   const transitionIndex =
-    onboarding.state.index * (quiz.progress.total + 1) + (onboarding.state.step.id === "quiz" ? quiz.activeQuestionIndex : 0);
+    onboarding.state.index * (quiz.progress.total + 1) +
+    (onboarding.state.step.id === "quiz" ? quiz.activeQuestionIndex : 0);
   const transition = useContentSlideTransition(transitionIndex);
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
-    }
+    },
   });
   const stepCopy = LL.onboarding.steps[onboarding.state.step.id];
-  const quizProgress = onboarding.state.step.id === "quiz" ? quiz.progress : undefined;
+  const quizProgress =
+    onboarding.state.step.id === "quiz" ? quiz.progress : undefined;
+  const canBrowseFromCurrentStep = canBrowseFromOnboardingStep(
+    onboarding.state,
+  );
 
-  const persistQuizProfile = async () => {
+  const persistQuizProfile = async (profileUser: BuzzAuthUser = user) => {
     const input = createBuzzProfilePersistenceInput({
-      user,
+      user: profileUser,
       answers: quiz.answers,
-      traits: quiz.traits
+      traits: quiz.traits,
     });
 
     quiz.markProfileSaving(input);
 
-    if (!shouldPersistProfileToSupabase(user)) {
+    if (!shouldPersistProfileToSupabase(profileUser)) {
       quiz.markProfilePersisted(input);
       return;
     }
 
     try {
       await upsertBuzzProfile({
-        variables: input
+        variables: input,
       });
       quiz.markProfilePersisted(input);
     } catch (caught) {
-      quiz.markProfilePersistenceFailed(input, caught instanceof Error ? caught.message : undefined);
+      quiz.markProfilePersistenceFailed(
+        input,
+        caught instanceof Error ? caught.message : undefined,
+      );
     }
+  };
+
+  const completeAnonymousOnboarding = async () => {
+    await anonymousOnboardingDraftStore.update((draft) =>
+      markAnonymousOnboardingComplete(draft),
+    );
+  };
+
+  const browseBuzzForNow = async () => {
+    await completeAnonymousOnboarding();
+    router.replace(routes.home);
   };
 
   const activateSelectedInterest = async () => {
     if (!selectedInterest) {
-      interestFlow.failActivation(LL.interests.activation.chooseBeforeActivating());
+      interestFlow.failActivation(
+        LL.interests.activation.chooseBeforeActivating(),
+      );
       return;
     }
 
-    interestFlow.markActivating();
-    let shouldShowMatchPreview = false;
+    await requireAuth("activate_interest", async (authUser) => {
+      await persistQuizProfile(authUser);
+      interestFlow.markActivating();
+      let shouldShowMatchPreview = false;
 
-    try {
-      if (shouldActivateInterestThroughSupabase(user)) {
-        const response = await activateInterest({
-          variables: {
-            interestId: selectedInterest.id
+      try {
+        if (shouldActivateInterestThroughSupabase(authUser)) {
+          const response = await activateInterest({
+            variables: {
+              interestId: selectedInterest.id,
+            },
+          });
+
+          if (!isBackendActivationResult(response.data?.activateInterest)) {
+            throw new Error("Activation response was invalid");
           }
-        });
 
-        if (!isBackendActivationResult(response.data?.activateInterest)) {
-          throw new Error("Activation response was invalid");
+          const result = response.data.activateInterest;
+          interestFlow.completeBackendActivation(result);
+          shouldShowMatchPreview = result.matchCandidates.length > 0;
+        } else {
+          interestFlow.completeLocalActivation();
         }
-
-        const result = response.data.activateInterest;
-        interestFlow.completeBackendActivation(result);
-        shouldShowMatchPreview = result.matchCandidates.length > 0;
-      } else {
-        interestFlow.completeLocalActivation();
+      } catch {
+        interestFlow.failActivation(LL.interests.activation.failed());
+        return;
       }
-    } catch {
-      interestFlow.failActivation(LL.interests.activation.failed());
-      return;
-    }
 
-    if (shouldShowMatchPreview) {
-      onboarding.next();
-      return;
-    }
+      if (shouldShowMatchPreview) {
+        onboarding.next();
+        return;
+      }
 
-    router.replace(routes.home);
+      await completeAnonymousOnboarding();
+      router.replace(routes.home);
+    });
   };
 
   const primaryLabel =
@@ -686,7 +966,9 @@ const OnboardingExperience = () => {
         : onboarding.state.step.id === "activation"
           ? activating || interestFlow.state.activation.status === "activating"
             ? LL.onboarding.actions.activating()
-            : LL.onboarding.actions.activateInterest()
+            : isAuthenticated
+              ? LL.onboarding.actions.activateInterest()
+              : LL.onboarding.actions.signInToActivate()
           : onboarding.isLastStep
             ? LL.onboarding.actions.enterBuzz()
             : LL.common.continue();
@@ -694,11 +976,17 @@ const OnboardingExperience = () => {
   const primaryDisabled =
     (onboarding.state.step.id === "quiz" && !quiz.hasAnsweredActiveQuestion) ||
     (onboarding.state.step.id === "interests" && !selectedInterest) ||
-    (onboarding.state.step.id === "activation" && (!selectedInterest || activating));
+    (onboarding.state.step.id === "activation" &&
+      (!selectedInterest || activating));
 
   const handlePrimary = () => {
-    if (onboarding.isLastStep) {
+    const completeOnboardingAndEnterHome = async () => {
+      await completeAnonymousOnboarding();
       router.replace(routes.home);
+    };
+
+    if (onboarding.isLastStep) {
+      void completeOnboardingAndEnterHome();
       return;
     }
 
@@ -732,10 +1020,18 @@ const OnboardingExperience = () => {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <FixedOnboardingHeader cityName={cityContext.city.name} flowProgress={onboarding.state.progress} quizProgress={quizProgress} />
+      <FixedOnboardingHeader
+        cityName={cityContext.city.name}
+        flowProgress={onboarding.state.progress}
+        quizProgress={quizProgress}
+      />
       <View style={styles.stage}>
         <AmbientBackground scrollY={scrollY} />
-        <Animated.ScrollView onScroll={scrollHandler} scrollEventThrottle={16} contentContainerStyle={styles.scrollContent}>
+        <Animated.ScrollView
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.scrollContent}
+        >
           <View style={styles.layout}>
             <View style={styles.cardRail}>
               <Animated.View style={[styles.mainCard, transition.cardStyle]}>
@@ -743,13 +1039,42 @@ const OnboardingExperience = () => {
                   <Text style={styles.eyebrow}>{stepCopy.eyebrow()}</Text>
                   <Text style={styles.title}>{stepCopy.title()}</Text>
                 </View>
-                <StepContent interests={interests} loading={loading} error={error} />
+                <StepContent
+                  interests={interests}
+                  loading={loading}
+                  error={error}
+                />
               </Animated.View>
             </View>
 
             <View style={styles.buttonStack}>
-              <PrimaryButton label={primaryLabel} disabled={primaryDisabled} onPress={handlePrimary} />
-              <SecondaryButton label={LL.common.back()} disabled={onboarding.isFirstStep && onboarding.state.step.id !== "quiz"} onPress={handleBack} />
+              <Button
+                label={primaryLabel}
+                disabled={primaryDisabled}
+                onPress={handlePrimary}
+                style={styles.primaryAction}
+              />
+
+              {canBrowseFromCurrentStep ? (
+                <Button
+                  label={LL.onboarding.actions.browseBuzz()}
+                  onPress={() => {
+                    void browseBuzzForNow();
+                  }}
+                  variant="tonal"
+                  style={styles.secondaryAction}
+                />
+              ) : null}
+              <Button
+                label={LL.common.back()}
+                disabled={
+                  onboarding.isFirstStep && onboarding.state.step.id !== "quiz"
+                }
+                onPress={handleBack}
+                variant="plain"
+                style={styles.secondaryAction}
+                textStyle={styles.backActionText}
+              />
             </View>
           </View>
         </Animated.ScrollView>
@@ -770,378 +1095,371 @@ export const OnboardingScreen = () => {
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, fontStyles, fontSizes, lineHeights, radii, spacing, borderWidths, shadows } = theme;
+  const {
+    colors,
+    fontStyles,
+    fontSizes,
+    lineHeights,
+    radii,
+    spacing,
+    borderWidths,
+    shadows,
+  } = theme;
 
   return StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 22,
-    paddingTop: 18,
-    paddingBottom: 22
-  },
-  stage: {
-    flex: 1,
-    position: "relative"
-  },
-  layout: {
-    flexGrow: 1,
-    justifyContent: "space-between",
-    gap: 22
-  },
-  ambientRoot: {
-    position: "absolute",
-    inset: 0
-  },
-  ambientSky: {
-    position: "absolute",
-    top: -80,
-    right: -70,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: colors.surfaceMuted
-  },
-  ambientGold: {
-    position: "absolute",
-    bottom: 90,
-    left: -95,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: colors.warningSoft
-  },
-  fixedHeader: {
-    paddingHorizontal: 22,
-    paddingTop: 18,
-    paddingBottom: 16,
-    gap: 18,
-    backgroundColor: colors.background,
-    borderBottomWidth: borderWidths.hairline,
-    borderBottomColor: colors.overlay,
-    zIndex: 1
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
-  },
-  logo: {
-    color: colors.text,
-    ...fontStyles.display,
-    fontSize: 28,
-    letterSpacing: -1
-  },
-  envLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1.1,
-    textTransform: "uppercase"
-  },
-  progressGroup: {
-    gap: 8
-  },
-  headerProgressSlot: {
-    height: 38,
-    overflow: "hidden"
-  },
-  flowProgressLayer: {
-    ...StyleSheet.absoluteFillObject
-  },
-  quizProgressLayer: {
-    ...StyleSheet.absoluteFillObject
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: radii.full,
-    backgroundColor: colors.overlay,
-    overflow: "hidden"
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: radii.full,
-    backgroundColor: colors.accent
-  },
-  progressLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: "uppercase"
-  },
-  mainCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 36,
-    padding: 24,
-    gap: 22,
-    borderWidth: borderWidths.hairline,
-    borderColor: colors.border,
-    ...shadows.card
-  },
-  cardRail: {
-    flex: 1,
-    justifyContent: "center"
-  },
-  titleStack: {
-    gap: 10
-  },
-  eyebrow: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.4,
-    textTransform: "uppercase"
-  },
-  title: {
-    color: colors.text,
-    ...fontStyles.display,
-    fontSize: 34,
-    lineHeight: 39,
-    letterSpacing: -1.2
-  },
-  contentStack: {
-    gap: 16
-  },
-  bodyCopy: {
-    color: colors.textMuted,
-    fontSize: 17,
-    lineHeight: 26
-  },
-  profileCard: {
-    backgroundColor: colors.background,
-    borderRadius: 24,
-    padding: 18
-  },
-  metaLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: "uppercase"
-  },
-  profileName: {
-    color: colors.text,
-    ...fontStyles.displayStrong,
-    fontSize: 28,
-    marginTop: 10
-  },
-  profileMeta: {
-    color: colors.textMuted,
-    marginTop: 8
-  },
-  howItWorksList: {
-    gap: 12
-  },
-  howItWorksItem: {
-    backgroundColor: colors.background,
-    borderRadius: 22,
-    padding: 16,
-    flexDirection: "row",
-    gap: 14,
-    alignItems: "center"
-  },
-  howItWorksItemFeatured: {
-    backgroundColor: colors.surfaceInverse
-  },
-  howItWorksNumber: {
-    color: colors.accent,
-    fontWeight: "900"
-  },
-  howItWorksText: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 16
-  },
-  howItWorksFeaturedText: {
-    color: colors.textInverse
-  },
-  quizPrompt: {
-    color: colors.text,
-    fontSize: 25,
-    fontWeight: "800",
-    lineHeight: 32
-  },
-  optionsList: {
-    gap: 10
-  },
-  optionCard: {
-    borderWidth: borderWidths.hairline,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    borderRadius: 22,
-    padding: 16,
-    gap: 5
-  },
-  optionCardSelected: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft
-  },
-  optionLabel: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "800"
-  },
-  optionCopy: {
-    color: colors.textMuted,
-    lineHeight: 20
-  },
-  inlineStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8
-  },
-  statusCopy: {
-    color: colors.textMuted
-  },
-  interestGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10
-  },
-  interestPill: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 999,
-    backgroundColor: colors.background,
-    borderWidth: borderWidths.hairline,
-    borderColor: colors.border
-  },
-  interestPillSelected: {
-    backgroundColor: colors.surfaceInverse,
-    borderColor: colors.surfaceInverse
-  },
-  interestPillText: {
-    color: colors.text,
-    fontWeight: "800"
-  },
-  interestPillTextSelected: {
-    color: colors.textInverse
-  },
-  activationCard: {
-    backgroundColor: colors.surfaceInverse,
-    borderRadius: 28,
-    padding: 20,
-    gap: 10
-  },
-  activationEyebrow: {
-    color: colors.warning,
-    fontSize: 13,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-    textTransform: "uppercase"
-  },
-  activationTitle: {
-    color: colors.textInverse,
-    fontSize: 28,
-    fontWeight: "900"
-  },
-  activationCopy: {
-    color: colors.textInverse,
-    lineHeight: 22
-  },
-  availabilityStack: {
-    gap: 10
-  },
-  activationOptionLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 0.8,
-    textTransform: "uppercase"
-  },
-  availabilityGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10
-  },
-  availabilityPill: {
-    backgroundColor: colors.background,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    borderWidth: borderWidths.hairline,
-    paddingHorizontal: 12,
-    paddingVertical: 10
-  },
-  availabilityPillSelected: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.accent
-  },
-  availabilityPillText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "800"
-  },
-  availabilityPillTextSelected: {
-    color: colors.accent
-  },
-  matchCard: {
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: 30,
-    padding: 22,
-    gap: 10
-  },
-  matchEyebrow: {
-    color: colors.brand,
-    fontSize: 13,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-    textTransform: "uppercase"
-  },
-  matchTitle: {
-    color: colors.text,
-    fontSize: 30,
-    fontWeight: "900"
-  },
-  matchReason: {
-    color: colors.brand,
-    lineHeight: 22
-  },
-  suggestionCard: {
-    backgroundColor: colors.background,
-    borderRadius: 24,
-    padding: 18
-  },
-  suggestionTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: "800"
-  },
-  suggestionCopy: {
-    color: colors.textMuted,
-    marginTop: 8,
-    lineHeight: 22
-  },
-  buttonStack: {
-    gap: 4
-  },
-  primaryButton: {
-    backgroundColor: colors.surfaceInverse,
-    borderRadius: 22,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    alignItems: "center"
-  },
-  primaryButtonDisabled: {
-    backgroundColor: colors.disabled
-  },
-  primaryButtonText: {
-    color: colors.textInverse,
-    fontSize: 16,
-    fontWeight: "700"
-  },
-  secondaryButton: {
-    paddingVertical: 16,
-    alignItems: "center"
-  },
-  secondaryButtonText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "700"
-  },
-  secondaryButtonTextDisabled: {
-    color: colors.disabled
-  }
+    screen: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 22,
+      paddingTop: 18,
+      paddingBottom: 22,
+    },
+    stage: {
+      flex: 1,
+      position: "relative",
+    },
+    layout: {
+      flexGrow: 1,
+      justifyContent: "space-between",
+      gap: 22,
+    },
+    ambientRoot: {
+      position: "absolute",
+      inset: 0,
+    },
+    ambientSky: {
+      position: "absolute",
+      top: -80,
+      right: -70,
+      width: 220,
+      height: 220,
+      borderRadius: 110,
+      backgroundColor: colors.surfaceMuted,
+    },
+    ambientGold: {
+      position: "absolute",
+      bottom: 90,
+      left: -95,
+      width: 260,
+      height: 260,
+      borderRadius: 130,
+      backgroundColor: colors.warningSoft,
+    },
+    fixedHeader: {
+      paddingHorizontal: 22,
+      paddingTop: 18,
+      paddingBottom: 16,
+      gap: 18,
+      backgroundColor: colors.background,
+      borderBottomWidth: borderWidths.hairline,
+      borderBottomColor: colors.overlay,
+      zIndex: 1,
+    },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    logo: {
+      color: colors.text,
+      ...fontStyles.display,
+      fontSize: 28,
+      letterSpacing: -1,
+    },
+    envLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: "800",
+      letterSpacing: 1.1,
+      textTransform: "uppercase",
+    },
+    progressGroup: {
+      gap: 8,
+    },
+    headerProgressSlot: {
+      height: 38,
+      overflow: "hidden",
+    },
+    flowProgressLayer: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    quizProgressLayer: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    progressTrack: {
+      height: 8,
+      borderRadius: radii.full,
+      backgroundColor: colors.overlay,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      borderRadius: radii.full,
+      backgroundColor: colors.accent,
+    },
+    progressLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+    },
+    mainCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 36,
+      padding: 24,
+      gap: 22,
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+      ...shadows.card,
+    },
+    cardRail: {
+      flex: 1,
+      justifyContent: "center",
+    },
+    titleStack: {
+      gap: 10,
+    },
+    eyebrow: {
+      color: colors.accent,
+      fontSize: 12,
+      fontWeight: "900",
+      letterSpacing: 1.4,
+      textTransform: "uppercase",
+    },
+    title: {
+      color: colors.text,
+      ...fontStyles.display,
+      fontSize: 34,
+      lineHeight: 39,
+      letterSpacing: -1.2,
+    },
+    contentStack: {
+      gap: 16,
+    },
+    bodyCopy: {
+      color: colors.textMuted,
+      fontSize: 17,
+      lineHeight: 26,
+    },
+    profileCard: {
+      backgroundColor: colors.background,
+      borderRadius: 24,
+      padding: 18,
+    },
+    metaLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+    },
+    profileName: {
+      color: colors.text,
+      ...fontStyles.displayStrong,
+      fontSize: 28,
+      marginTop: 10,
+    },
+    profileMeta: {
+      color: colors.textMuted,
+      marginTop: 8,
+    },
+    howItWorksList: {
+      gap: 12,
+    },
+    howItWorksItem: {
+      backgroundColor: colors.background,
+      borderRadius: 22,
+      padding: 16,
+      flexDirection: "row",
+      gap: 14,
+      alignItems: "center",
+    },
+    howItWorksItemFeatured: {
+      backgroundColor: colors.surfaceInverse,
+    },
+    howItWorksNumber: {
+      color: colors.accent,
+      fontWeight: "900",
+    },
+    howItWorksText: {
+      color: colors.text,
+      flex: 1,
+      fontSize: 16,
+    },
+    howItWorksFeaturedText: {
+      color: colors.textInverse,
+    },
+    quizPrompt: {
+      color: colors.text,
+      fontSize: 25,
+      fontWeight: "800",
+      lineHeight: 32,
+    },
+    optionsList: {
+      gap: 10,
+    },
+    optionCard: {
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      borderRadius: 22,
+      padding: 16,
+      gap: 5,
+    },
+    optionCardSelected: {
+      borderColor: colors.accent,
+      backgroundColor: colors.accentSoft,
+    },
+    optionLabel: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "800",
+    },
+    optionCopy: {
+      color: colors.textMuted,
+      lineHeight: 20,
+    },
+    inlineStatus: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    statusCopy: {
+      color: colors.textMuted,
+    },
+    interestGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+    },
+    interestPill: {
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: 999,
+      backgroundColor: colors.background,
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+    },
+    interestPillSelected: {
+      backgroundColor: colors.surfaceInverse,
+      borderColor: colors.surfaceInverse,
+    },
+    interestPillText: {
+      color: colors.text,
+      fontWeight: "800",
+    },
+    interestPillTextSelected: {
+      color: colors.textInverse,
+    },
+    activationCard: {
+      backgroundColor: colors.surfaceInverse,
+      borderRadius: 28,
+      padding: 20,
+      gap: 10,
+    },
+    activationEyebrow: {
+      color: colors.warning,
+      fontSize: 13,
+      fontWeight: "900",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+    },
+    activationTitle: {
+      color: colors.textInverse,
+      fontSize: 28,
+      fontWeight: "900",
+    },
+    activationCopy: {
+      color: colors.textInverse,
+      lineHeight: 22,
+    },
+    availabilityStack: {
+      gap: 10,
+    },
+    activationOptionLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: "900",
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
+    },
+    availabilityGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+    },
+    availabilityPill: {
+      backgroundColor: colors.background,
+      borderColor: colors.border,
+      borderRadius: radii.sm,
+      borderWidth: borderWidths.hairline,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    availabilityPillSelected: {
+      backgroundColor: colors.accentSoft,
+      borderColor: colors.accent,
+    },
+    availabilityPillText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "800",
+    },
+    availabilityPillTextSelected: {
+      color: colors.accent,
+    },
+    matchCard: {
+      backgroundColor: colors.surfaceMuted,
+      borderRadius: 30,
+      padding: 22,
+      gap: 10,
+    },
+    matchEyebrow: {
+      color: colors.brand,
+      fontSize: 13,
+      fontWeight: "900",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+    },
+    matchTitle: {
+      color: colors.text,
+      fontSize: 30,
+      fontWeight: "900",
+    },
+    matchReason: {
+      color: colors.brand,
+      lineHeight: 22,
+    },
+    suggestionCard: {
+      backgroundColor: colors.background,
+      borderRadius: 24,
+      padding: 18,
+    },
+    suggestionTitle: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: "800",
+    },
+    suggestionCopy: {
+      color: colors.textMuted,
+      marginTop: 8,
+      lineHeight: 22,
+    },
+    buttonStack: {
+      gap: 4,
+    },
+    primaryAction: {
+      borderRadius: 22,
+    },
+    secondaryAction: {
+      borderRadius: 22,
+      marginTop: spacing[2],
+    },
+    backActionText: {
+      fontSize: 15,
+      fontWeight: "700",
+    },
   });
 };

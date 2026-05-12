@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-import type { ChatMessage } from "@/features/chat/MessageList";
+import type { ChatMessage } from "@/features/chat/MessageBubble";
+import { getSupabaseUrl } from "@/lib/supabaseUrl";
 
 type GroupMessageRow = {
   id: string;
@@ -19,7 +20,7 @@ type UseGroupMessagesInput = {
   enabled: boolean;
 };
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
+const supabaseUrl = getSupabaseUrl();
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 const realtimeClient = createClient(supabaseUrl, supabaseAnonKey, {

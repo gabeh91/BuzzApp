@@ -6,13 +6,25 @@ import { BuzzAuthProvider } from "@/auth/AuthProvider";
 import { InterestFlowProvider } from "@/features/interests/InterestFlowProvider";
 import { OnboardingProvider } from "@/features/onboarding/OnboardingProvider";
 import { SettlingProgressProvider } from "@/features/progress/SettlingProgressProvider";
+import { QuizCompletionPrompt } from "@/features/quiz/QuizCompletionPrompt";
 import { QuizProvider } from "@/features/quiz/QuizProvider";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { createBuzzApolloClient } from "@/lib/apollo";
+import { buzzSupabase } from "@/lib/supabase";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
 export const AppProviders = ({ children }: { children: ReactNode }) => {
-  const client = useMemo(() => createBuzzApolloClient(), []);
+  const client = useMemo(
+    () =>
+      createBuzzApolloClient({
+        getAccessToken: async () => {
+          const { data } = await buzzSupabase.auth.getSession();
+
+          return data.session?.access_token;
+        },
+      }),
+    [],
+  );
   const [fontsLoaded] = useFonts({
     "Metropolis-Regular": require("../../assets/fonts/Metropolis-Regular.otf"),
     "Metropolis-Bold": require("../../assets/fonts/Metropolis-Bold.otf"),
@@ -32,6 +44,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
           <BuzzAuthProvider>
             <OnboardingProvider>
               <QuizProvider>
+                <QuizCompletionPrompt />
                 <InterestFlowProvider>
                   <SettlingProgressProvider>
                     {children}

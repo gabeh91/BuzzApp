@@ -11,8 +11,15 @@ Before making product, architecture, or mobile UI changes, read:
 
 When building or editing mobile screens:
 
+- Treat app performance and memory management as high-priority code design constraints, especially
+  on mobile feeds, chats, and repeated card surfaces.
 - Prefer reusable, categorized componentry over one-off screen styling.
 - Extract repeated UI patterns into shared primitives/composites and drive differences through props.
+- Use the shared `List` primitive backed by Shopify FlashList for unbounded or server-backed lists
+  and feeds. Do not render long data sets with array `.map()` in screen JSX.
+- Keep `.map()` for small, bounded static UI such as option chips, tabs, and short metadata rows.
+- Do not nest virtualized lists inside `ScrollView`; make the screen non-scrolling and let the
+  virtualized list own scrolling.
 - Use existing hooks and extract repeated hook/state logic instead of duplicating it across screens.
 - Use React context only for focused app/feature state that must be shared across branches; keep providers domain-specific and prefer props for reusable UI.
 - Use `StyleSheet.create` with theme tokens; avoid ad hoc repeated padding, radius, shadows, colors, typography, or font choices in screens.

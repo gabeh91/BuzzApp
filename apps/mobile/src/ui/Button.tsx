@@ -11,7 +11,13 @@ import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import { Text } from "./Text";
 
-export type ButtonVariant = "primary" | "secondary" | "neutral";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "neutral"
+  | "tonal"
+  | "bordered"
+  | "plain";
 
 type ButtonProps = Omit<PressableProps, "style" | "children"> & {
   children?: string;
@@ -66,7 +72,7 @@ const createStyles = (theme: BuzzTheme) => {
       borderRadius: radii.full,
       borderWidth: borderWidths.hairline,
       justifyContent: "center",
-      minHeight: 44,
+      minHeight: 50,
       paddingHorizontal: spacing[4],
       paddingVertical: spacing[3],
     },
@@ -82,6 +88,18 @@ const createStyles = (theme: BuzzTheme) => {
       backgroundColor: colors.surfaceMuted,
       borderColor: colors.border,
     },
+    tonal: {
+      backgroundColor: colors.warningSoft,
+      borderColor: "transparent",
+    },
+    bordered: {
+      backgroundColor: colors.surface,
+      borderColor: colors.brand,
+    },
+    plain: {
+      backgroundColor: "transparent",
+      borderColor: "transparent",
+    },
     disabled: {
       opacity: 0.55,
     },
@@ -92,6 +110,15 @@ const createStyles = (theme: BuzzTheme) => {
       color: colors.brand,
     },
     neutralText: {
+      color: colors.text,
+    },
+    tonalText: {
+      color: colors.text,
+    },
+    borderedText: {
+      color: colors.brand,
+    },
+    plainText: {
       color: colors.text,
     },
   });

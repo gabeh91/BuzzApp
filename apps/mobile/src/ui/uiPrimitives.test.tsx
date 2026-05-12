@@ -1,8 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { readFileSync } from "node:fs";
 import type { ReactElement } from "react";
 
 import { ThemeProvider } from "@/theme/ThemeProvider";
-import { Button, Header, HeroPanel, Panel, Screen, Text } from "@/ui";
+import { Button, Header, HeroPanel, List, Panel, Screen, Text } from "@/ui";
 
 const renderWithTheme = (ui: ReactElement) =>
   render(<ThemeProvider>{ui}</ThemeProvider>);
@@ -66,5 +67,39 @@ describe("UI primitives", () => {
     fireEvent.press(screen.getByRole("button", { name: "Accept plan" }));
 
     expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it("renders data-driven rows through the shared virtualized list primitive", () => {
+    renderWithTheme(
+      <List
+        data={[
+          { id: "fitzroy", label: "Fitzroy" },
+          { id: "brunswick", label: "Brunswick" },
+        ]}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <Text>{item.label}</Text>}
+      />,
+    );
+
+    expect(screen.getByText("Fitzroy")).toBeTruthy();
+    expect(screen.getByText("Brunswick")).toBeTruthy();
+  });
+
+  it("keeps app screens on shared text primitives instead of direct native Text", () => {
+    [
+      "src/features/home/HomeScreen.tsx",
+      "src/features/profile/ProfileScreen.tsx",
+      "src/features/groups/GroupScreen.tsx",
+      "app/join/group/[token].tsx",
+    ].forEach((path) => {
+      const source = readFileSync(path, "utf8");
+
+      expect(source).not.toMatch(
+        /import \{[^}]*\bText\b[^}]*\} from "react-native"/,
+      );
+      expect(source).toMatch(
+        /Text as UiText|import \{[^}]*Text[^}]*\} from "@\/ui"/,
+      );
+    });
   });
 });

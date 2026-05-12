@@ -2,6 +2,7 @@ declare const process: {
   env: {
     EXPO_PUBLIC_APP_ENV?: string;
     EXPO_PUBLIC_SUPABASE_URL?: string;
+    EXPO_PUBLIC_SUPABASE_ANDROID_URL?: string;
     EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
     EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN?: string;
     EXPO_PUBLIC_AUTH_MODE?: "demo" | "supabase";

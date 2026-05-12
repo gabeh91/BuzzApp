@@ -5,8 +5,22 @@ export type ResolvedProfile = {
   source: "local" | "supabase";
 };
 
-export function allowLocalDevBypass(appEnv: string | undefined, bypass: string | undefined): boolean {
+export function allowLocalDevBypass(
+  appEnv: string | undefined,
+  bypass: string | undefined,
+): boolean {
   return appEnv === "local" && bypass === "true";
+}
+
+export async function ensureProfileForUser(
+  serviceClient: SupabaseClient,
+  profileId: string,
+): Promise<void> {
+  const { error } = await serviceClient
+    .from("profiles")
+    .upsert({ id: profileId }, { ignoreDuplicates: true, onConflict: "id" });
+
+  if (error) throw error;
 }
 
 const readBearerToken = (request: Request): string | null => {
@@ -15,7 +29,10 @@ const readBearerToken = (request: Request): string | null => {
   return match?.[1] ?? null;
 };
 
-export async function resolveCurrentProfile(request: Request, serviceClient: SupabaseClient): Promise<ResolvedProfile> {
+export async function resolveCurrentProfile(
+  request: Request,
+  serviceClient: SupabaseClient,
+): Promise<ResolvedProfile> {
   const token = readBearerToken(request);
 
   if (token) {
@@ -24,18 +41,21 @@ export async function resolveCurrentProfile(request: Request, serviceClient: Sup
     if (!error && data.user?.id) {
       return {
         profileId: data.user.id,
-        source: "supabase"
+        source: "supabase",
       };
     }
   }
 
   const bypassProfileId = request.headers.get("x-buzz-profile-id") ?? undefined;
-  const bypassEnabled = allowLocalDevBypass(Deno.env.get("APP_ENV"), request.headers.get("x-buzz-local-bypass") ?? undefined);
+  const bypassEnabled = allowLocalDevBypass(
+    Deno.env.get("APP_ENV"),
+    request.headers.get("x-buzz-local-bypass") ?? undefined,
+  );
 
   if (bypassEnabled && bypassProfileId) {
     return {
       profileId: bypassProfileId,
-      source: "local"
+      source: "local",
     };
   }
 

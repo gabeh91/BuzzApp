@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import {
@@ -27,7 +27,13 @@ export const ProfileScreen = () => {
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const { LL } = useI18n();
-  const { user } = useBuzzAuth();
+  const {
+    biometricEnabled,
+    enableBiometricLogin,
+    isAuthenticated,
+    requireAuth,
+    user,
+  } = useBuzzAuth();
   const { traits } = useQuiz();
   const { state: interestState } = useInterestFlow();
   const { state: settlingProgressState } = useSettlingProgressState();
@@ -83,6 +89,9 @@ export const ProfileScreen = () => {
   const [isSettled, setIsSettled] = useState(false);
   const [settledActionStatus, setSettledActionStatus] =
     useState<SettledActionStatus>("idle");
+  const [biometricStatus, setBiometricStatus] = useState<
+    "idle" | "saving" | "failed"
+  >("idle");
 
   const getLandingPlanStatusLabel = (status: LandingPlanItemStatus) => {
     if (status === "completed") {
@@ -97,29 +106,42 @@ export const ProfileScreen = () => {
   };
 
   const handleToggleSettled = async () => {
-    const nextSettled = !isSettled;
-    setSettledActionStatus("saving");
+    await requireAuth("save_profile", async (authUser, accessToken) => {
+      const nextSettled = !isSettled;
+      setSettledActionStatus("saving");
 
-    if (user.authSource === "demo") {
-      setIsSettled(nextSettled);
-      setSettledActionStatus("idle");
+      try {
+        const result = await runSettledAction({
+          accessToken,
+          profileId: authUser.id,
+          settled: nextSettled,
+        });
+        setIsSettled(result.settled);
+        setSettledActionStatus("idle");
+      } catch {
+        setSettledActionStatus("error");
+      }
+    });
+  };
+
+  const handleEnableBiometrics = async () => {
+    setBiometricStatus("saving");
+    const enabled = await enableBiometricLogin();
+
+    if (enabled) {
+      setBiometricStatus("idle");
       return;
     }
 
-    try {
-      const result = await runSettledAction({
-        profileId: user.id,
-        settled: nextSettled,
-      });
-      setIsSettled(result.settled);
-      setSettledActionStatus("idle");
-    } catch {
-      setSettledActionStatus("error");
-    }
+    setBiometricStatus("failed");
+  };
+
+  const handleSaveProfile = async () => {
+    await requireAuth("save_profile", async () => undefined);
   };
 
   return (
-    <Screen contentStyle={styles.content}>
+    <Screen contentStyle={styles.content} edges={["top"]}>
       <Header
         left={<UiText variant="logo">{LL.brand.name()}</UiText>}
         right={<UiText variant="city">{cityContext.city.name}</UiText>}
@@ -131,30 +153,65 @@ export const ProfileScreen = () => {
         title={LL.profile.title()}
       />
 
-      <Panel variant="muted" style={styles.panel}>
-        <UiText variant="panelTitle">{LL.profile.settled.title()}</UiText>
-        <UiText variant="panelBody">{LL.profile.settled.body()}</UiText>
-        <UiText variant="feedback">
-          {isSettled
-            ? LL.profile.settled.paused()
-            : LL.profile.settled.active()}
-        </UiText>
-        <Button
-          disabled={settledActionStatus === "saving"}
-          label={
-            settledActionStatus === "saving"
-              ? LL.profile.settled.saving()
-              : isSettled
-                ? LL.profile.settled.markAvailable()
-                : LL.profile.settled.markSettled()
-          }
-          onPress={handleToggleSettled}
-          variant={isSettled ? "secondary" : "primary"}
-        />
-        {settledActionStatus === "error" ? (
-          <UiText variant="feedback">{LL.profile.settled.failed()}</UiText>
-        ) : null}
-      </Panel>
+      {!isAuthenticated ? (
+        <Panel variant="muted" style={styles.panel}>
+          <UiText variant="panelTitle">{LL.profile.auth.title()}</UiText>
+          <UiText variant="panelBody">{LL.profile.auth.body()}</UiText>
+          <Button
+            label={LL.profile.auth.signIn()}
+            onPress={handleSaveProfile}
+          />
+        </Panel>
+      ) : !biometricEnabled ? (
+        <Panel variant="muted" style={styles.panel}>
+          <UiText variant="panelTitle">
+            {LL.profile.auth.biometricTitle()}
+          </UiText>
+          <UiText variant="panelBody">{LL.profile.auth.biometricBody()}</UiText>
+          <Button
+            disabled={biometricStatus === "saving"}
+            label={
+              biometricStatus === "saving"
+                ? LL.profile.auth.biometricSaving()
+                : LL.profile.auth.enableBiometric()
+            }
+            onPress={handleEnableBiometrics}
+            variant="secondary"
+          />
+          {biometricStatus === "failed" ? (
+            <UiText variant="feedback">
+              {LL.profile.auth.biometricFailed()}
+            </UiText>
+          ) : null}
+        </Panel>
+      ) : null}
+
+      {isAuthenticated ? (
+        <Panel variant="muted" style={styles.panel}>
+          <UiText variant="panelTitle">{LL.profile.settled.title()}</UiText>
+          <UiText variant="panelBody">{LL.profile.settled.body()}</UiText>
+          <UiText variant="feedback">
+            {isSettled
+              ? LL.profile.settled.paused()
+              : LL.profile.settled.active()}
+          </UiText>
+          <Button
+            disabled={settledActionStatus === "saving"}
+            label={
+              settledActionStatus === "saving"
+                ? LL.profile.settled.saving()
+                : isSettled
+                  ? LL.profile.settled.markAvailable()
+                  : LL.profile.settled.markSettled()
+            }
+            onPress={handleToggleSettled}
+            variant={isSettled ? "secondary" : "primary"}
+          />
+          {settledActionStatus === "error" ? (
+            <UiText variant="feedback">{LL.profile.settled.failed()}</UiText>
+          ) : null}
+        </Panel>
+      ) : null}
 
       {showCityStartingPoint ? (
         <Panel variant="plain" style={styles.panel}>
@@ -170,41 +227,41 @@ export const ProfileScreen = () => {
             {LL.profile.cityStartingPoint.body()}
           </UiText>
           <View style={styles.suburbFitBlock}>
-            <Text style={styles.suburbFitTitle}>
+            <UiText style={styles.suburbFitTitle}>
               {LL.profile.cityStartingPoint.areasTitle()}
-            </Text>
+            </UiText>
             <View style={styles.suburbFitList}>
               {topSuburbMatches.map((suburb, index) => (
                 <View key={suburb.id} style={styles.suburbFitRow}>
-                  <Text style={styles.suburbFitRank}>{index + 1}</Text>
+                  <UiText style={styles.suburbFitRank}>{index + 1}</UiText>
                   <View style={styles.suburbFitCopy}>
-                    <Text style={styles.suburbFitName}>{suburb.name}</Text>
-                    <Text style={styles.suburbFitReason}>
+                    <UiText style={styles.suburbFitName}>{suburb.name}</UiText>
+                    <UiText style={styles.suburbFitReason}>
                       {suburb.reasons[0] ??
                         LL.profile.suburbFit.fallbackReason()}
-                    </Text>
+                    </UiText>
                   </View>
                 </View>
               ))}
             </View>
           </View>
           <View style={styles.suburbFitBlock}>
-            <Text style={styles.suburbFitTitle}>
+            <UiText style={styles.suburbFitTitle}>
               {LL.profile.cityStartingPoint.interestsTitle()}
-            </Text>
+            </UiText>
             <View style={styles.interestRow}>
               {startingPointInterests.map((interest) => (
-                <Text key={interest} style={styles.interestPill}>
+                <UiText key={interest} style={styles.interestPill}>
                   {interest}
-                </Text>
+                </UiText>
               ))}
             </View>
           </View>
           <View style={styles.suburbFitBlock}>
-            <Text style={styles.suburbFitTitle}>
+            <UiText style={styles.suburbFitTitle}>
               {LL.profile.cityStartingPoint.firstActionTitle()}
-            </Text>
-            <Text style={styles.suburbFitBody}>{suggestedFirstAction}</Text>
+            </UiText>
+            <UiText style={styles.suburbFitBody}>{suggestedFirstAction}</UiText>
           </View>
         </Panel>
       ) : null}
@@ -218,22 +275,22 @@ export const ProfileScreen = () => {
             })}
           </UiText>
           <View style={styles.suburbFitBlock}>
-            <Text style={styles.suburbFitTitle}>
+            <UiText style={styles.suburbFitTitle}>
               {LL.profile.suburbFit.title()}
-            </Text>
-            <Text style={styles.suburbFitBody}>
+            </UiText>
+            <UiText style={styles.suburbFitBody}>
               {LL.profile.suburbFit.body()}
-            </Text>
+            </UiText>
             <View style={styles.suburbFitList}>
               {topSuburbMatches.map((suburb, index) => (
                 <View key={suburb.id} style={styles.suburbFitRow}>
-                  <Text style={styles.suburbFitRank}>{index + 1}</Text>
+                  <UiText style={styles.suburbFitRank}>{index + 1}</UiText>
                   <View style={styles.suburbFitCopy}>
-                    <Text style={styles.suburbFitName}>{suburb.name}</Text>
-                    <Text style={styles.suburbFitReason}>
+                    <UiText style={styles.suburbFitName}>{suburb.name}</UiText>
+                    <UiText style={styles.suburbFitReason}>
                       {suburb.reasons[0] ??
                         LL.profile.suburbFit.fallbackReason()}
-                    </Text>
+                    </UiText>
                   </View>
                 </View>
               ))}
@@ -245,7 +302,7 @@ export const ProfileScreen = () => {
                 key={`${item.weekNumber}-${item.sortOrder}-${item.itemType}`}
                 style={styles.planItem}
               >
-                <Text
+                <UiText
                   style={[
                     styles.planStatus,
                     item.status === "completed"
@@ -256,10 +313,12 @@ export const ProfileScreen = () => {
                   ]}
                 >
                   {getLandingPlanStatusLabel(item.status)}
-                </Text>
+                </UiText>
                 <View style={styles.planItemCopy}>
-                  <Text style={styles.planItemTitle}>{item.title}</Text>
-                  <Text style={styles.planItemBody}>{item.description}</Text>
+                  <UiText style={styles.planItemTitle}>{item.title}</UiText>
+                  <UiText style={styles.planItemBody}>
+                    {item.description}
+                  </UiText>
                 </View>
               </View>
             ))}

@@ -41,3 +41,21 @@ test("rendered mobile screens consume localized copy through the typed hook", ()
   assert.match(homeSource, /LL\.home/);
   assert.match(interestFlowSource, /InterestFlowCopy/);
 });
+
+test("translations keep product mechanics out of user-facing copy", () => {
+  const translationsSource = readProjectFile("src/i18n/en.ts");
+
+  [
+    /turning Buzz into/,
+    /Buzz can shape/,
+    /Buzz will use/,
+    /Buzz has enough context/,
+    /Buzz turns/,
+    /Buzz avoids/,
+    /Buzz forms/,
+    /so Buzz can/,
+    /Supabase session/,
+  ].forEach((pattern) => {
+    assert.doesNotMatch(translationsSource, pattern);
+  });
+});

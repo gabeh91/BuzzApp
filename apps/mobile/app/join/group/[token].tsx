@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Pressable, SafeAreaView, StyleSheet, View } from "react-native";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { normalizeInviteToken } from "@/features/invites/inviteModel";
@@ -9,6 +9,7 @@ import { runAcceptInviteAction, runResolveInviteAction } from "@/lib/functions";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
+import { Text as UiText } from "@/ui";
 
 type InviteRouteStatus =
   | "idle"
@@ -21,7 +22,7 @@ type InviteRouteStatus =
 const JoinGroupInviteRoute = () => {
   const router = useRouter();
   const { token } = useLocalSearchParams<{ token?: string | string[] }>();
-  const { user } = useBuzzAuth();
+  const { requireAuth } = useBuzzAuth();
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
@@ -70,19 +71,22 @@ const JoinGroupInviteRoute = () => {
       return;
     }
 
-    setStatus("accepting");
+    await requireAuth("attend_activity", async (authUser, accessToken) => {
+      setStatus("accepting");
 
-    try {
-      const result = await runAcceptInviteAction({
-        profileId: user.id,
-        token: inviteToken,
-      });
+      try {
+        const result = await runAcceptInviteAction({
+          accessToken,
+          profileId: authUser.id,
+          token: inviteToken,
+        });
 
-      setStatus("accepted");
-      router.replace(routes.group(result.activityGroupId));
-    } catch {
-      setStatus("error");
-    }
+        setStatus("accepted");
+        router.replace(routes.group(result.activityGroupId));
+      } catch {
+        setStatus("error");
+      }
+    });
   };
 
   const bodyCopy = !inviteToken
@@ -104,9 +108,11 @@ const JoinGroupInviteRoute = () => {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.content}>
-        <Text style={styles.eyebrow}>{LL.groups.invites.bringFriend()}</Text>
-        <Text style={styles.title}>{LL.groups.invites.joinTitle()}</Text>
-        <Text style={styles.body}>{bodyCopy}</Text>
+        <UiText style={styles.eyebrow}>
+          {LL.groups.invites.bringFriend()}
+        </UiText>
+        <UiText style={styles.title}>{LL.groups.invites.joinTitle()}</UiText>
+        <UiText style={styles.body}>{bodyCopy}</UiText>
         <Pressable
           accessibilityRole="button"
           disabled={status === "resolving" || status === "accepting"}
@@ -124,7 +130,7 @@ const JoinGroupInviteRoute = () => {
               : null,
           ]}
         >
-          <Text style={styles.buttonText}>{buttonLabel}</Text>
+          <UiText style={styles.buttonText}>{buttonLabel}</UiText>
         </Pressable>
       </View>
     </SafeAreaView>

@@ -9,6 +9,7 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   assert.equal(existsSync("src/ui/Button.tsx"), true);
   assert.equal(existsSync("src/ui/Header.tsx"), true);
   assert.equal(existsSync("src/ui/HeroPanel.tsx"), true);
+  assert.equal(existsSync("src/ui/List.tsx"), true);
   assert.equal(existsSync("src/ui/index.ts"), true);
 
   const screenSource = readFileSync("src/ui/Screen.tsx", "utf8");
@@ -17,6 +18,7 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   const panelSource = readFileSync("src/ui/Panel.tsx", "utf8");
   const headerSource = readFileSync("src/ui/Header.tsx", "utf8");
   const heroPanelSource = readFileSync("src/ui/HeroPanel.tsx", "utf8");
+  const listSource = readFileSync("src/ui/List.tsx", "utf8");
   const indexSource = readFileSync("src/ui/index.ts", "utf8");
 
   assert.match(screenSource, /SafeAreaView/);
@@ -29,9 +31,12 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   assert.match(heroPanelSource, /eyebrow/);
   assert.match(heroPanelSource, /title/);
   assert.match(heroPanelSource, /body/);
+  assert.match(listSource, /@shopify\/flash-list/);
+  assert.match(listSource, /FlashList/);
+  assert.match(indexSource, /export \{ List/);
   assert.doesNotMatch(
     indexSource,
-    /Buzz(Screen|Text|Panel|Button|Header|HeroPanel)/,
+    /Buzz(Screen|Text|Panel|Button|Header|HeroPanel|List)/,
   );
 });
 
@@ -47,10 +52,21 @@ test("Home and Group screens consume shared UI primitives instead of duplicating
   assert.match(homeSource, /<Header/);
   assert.match(homeSource, /<Panel/);
   assert.match(homeSource, /<UiText/);
-  assert.match(homeSource, /<Button/);
+  assert.match(homeSource, /PeopleMatchCard/);
   assert.match(groupSource, /@\/ui/);
   assert.match(groupSource, /<Header/);
   assert.match(groupSource, /<Button/);
+});
+
+test("Discover feed uses the shared virtualized List primitive", () => {
+  const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
+
+  assert.match(homeSource, /<List/);
+  assert.match(homeSource, /renderItem=\{renderPeopleMatch\}/);
+  assert.match(homeSource, /keyExtractor=\{getPersonKey\}/);
+  assert.match(homeSource, /extraData=\{connectionStatuses\}/);
+  assert.match(homeSource, /scroll=\{false\}/);
+  assert.doesNotMatch(homeSource, /peopleMatches\.map/);
 });
 
 test("Home and Profile screens share the same hero panel component", () => {
@@ -64,4 +80,19 @@ test("Home and Profile screens share the same hero panel component", () => {
   assert.match(profileSource, /HeroPanel/);
   assert.doesNotMatch(homeSource, /heroCard/);
   assert.doesNotMatch(profileSource, /heroCard/);
+});
+
+test("Onboarding actions use shared button variants instead of local button wrappers", () => {
+  const onboardingSource = readFileSync(
+    "src/features/onboarding/OnboardingScreen.tsx",
+    "utf8",
+  );
+
+  assert.match(onboardingSource, /import \{[^}]*Button[^}]*\} from "@\/ui"/);
+  assert.match(onboardingSource, /variant="tonal"/);
+  assert.match(onboardingSource, /variant="plain"/);
+  assert.doesNotMatch(onboardingSource, /const PrimaryButton/);
+  assert.doesNotMatch(onboardingSource, /const SecondaryButton/);
+  assert.doesNotMatch(onboardingSource, /primaryButton/);
+  assert.doesNotMatch(onboardingSource, /secondaryButton/);
 });

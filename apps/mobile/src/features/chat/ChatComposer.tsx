@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
+import { Text as UiText } from "@/ui";
 
 import { createChatDraft } from "./chatModel";
 
@@ -15,7 +16,14 @@ export type ChatComposerProps = {
   sendingLabel: string;
 };
 
-export const ChatComposer = ({ blockedLabel, disabled = false, onSend, placeholder, sendLabel, sendingLabel }: ChatComposerProps) => {
+export const ChatComposer = ({
+  blockedLabel,
+  disabled = false,
+  onSend,
+  placeholder,
+  sendLabel,
+  sendingLabel,
+}: ChatComposerProps) => {
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const [draft, setDraft] = useState("");
@@ -47,26 +55,36 @@ export const ChatComposer = ({ blockedLabel, disabled = false, onSend, placehold
           style={styles.input}
           value={draft}
         />
-        <Pressable accessibilityRole="button" disabled={sendDisabled} onPress={handleSend} style={[styles.button, sendDisabled ? styles.buttonDisabled : null]}>
-          <Text style={styles.buttonText}>{sending ? sendingLabel : sendLabel}</Text>
+        <Pressable
+          accessibilityRole="button"
+          disabled={sendDisabled}
+          onPress={handleSend}
+          style={[styles.button, sendDisabled ? styles.buttonDisabled : null]}
+        >
+          <UiText style={styles.buttonText}>
+            {sending ? sendingLabel : sendLabel}
+          </UiText>
         </Pressable>
       </View>
-      {isBlocked ? <Text style={styles.warning}>{blockedLabel}</Text> : null}
+      {isBlocked ? (
+        <UiText style={styles.warning}>{blockedLabel}</UiText>
+      ) : null}
     </View>
   );
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, fontSizes, lineHeights, radii, spacing, borderWidths } = theme;
+  const { colors, fontSizes, lineHeights, radii, spacing, borderWidths } =
+    theme;
 
   return StyleSheet.create({
     wrapper: {
-      gap: spacing[2]
+      gap: spacing[2],
     },
     row: {
       alignItems: "flex-end",
       flexDirection: "row",
-      gap: spacing[3]
+      gap: spacing[3],
     },
     input: {
       backgroundColor: colors.surface,
@@ -79,7 +97,7 @@ const createStyles = (theme: BuzzTheme) => {
       lineHeight: lineHeights.body,
       minHeight: 48,
       paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3]
+      paddingVertical: spacing[3],
     },
     button: {
       alignItems: "center",
@@ -87,21 +105,21 @@ const createStyles = (theme: BuzzTheme) => {
       borderRadius: radii.full,
       minWidth: 74,
       paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3]
+      paddingVertical: spacing[3],
     },
     buttonDisabled: {
-      opacity: 0.45
+      opacity: 0.45,
     },
     buttonText: {
       color: colors.textInverse,
       fontSize: fontSizes.sm,
-      fontWeight: "900"
+      fontWeight: "900",
     },
     warning: {
       color: colors.accent,
       fontSize: fontSizes.sm,
       fontWeight: "800",
-      lineHeight: lineHeights.tight
-    }
+      lineHeight: lineHeights.tight,
+    },
   });
 };

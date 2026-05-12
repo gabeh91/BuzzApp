@@ -7,12 +7,12 @@ test("createBuzzApolloHeaders uses anon key for reads when no user token is pres
   assert.deepEqual(
     createBuzzApolloHeaders({
       appEnv: "local",
-      supabaseAnonKey: "anon-key"
+      supabaseAnonKey: "anon-key",
     }),
     {
       apikey: "anon-key",
-      authorization: "Bearer anon-key"
-    }
+      authorization: "Bearer anon-key",
+    },
   );
 });
 
@@ -21,12 +21,26 @@ test("createBuzzApolloHeaders prefers a Supabase user token for authenticated mu
     createBuzzApolloHeaders({
       appEnv: "local",
       supabaseAnonKey: "anon-key",
-      localSupabaseAccessToken: "user-token"
+      localSupabaseAccessToken: "user-token",
     }),
     {
       apikey: "anon-key",
-      authorization: "Bearer user-token"
-    }
+      authorization: "Bearer user-token",
+    },
+  );
+});
+
+test("createBuzzApolloHeaders prefers the stored Supabase session token in hosted envs", () => {
+  assert.deepEqual(
+    createBuzzApolloHeaders({
+      appEnv: "production",
+      supabaseAnonKey: "anon-key",
+      supabaseAccessToken: "session-token",
+    }),
+    {
+      apikey: "anon-key",
+      authorization: "Bearer session-token",
+    },
   );
 });
 
@@ -35,11 +49,11 @@ test("createBuzzApolloHeaders ignores local user tokens outside local app env", 
     createBuzzApolloHeaders({
       appEnv: "production",
       supabaseAnonKey: "anon-key",
-      localSupabaseAccessToken: "user-token"
+      localSupabaseAccessToken: "user-token",
     }),
     {
       apikey: "anon-key",
-      authorization: "Bearer anon-key"
-    }
+      authorization: "Bearer anon-key",
+    },
   );
 });

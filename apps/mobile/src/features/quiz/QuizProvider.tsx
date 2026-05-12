@@ -1,9 +1,24 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { useI18n } from "@/i18n/I18nProvider";
+import { mergeQuizAnswerIntoDraft } from "@/features/onboarding/onboardingDraft";
+import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
 
 import type { BuzzProfilePersistenceInput } from "./profilePersistence";
-import { createQuizQuestions, deriveProfileTraits, type ProfileTraits, type QuizAnswers, type QuizQuestion } from "./quizModel";
+import {
+  createQuizQuestions,
+  deriveProfileTraits,
+  type ProfileTraits,
+  type QuizAnswers,
+  type QuizQuestion,
+} from "./quizModel";
 
 type QuizProfilePersistenceState = {
   status: "idle" | "saving" | "saved" | "failed";
@@ -22,7 +37,10 @@ type QuizContextValue = {
   previousQuestion: () => void;
   markProfileSaving: (input: BuzzProfilePersistenceInput) => void;
   markProfilePersisted: (input: BuzzProfilePersistenceInput) => void;
-  markProfilePersistenceFailed: (input: BuzzProfilePersistenceInput, errorMessage?: string) => void;
+  markProfilePersistenceFailed: (
+    input: BuzzProfilePersistenceInput,
+    errorMessage?: string,
+  ) => void;
   hasAnsweredActiveQuestion: boolean;
   isLastQuestion: boolean;
   progress: {
@@ -38,9 +56,36 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   const quizQuestions = useMemo(() => createQuizQuestions(LL), [LL]);
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
-  const [profilePersistence, setProfilePersistence] = useState<QuizProfilePersistenceState>({ status: "idle" });
+  const [profilePersistence, setProfilePersistence] =
+    useState<QuizProfilePersistenceState>({ status: "idle" });
   const activeQuestion = quizQuestions[activeQuestionIndex] ?? quizQuestions[0];
   const traits = deriveProfileTraits(answers, quizQuestions, LL);
+
+  useEffect(() => {
+    let active = true;
+
+    const restoreQuizDraft = async () => {
+      const draft = await anonymousOnboardingDraftStore.load();
+
+      if (!active || draft.status === "empty") {
+        return;
+      }
+
+      setAnswers(draft.answers);
+      setActiveQuestionIndex(
+        Math.min(
+          Math.max(draft.activeQuestionIndex, 0),
+          quizQuestions.length - 1,
+        ),
+      );
+    };
+
+    void restoreQuizDraft();
+
+    return () => {
+      active = false;
+    };
+  }, [quizQuestions.length]);
 
   if (!activeQuestion) {
     throw new Error("Quiz questions must include at least one question");
@@ -55,14 +100,40 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
     answerQuestion: (questionId, optionId) => {
       setAnswers((current) => ({
         ...current,
-        [questionId]: optionId
+        [questionId]: optionId,
       }));
+      void anonymousOnboardingDraftStore.update((draft) =>
+        mergeQuizAnswerIntoDraft(
+          draft,
+          questionId,
+          optionId,
+          activeQuestionIndex,
+        ),
+      );
     },
     nextQuestion: () => {
-      setActiveQuestionIndex((current) => Math.min(current + 1, quizQuestions.length - 1));
+      setActiveQuestionIndex((current) => {
+        const nextIndex = Math.min(current + 1, quizQuestions.length - 1);
+
+        void anonymousOnboardingDraftStore.update((draft) => ({
+          ...draft,
+          activeQuestionIndex: nextIndex,
+        }));
+
+        return nextIndex;
+      });
     },
     previousQuestion: () => {
-      setActiveQuestionIndex((current) => Math.max(current - 1, 0));
+      setActiveQuestionIndex((current) => {
+        const nextIndex = Math.max(current - 1, 0);
+
+        void anonymousOnboardingDraftStore.update((draft) => ({
+          ...draft,
+          activeQuestionIndex: nextIndex,
+        }));
+
+        return nextIndex;
+      });
     },
     markProfileSaving: (input) => {
       setProfilePersistence({ status: "saving", lastInput: input });
@@ -74,15 +145,15 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
       setProfilePersistence({
         status: "failed",
         lastInput: input,
-        ...(errorMessage ? { errorMessage } : {})
+        ...(errorMessage ? { errorMessage } : {}),
       });
     },
     hasAnsweredActiveQuestion: Boolean(answers[activeQuestion.id]),
     isLastQuestion: activeQuestionIndex === quizQuestions.length - 1,
     progress: {
       current: activeQuestionIndex + 1,
-      total: quizQuestions.length
-    }
+      total: quizQuestions.length,
+    },
   };
 
   return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>;

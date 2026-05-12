@@ -51,7 +51,50 @@ query GroupMessages($groupId: UUID!) {
   }
 }
 
-mutation SendGroupMessage($activityGroupId: UUID!, $senderId: UUID!, $body: String!, $moderationStatus: String!) {
+query ActivityGroupSummary($groupId: UUID!) {
+  activityGroupsCollection(first: 1, filter: { id: { eq: $groupId } }) {
+    edges {
+      node {
+        id
+        title
+        status
+        city {
+          id
+          name
+        }
+        interest {
+          id
+          name
+        }
+        activityPlansCollection(
+          first: 1
+          orderBy: [{ createdAt: DescNullsLast }]
+        ) {
+          edges {
+            node {
+              id
+              title
+              description
+              startsAt
+              venueType
+              publicLocationName
+              capacityMin
+              capacityMax
+              safetyGuidance
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation SendGroupMessage(
+  $activityGroupId: UUID!
+  $senderId: UUID!
+  $body: String!
+  $moderationStatus: String!
+) {
   insertIntoGroupMessagesCollection(
     objects: [
       {

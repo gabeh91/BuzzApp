@@ -1,6 +1,15 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { useI18n } from "@/i18n/I18nProvider";
+import { selectDraftInterest } from "@/features/onboarding/onboardingDraft";
+import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
 import {
   activateInterestLocally,
   completeBackendActivation,
@@ -13,7 +22,7 @@ import {
   type ActivationAvailabilityIntent,
   type BackendActivationResult,
   type BuzzInterest,
-  type InterestFlowState
+  type InterestFlowState,
 } from "./interestFlow";
 
 type InterestFlowContextValue = {
@@ -26,17 +35,46 @@ type InterestFlowContextValue = {
   failActivation: (message: string) => void;
 };
 
-const InterestFlowContext = createContext<InterestFlowContextValue | null>(null);
+const InterestFlowContext = createContext<InterestFlowContextValue | null>(
+  null,
+);
 
 export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
   const { LL } = useI18n();
   const copy = useMemo(() => createInterestFlowCopy(LL), [LL]);
-  const [state, setState] = useState(() => createInitialInterestFlowState(copy));
+  const [state, setState] = useState(() =>
+    createInitialInterestFlowState(copy),
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    const restoreSelectedInterest = async () => {
+      const draft = await anonymousOnboardingDraftStore.load();
+
+      if (!active || !draft.selectedInterest) {
+        return;
+      }
+
+      setState((current) =>
+        selectInterest(current, draft.selectedInterest!, copy),
+      );
+    };
+
+    void restoreSelectedInterest();
+
+    return () => {
+      active = false;
+    };
+  }, [copy]);
 
   const value: InterestFlowContextValue = {
     state,
     select: (interest) => {
       setState((current) => selectInterest(current, interest, copy));
+      void anonymousOnboardingDraftStore.update((draft) =>
+        selectDraftInterest(draft, interest),
+      );
     },
     markActivating: () => {
       setState((current) => markInterestActivating(current, copy));
@@ -52,10 +90,14 @@ export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
     },
     failActivation: (message) => {
       setState((current) => markInterestActivationError(current, message));
-    }
+    },
   };
 
-  return <InterestFlowContext.Provider value={value}>{children}</InterestFlowContext.Provider>;
+  return (
+    <InterestFlowContext.Provider value={value}>
+      {children}
+    </InterestFlowContext.Provider>
+  );
 };
 
 export const useInterestFlow = (): InterestFlowContextValue => {

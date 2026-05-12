@@ -15,10 +15,21 @@ const en = {
   navigation: {
     tabs: {
       discover: "Discover",
-      discoverAccessibility: "Discover activities",
+      discoverAccessibility: "Discover people and activities",
+      activities: "Activities",
+      activitiesAccessibility: "Activities and plans",
+      chats: "Chats",
+      chatsAccessibility: "Chats and requests",
       profile: "Profile",
       profileAccessibility: "Profile and progress",
     },
+  },
+  quizCompletionPrompt: {
+    eyebrow: "Profile step",
+    title: "Complete your quiz",
+    body: "You can join through an invite now. Complete the quiz to keep suburb fit, activity ideas, and future matches personal to you.",
+    completeQuiz: "Complete quiz",
+    notNow: "Not now",
   },
   onboarding: {
     actions: {
@@ -26,13 +37,15 @@ const en = {
       nextQuestion: "Next question",
       useInterest: "Use this interest",
       activating: "Activating...",
+      signInToActivate: "Sign in to activate",
       activateInterest: "Activate interest",
+      browseBuzz: "Browse Buzz for now",
       enterBuzz: "Enter Buzz",
     },
     profile: {
       metaLabel: "Your starting point",
       meta: "{city:string} - Ready to meet around real plans",
-      body: "A lightweight profile helps Buzz shape suggestions around your city, pace, and interests.",
+      body: "Add your city, pace, and interests so first suggestions feel useful.",
     },
     howItWorks: {
       itemOne: "Choose what you actually want to do.",
@@ -63,22 +76,22 @@ const en = {
       welcome: {
         eyebrow: "Welcome to Buzz",
         title: "A softer way to find your people in a new city.",
-        body: "Start with what you actually want to do. Buzz turns interests into low-pressure reasons to meet.",
+        body: "Start with what you actually want to do, then turn one interest into an easy reason to meet.",
       },
       intent: {
         eyebrow: "Your intent",
-        title: "Tell Buzz why you are here.",
+        title: "Tell us why you are here.",
         body: "New to town, returning after time away, or just widening your circle. The activity comes first.",
       },
       howItWorks: {
         eyebrow: "How it works",
         title: "Pick interests, activate one, then meet around a plan.",
-        body: "Buzz avoids cold friend-swiping. You match around shared momentum: tennis, coffee, climbing, singing, or whatever feels right.",
+        body: "Match around shared momentum: tennis, coffee, climbing, singing, or whatever feels right.",
       },
       profile: {
         eyebrow: "Profile basics",
         title: "Create a lightweight local profile.",
-        body: "Add just enough context for Buzz to shape your first suggestions around where you are and how you like to spend time.",
+        body: "Add just enough context for suggestions around where you are and how you like to spend time.",
       },
       quizIntro: {
         eyebrow: "Discovery quiz",
@@ -88,7 +101,7 @@ const en = {
       quiz: {
         eyebrow: "Quiz",
         title: "Answer as you are, not as you think you should be.",
-        body: "Your answers help Buzz understand your energy, planning style, availability, and group comfort.",
+        body: "Your answers capture your energy, planning style, availability, and group comfort.",
       },
       interests: {
         eyebrow: "Interests",
@@ -98,24 +111,41 @@ const en = {
       activation: {
         eyebrow: "Activation",
         title: "Activate one interest when you are open to doing it.",
-        body: "Activation is the core behaviour: a clear signal that you are ready for a plan, not just browsing.",
+        body: "Activating says you are ready for a plan, not just browsing.",
       },
       matchPreview: {
         eyebrow: "First match",
-        title: "Buzz forms a practical next step.",
+        title: "Your first next step stays practical.",
         body: "Your first preview keeps the next step practical: who it suits, why it fits, and what to do next.",
       },
     },
   },
   home: {
+    people: {
+      eyebrow: "Discover",
+      title: "Your matches in {city:string}",
+      body: "People with shared interests and a compatible pace.",
+      loading: "Finding people for you",
+      emptyTitle: "No people to show yet",
+      emptyBody:
+        "Choose an interest or complete your quiz to sharpen your matches.",
+      error: "We could not load people right now. Pull down to try again.",
+      sayHi: "Say hi",
+      sending: "Sending...",
+      sent: "Request sent",
+      failed: "We could not send that yet. Try again in a moment.",
+    },
     firstPlan: "First plan",
     titleActivated: "You activated {interest:string}.",
     titleReady: "Your Buzz profile is ready.",
     activatedBody:
-      "Buzz has enough context to start shaping low-pressure plans around this interest.",
+      "You can now see practical next steps around this interest.",
     readyBody: "Complete onboarding to unlock your first suggested plan.",
+    browsingBody:
+      "Browse activities now and sign in when you are ready to join or activate a plan.",
     suggestedNextStep: "Suggested next step",
     emptyPlan: "No suggested plan yet.",
+    inactiveInterestTitle: "Keep browsing around {interest:string}.",
     waitingForCandidateTitle: "Explore your best-fit suburbs",
     waitingForCandidateBody:
       "Keep {interest:string} active while Buzz looks for a real compatible plan.",
@@ -146,13 +176,84 @@ const en = {
       nextStep: "Next: {step:string}",
     },
   },
+  peopleConnect: {
+    eyebrow: "Say hi",
+    profileLabel: "Match",
+    fallbackName: "this person",
+    title: "Send {name:string} a hi",
+    body: "Choose a simple intro before sending a request.",
+    justHi: {
+      title: "Just say hi",
+      body: "Send a low-pressure connection request.",
+    },
+    activity: {
+      title: "Suggest an activity",
+      body: "Pick one shared interest as an easy starting point.",
+    },
+    noSharedInterests: "Shared interests will appear here when available.",
+    sharedInterestTitle: "Shared interest",
+    messageTitle: "Optional note",
+    messagePlaceholder: "Add a short note",
+    defaultActivityMessage:
+      "Would you be keen to do {interest:string} sometime?",
+    send: "Send hi",
+    sending: "Sending...",
+    sentToast: "Hi sent to {name:string}.",
+    failed: "We could not send that yet. Try again in a moment.",
+  },
+  activities: {
+    eyebrow: "Activities",
+    title: "Your activities",
+    subtitle: "Keep track of interests you are open to and plans taking shape.",
+    currentSignal: {
+      title: "Current signal",
+      active: "{interest:string} is active.",
+      selected: "{interest:string} is ready when you are.",
+      empty: "Choose an interest you would genuinely do this week.",
+      bodyActive:
+        "You are available for a practical plan around this interest.",
+      bodySelected:
+        "Activate when you are ready for Buzz to look for a real plan.",
+      bodyEmpty:
+        "Start with something that feels easy to say yes to.",
+    },
+    plans: {
+      title: "Plans",
+      active: "{plan:string}",
+      empty: "Accepted plans and group activity updates will appear here.",
+    },
+  },
+  chats: {
+    eyebrow: "Chats",
+    title: "Messages",
+    subtitle: "Requests and group chats stay together here.",
+    requests: {
+      title: "Requests",
+      empty: "Connection requests will appear here when someone says hi.",
+    },
+    groups: {
+      title: "Group chats",
+      empty: "Group chats will appear after a plan starts.",
+    },
+  },
   profile: {
     title: "Your profile",
     subtitle: "Keep your local plan and matching availability in one place.",
+    auth: {
+      title: "Save your profile",
+      body: "Sign in to keep your quiz answers, selected interests, and matching availability attached to your account.",
+      signIn: "Sign in to save",
+      biometricTitle: "Unlock with biometrics",
+      biometricBody:
+        "Use your device unlock after sign-in to reopen Buzz with your saved session.",
+      enableBiometric: "Enable biometric unlock",
+      biometricSaving: "Enabling...",
+      biometricFailed: "Biometric unlock is not available on this device yet.",
+    },
     cityStartingPoint: {
       eyebrow: "Starting point",
       title: "Your {city:string} starting point",
-      body: "A compact read on where to start without turning Buzz into a city guide.",
+      body: "Start with nearby areas, a few easy interests, and one practical next action.",
       areasTitle: "Areas you may enjoy exploring",
       interestsTitle: "Best interests to activate first",
       firstActionTitle: "Suggested first action",
@@ -161,7 +262,7 @@ const en = {
       actionActivateSelected:
         "Activate {interest:string} when you are ready to form a small plan.",
       actionAfterActivation:
-        "Keep your active interest warm while Buzz looks for a practical group plan.",
+        "Keep your active interest warm while a practical group plan takes shape.",
     },
     landingPlan: {
       eyebrow: "Landing plan",
@@ -237,7 +338,7 @@ const en = {
     },
     attendance: {
       title: "Attendance",
-      body: "Confirm what happened after the plan so Buzz can improve reliability.",
+      body: "Confirm what happened after the plan so future matches stay reliable.",
       confirmAttendance: "Confirm attendance",
       attendanceConfirmed: "Attendance confirmed.",
       attendanceFailed:
@@ -285,7 +386,7 @@ const en = {
       selected: "{interest:string} is ready when you are.",
       activating: "Activating your interest...",
       complete:
-        "{interest:string} is active. Buzz will use it to shape your next suggestion.",
+        "{interest:string} is active. Your next suggestion can start from this.",
       chooseBeforeActivating: "Choose an interest before activating.",
       failed: "We could not activate that interest yet. Try again in a moment.",
     },

@@ -85,7 +85,6 @@ test("group screen calls the feedback action and marks shared progress instead o
     "src/features/groups/GroupScreen.tsx",
     "utf8",
   );
-  const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
   const functionsSource = readFileSync("src/lib/functions.ts", "utf8");
 
   assert.match(functionsSource, /record-feedback/);
@@ -95,7 +94,7 @@ test("group screen calls the feedback action and marks shared progress instead o
   assert.match(groupSource, /wouldMeetAgain/);
   assert.match(groupSource, /markFeedbackCompleted/);
   assert.match(groupSource, /LL\.groups\.attendance\.reportIssue/);
-  assert.match(homeSource, /useSettlingProgressState/);
-  assert.doesNotMatch(homeSource, /attendanceConfirmed:\s*false/);
-  assert.doesNotMatch(homeSource, /feedbackCompleted:\s*false/);
+  assert.match(groupSource, /useSettlingProgressState/);
+  assert.doesNotMatch(groupSource, /attendanceConfirmed:\s*false/);
+  assert.doesNotMatch(groupSource, /feedbackCompleted:\s*false/);
 });

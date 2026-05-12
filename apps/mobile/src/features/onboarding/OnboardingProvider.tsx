@@ -1,11 +1,19 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   createInitialOnboardingState,
+  createOnboardingStateForAnonymousDraft,
   goBack,
   goNext,
   type OnboardingState
 } from "./onboardingFlow";
+import { anonymousOnboardingDraftStore } from "./onboardingDraftStorage";
 
 type OnboardingContextValue = {
   state: OnboardingState;
@@ -20,6 +28,24 @@ const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState(createInitialOnboardingState);
+
+  useEffect(() => {
+    let active = true;
+
+    const restoreOnboardingDraft = async () => {
+      const draft = await anonymousOnboardingDraftStore.load();
+
+      if (active) {
+        setState(createOnboardingStateForAnonymousDraft(draft));
+      }
+    };
+
+    void restoreOnboardingDraft();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const value: OnboardingContextValue = {
     state,

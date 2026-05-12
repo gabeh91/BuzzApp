@@ -36,10 +36,11 @@ test("mobile GraphQL operations read and send group messages", () => {
   assert.match(source, /insertIntoGroupMessagesCollection/);
 });
 
-test("group screen renders message list and composer from localized chat copy", () => {
+test("group screen renders the virtualized message timeline and composer from localized chat copy", () => {
   const source = existsSync("src/features/groups/GroupScreen.tsx") ? readFileSync("src/features/groups/GroupScreen.tsx", "utf8") : "";
 
-  assert.match(source, /MessageList/);
+  assert.match(source, /<List/);
+  assert.match(source, /MessageBubble/);
   assert.match(source, /ChatComposer/);
   assert.match(source, /useGroupMessagesQuery/);
   assert.match(source, /useSendGroupMessageMutation/);

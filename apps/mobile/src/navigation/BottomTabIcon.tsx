@@ -1,31 +1,63 @@
+import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 
-export type BottomTabIconName = "discover" | "profile";
+export type BottomTabIconName =
+  | "activities"
+  | "chats"
+  | "discover"
+  | "profile";
 
 type BottomTabIconProps = {
   color: string;
   focused: boolean;
   name: BottomTabIconName;
+  unreadCount?: number;
 };
 
-export const BottomTabIcon = ({ color, focused, name }: BottomTabIconProps) => {
+export const BottomTabIcon = ({
+  color,
+  name,
+  unreadCount = 0,
+}: BottomTabIconProps) => {
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
+  const hasUnreadChats = name === "chats" && unreadCount > 0;
+  const accessibilityLabelByName: Record<BottomTabIconName, string> = {
+    activities: "Activities tab icon",
+    chats: "Chats tab icon",
+    discover: "Discover tab icon",
+    profile: "Profile tab icon",
+  };
 
   return (
     <View
-      accessibilityLabel={`${name === "discover" ? "Discover" : "Profile"} tab icon`}
+      accessibilityLabel={accessibilityLabelByName[name]}
       accessibilityRole="image"
-      style={[styles.shell, focused ? styles.shellFocused : null]}
+      style={styles.shell}
     >
       {name === "discover" ? (
         <View style={styles.discoverGlyph}>
           <View style={[styles.discoverRing, { borderColor: color }]} />
           <View style={[styles.discoverNeedle, { backgroundColor: color }]} />
           <View style={[styles.discoverDot, { backgroundColor: color }]} />
+        </View>
+      ) : name === "activities" ? (
+        <View style={styles.activitiesGlyph}>
+          <Ionicons color={color} name="ticket-outline" size={25} />
+        </View>
+      ) : name === "chats" ? (
+        <View style={styles.chatsGlyph}>
+          <Ionicons color={color} name="chatbubble-outline" size={24} />
+          {hasUnreadChats ? (
+            <View
+              accessibilityLabel="Unread chats"
+              accessibilityRole="image"
+              style={styles.unreadDot}
+            />
+          ) : null}
         </View>
       ) : (
         <View style={styles.profileGlyph}>
@@ -38,7 +70,7 @@ export const BottomTabIcon = ({ color, focused, name }: BottomTabIconProps) => {
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, radii } = theme;
+  const { radii } = theme;
 
   return StyleSheet.create({
     shell: {
@@ -47,9 +79,6 @@ const createStyles = (theme: BuzzTheme) => {
       height: 34,
       justifyContent: "center",
       width: 44,
-    },
-    shellFocused: {
-      backgroundColor: colors.accentSoft,
     },
     discoverGlyph: {
       alignItems: "center",
@@ -75,6 +104,27 @@ const createStyles = (theme: BuzzTheme) => {
       height: 5,
       position: "absolute",
       width: 5,
+    },
+    activitiesGlyph: {
+      alignItems: "center",
+      height: 24,
+      justifyContent: "center",
+      width: 24,
+    },
+    chatsGlyph: {
+      alignItems: "center",
+      height: 24,
+      justifyContent: "center",
+      width: 24,
+    },
+    unreadDot: {
+      backgroundColor: theme.colors.accent,
+      borderRadius: 4,
+      height: 8,
+      position: "absolute",
+      right: 0,
+      top: 0,
+      width: 8,
     },
     profileGlyph: {
       alignItems: "center",

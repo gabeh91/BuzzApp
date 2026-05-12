@@ -42,6 +42,14 @@ Before building mobile screens or UI, read `docs/UI_COMPONENT_GUIDELINES.md`.
 
 Prefer reusable, categorized componentry over per-screen styling. If two screens render the same UI pattern, extract or reuse a component and drive differences through props. Screens should compose shared primitives/composites and keep local styles limited to feature layout, not repeated card/header/button/hero treatment. The guideline also covers hook extraction, React context/provider use, `StyleSheet`/theme-token use, root navigation placement, i18n, typography, and Jest/React Native Testing Library expectations.
 
+### Mobile Performance Guardrail
+
+App performance and memory management are first-order product concerns. Unbounded feeds, chats,
+search results, and server-backed lists should use the shared mobile `List` primitive backed by
+Shopify FlashList. Do not render long data sets with array `.map()` in screen JSX, and do not nest
+virtualized lists inside `ScrollView`. Small, bounded static arrays such as quiz options, tab
+metadata, and short chip rows can still use `.map()`.
+
 ---
 
 ## 2. Product Elevator Pitch
@@ -76,6 +84,17 @@ Build the smallest useful product that proves the core loop.
 - Settled/inactive toggle on profile.
 - Basic safety primitives: block/report placeholders
 - Moderation: Bad-word censores, rude message filters etc
+
+### Root Navigation Ownership
+
+Buzz root tabs should keep enough room for the product to grow without renaming core areas.
+
+- `Discover`: the default/home surface. It should help users find people and activities, with the MVP leaning first into compatible people and later allowing activity recommendations or other discovery cards.
+- `Activities`: the action loop. It owns active interest availability, activate/deactivate flows, current plans, accepted activities, and plan status.
+- `Chats`: the social state surface. It owns connection requests, accepted request threads, group chats, and plan coordination conversations.
+- `Profile`: personal state. It owns quiz/local profile context, landing or starting-point content, matching availability, auth/account state, and settings.
+
+Connection requests should start contextually from `Discover` or a profile detail route, but their ongoing state belongs in `Chats`. Detail/workflow routes such as public profile detail, group detail, auth, onboarding, and invite joins should stay outside the root tabs.
 
 ### Out of Scope for MVP / Feature-Flagged
 
@@ -247,6 +266,18 @@ pnpm dev
 - local Edge Function serving where practical
 
 Local development must not require real AI, Stripe, Sentry, PostHog, Railway, Apple, Google, or production Supabase credentials.
+
+### Local Supabase and Demo People
+
+Local mobile builds should point at the Supabase CLI project, not hosted production/staging, when validating seed data. Use the Project URL and publishable key from `supabase status`. Set `EXPO_PUBLIC_SUPABASE_URL` to the normal local URL, such as `http://127.0.0.1:54321`, and `EXPO_PUBLIC_SUPABASE_ANDROID_URL` to `http://10.0.2.2:54321`. The mobile app resolves the correct URL from React Native platform at runtime.
+
+Keep production-safe seed data and local/demo fixture data separate:
+
+- `supabase/seed.sql` is safe city/config/reference data.
+- `supabase/seed.demo.sql` is local/demo-only people, interests, businesses, and events.
+- Demo people must remain removable and must not be required in hosted production.
+
+The Discover people feed should not assume mobile fallback interest IDs match database UUIDs. Mobile may receive real interest UUIDs from Supabase or stable fallback interests from the app catalog. Backend people-feed RPCs should accept both interest UUIDs and interest slugs, then resolve slugs server-side before matching.
 
 ---
 

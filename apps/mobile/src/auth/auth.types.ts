@@ -1,4 +1,13 @@
-export type BuzzAuthMode = "demo" | "supabase";
+import type { AuthInteractionIntent } from "./authGate";
+
+export type SocialAuthProvider = "apple" | "google" | "facebook";
+
+export type BuzzAuthMode = "anonymous" | "demo" | "supabase";
+export type BuzzAuthStatus =
+  | "loading"
+  | "anonymous"
+  | "authenticated"
+  | "locked";
 
 export type BuzzAuthUser = {
   id: string;
@@ -9,6 +18,23 @@ export type BuzzAuthUser = {
 };
 
 export type BuzzAuthState = {
+  accessToken?: string | undefined;
+  authSheetVisible: boolean;
+  biometricEnabled: boolean;
+  enableBiometricLogin: () => Promise<boolean>;
+  isAuthenticated: boolean;
+  isLocked: boolean;
   mode: BuzzAuthMode;
+  requireAuth: (
+    intent: AuthInteractionIntent,
+    action: (user: BuzzAuthUser, accessToken?: string) => Promise<void> | void,
+  ) => Promise<boolean>;
+  sendEmailOtp: (email: string) => Promise<void>;
+  verifyEmailOtp: (email: string, token: string) => Promise<void>;
+  signInWithMagicLink: (email: string) => Promise<void>;
+  signInWithOAuth: (provider: SocialAuthProvider) => Promise<void>;
+  signOut: () => Promise<void>;
+  status: BuzzAuthStatus;
+  unlockWithBiometrics: () => Promise<boolean>;
   user: BuzzAuthUser;
 };

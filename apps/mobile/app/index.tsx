@@ -1,7 +1,7 @@
-import { OnboardingScreen } from "@/features/onboarding/OnboardingScreen";
+import { AppEntry } from "@/navigation/AppEntry";
 
-const OnboardingRoute = () => {
-  return <OnboardingScreen />;
+const IndexRoute = () => {
+  return <AppEntry />;
 };
 
-export default OnboardingRoute;
+export default IndexRoute;

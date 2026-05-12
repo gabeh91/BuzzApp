@@ -33,7 +33,7 @@ test("activateInterestLocally completes activation without creating a fake match
   const activated = activateInterestLocally(selected);
 
   assert.equal(activated.activation.status, "complete");
-  assert.equal(activated.activation.message, "Surfing is active. Buzz will use it to shape your next suggestion.");
+  assert.equal(activated.activation.message, "Surfing is active. Your next suggestion can start from this.");
   assert.equal(activated.matchPreview, null);
 });
 

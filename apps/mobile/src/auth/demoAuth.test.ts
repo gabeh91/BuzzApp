@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createBuzzAuthState } from "./AuthProvider";
+import { createBuzzAuthState } from "./authState";
 import { createDemoBuzzUser } from "./demoAuth";
 
 test("createDemoBuzzUser keeps demo identity behind a replaceable auth boundary", () => {
   const user = createDemoBuzzUser({
     EXPO_PUBLIC_DEMO_USER_ID: "00000000-0000-0000-0000-000000000202",
     EXPO_PUBLIC_DEMO_CITY_ID: "00000000-0000-0000-0000-000000000001",
-    EXPO_PUBLIC_DEMO_DISPLAY_NAME: "Mia"
+    EXPO_PUBLIC_DEMO_DISPLAY_NAME: "Mia",
   });
 
   assert.deepEqual(user, {
@@ -16,7 +16,7 @@ test("createDemoBuzzUser keeps demo identity behind a replaceable auth boundary"
     displayName: "Mia",
     cityId: "00000000-0000-0000-0000-000000000001",
     cityName: "Melbourne",
-    authSource: "demo"
+    authSource: "demo",
   });
   assert.equal("isDemo" in user, false);
 });
@@ -34,7 +34,7 @@ test("createBuzzAuthState derives mode from the replaceable user auth source", (
   const state = createBuzzAuthState({
     EXPO_PUBLIC_DEMO_USER_ID: "00000000-0000-0000-0000-000000000303",
     EXPO_PUBLIC_DEMO_CITY_ID: "00000000-0000-0000-0000-000000000001",
-    EXPO_PUBLIC_DEMO_DISPLAY_NAME: "Noor"
+    EXPO_PUBLIC_DEMO_DISPLAY_NAME: "Noor",
   });
 
   assert.equal(state.mode, "demo");
@@ -50,7 +50,7 @@ test("createBuzzAuthState can opt into Supabase-backed local activation with a u
     EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN: "local-user-token",
     EXPO_PUBLIC_DEMO_USER_ID: "00000000-0000-0000-0000-000000000404",
     EXPO_PUBLIC_DEMO_CITY_ID: "00000000-0000-0000-0000-000000000001",
-    EXPO_PUBLIC_DEMO_DISPLAY_NAME: "Gabe"
+    EXPO_PUBLIC_DEMO_DISPLAY_NAME: "Gabe",
   });
 
   assert.equal(state.mode, "supabase");
@@ -62,7 +62,7 @@ test("createBuzzAuthState keeps Supabase token override local-only", () => {
   const state = createBuzzAuthState({
     EXPO_PUBLIC_APP_ENV: "production",
     EXPO_PUBLIC_AUTH_MODE: "supabase",
-    EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN: "local-user-token"
+    EXPO_PUBLIC_LOCAL_SUPABASE_ACCESS_TOKEN: "local-user-token",
   });
 
   assert.equal(state.mode, "demo");

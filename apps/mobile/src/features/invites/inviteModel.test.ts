@@ -132,17 +132,24 @@ test("mobile exposes a join route and group invite action", () => {
     "src/features/groups/GroupScreen.tsx",
     "utf8",
   );
+  const acceptInviteSource = readFileSync(
+    "../../supabase/functions/accept-invite/index.ts",
+    "utf8",
+  );
   const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
 
   assert.match(routeSource, /normalizeInviteToken/);
   assert.match(routeSource, /useLocalSearchParams/);
   assert.match(routeSource, /runResolveInviteAction/);
   assert.match(routeSource, /runAcceptInviteAction/);
+  assert.match(routeSource, /requireAuth\("attend_activity"/);
   assert.match(groupSource, /createInviteDraft/);
   assert.match(groupSource, /createGroupInviteLink/);
   assert.match(groupSource, /runCreateInviteAction/);
+  assert.match(groupSource, /useActivityGroupSummaryQuery/);
   assert.match(groupSource, /Share\.share/);
   assert.match(groupSource, /LL\.groups\.invites/);
+  assert.match(acceptInviteSource, /ensureProfileForUser/);
   assert.match(translationsSource, /invites:/);
   assert.match(translationsSource, /bringFriend:/);
 });

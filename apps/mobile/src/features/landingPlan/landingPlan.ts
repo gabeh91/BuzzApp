@@ -109,8 +109,8 @@ export const createLandingPlan = ({
       "complete_profile",
       "Complete your local profile",
       traits.quizCompleted
-        ? "Your quiz is complete, so Buzz can shape the plan around your pace."
-        : "Finish the quiz so Buzz can shape the plan around your pace.",
+        ? "Your quiz is complete, so the plan can follow your pace."
+        : "Finish the quiz so the plan can follow your pace.",
       1,
       1,
       traits.quizCompleted ? "completed" : "pending"

@@ -2,6 +2,7 @@ import {
   normalizeCityContext,
   type CityContext,
 } from "@/features/city/cityContext";
+import { getSupabaseUrl } from "./supabaseUrl";
 
 export type MatchAction = "accept" | "decline";
 
@@ -94,7 +95,7 @@ export type LeaveGroupActionResult = {
 export type CreateMatchActionRequestInput = {
   action: MatchAction;
   matchCandidateId: string;
-  accessToken?: string;
+  accessToken?: string | undefined;
   profileId?: string;
   appEnv?: string;
   supabaseAnonKey?: string;
@@ -103,7 +104,7 @@ export type CreateMatchActionRequestInput = {
 
 export type CreateAttendanceActionRequestInput = {
   activityGroupId: string;
-  accessToken?: string;
+  accessToken?: string | undefined;
   profileId?: string;
   appEnv?: string;
   supabaseAnonKey?: string;
@@ -118,7 +119,7 @@ export type CreateFeedbackActionRequestInput =
 
 export type CreateSettledActionRequestInput = {
   settled: boolean;
-  accessToken?: string;
+  accessToken?: string | undefined;
   profileId?: string;
   appEnv?: string;
   supabaseAnonKey?: string;
@@ -131,7 +132,7 @@ export type MatchActionRequest = {
 };
 
 export type CreateCityContextRequestInput = {
-  accessToken?: string;
+  accessToken?: string | undefined;
   cityId?: string;
   cityName?: string;
   supabaseAnonKey?: string;
@@ -141,7 +142,7 @@ export type CreateCityContextRequestInput = {
 export type CreateInviteActionRequestInput = {
   activityGroupId: string;
   activityPlanId?: string;
-  accessToken?: string;
+  accessToken?: string | undefined;
   profileId?: string;
   appEnv?: string;
   supabaseAnonKey?: string;
@@ -150,7 +151,7 @@ export type CreateInviteActionRequestInput = {
 
 export type ResolveInviteActionRequestInput = {
   token: string;
-  accessToken?: string;
+  accessToken?: string | undefined;
   supabaseAnonKey?: string;
   supabaseUrl?: string;
 };
@@ -166,7 +167,7 @@ export type CreateReportActionRequestInput = {
   details?: string;
   targetUserId?: string;
   activityGroupId?: string;
-  accessToken?: string;
+  accessToken?: string | undefined;
   profileId?: string;
   appEnv?: string;
   supabaseAnonKey?: string;
@@ -176,7 +177,7 @@ export type CreateReportActionRequestInput = {
 export type CreateBlockActionRequestInput = {
   blockedId: string;
   activityGroupId?: string;
-  accessToken?: string;
+  accessToken?: string | undefined;
   profileId?: string;
   appEnv?: string;
   supabaseAnonKey?: string;
@@ -185,15 +186,14 @@ export type CreateBlockActionRequestInput = {
 
 export type CreateLeaveGroupActionRequestInput = {
   activityGroupId: string;
-  accessToken?: string;
+  accessToken?: string | undefined;
   profileId?: string;
   appEnv?: string;
   supabaseAnonKey?: string;
   supabaseUrl?: string;
 };
 
-const defaultSupabaseUrl =
-  process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
+const defaultSupabaseUrl = getSupabaseUrl();
 const defaultSupabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const defaultAppEnv = process.env.EXPO_PUBLIC_APP_ENV ?? "local";
 

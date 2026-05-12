@@ -1,4 +1,7 @@
-import { resolveCurrentProfile } from "../_shared/auth.ts";
+import {
+  ensureProfileForUser,
+  resolveCurrentProfile,
+} from "../_shared/auth.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { jsonError } from "../_shared/errors.ts";
 import { createServiceRoleClient } from "../_shared/supabase.ts";
@@ -53,6 +56,7 @@ Deno.serve(async (request) => {
   try {
     const token = await readToken(request);
     const { profileId } = await resolveCurrentProfile(request, serviceClient);
+    await ensureProfileForUser(serviceClient, profileId);
     const { data: invite, error: inviteError } = await serviceClient
       .from("group_invites")
       .select("id, activity_group_id, activity_plan_id, max_uses, use_count")
