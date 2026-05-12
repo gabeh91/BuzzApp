@@ -18,9 +18,11 @@ import { buzzSupabase } from "@/lib/supabase";
 import {
   claimAnonymousOnboardingDraft,
   createAnonymousOnboardingDraft,
+  type AnonymousOnboardingDraft,
   resetClaimedAnonymousOnboardingDraft,
 } from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
+import { deriveProfileTraits } from "@/features/quiz/quizModel";
 import { routes } from "@/navigation/routes";
 import type { AuthInteractionIntent } from "./authGate";
 import { getAuthGateDecision, shouldClaimAnonymousDraft } from "./authGate";
@@ -123,23 +125,60 @@ const normalizeProfileQuizState = (
 
 const loadProfileQuizState = async (
   userId: string,
-): Promise<ProfileQuizState> => {
+): Promise<ProfileQuizState | null> => {
   const { data, error } = await buzzSupabase.rpc("getBuzzProfileQuizState");
 
   if (error) {
-    return createEmptyProfileQuizState(userId);
+    return null;
   }
 
   return normalizeProfileQuizState(data, userId);
 };
 
-const claimAnonymousDraftForUser = async (userId: string): Promise<void> => {
+const hasDraftQuizAnswers = (draft: AnonymousOnboardingDraft): boolean =>
+  Object.keys(draft.answers).length > 0;
+
+const persistAnonymousDraftProfile = async (
+  user: BuzzAuthUser,
+  draft: AnonymousOnboardingDraft,
+): Promise<void> => {
+  if (!hasDraftQuizAnswers(draft)) {
+    return;
+  }
+
+  const { error } = await buzzSupabase.rpc("upsertBuzzProfile", {
+    cityId: user.cityId,
+    displayName: user.displayName,
+    quizAnswers: draft.answers,
+    quizTraits: deriveProfileTraits(draft.answers),
+    userId: user.id,
+  });
+
+  if (error) {
+    throw error;
+  }
+};
+
+const claimAnonymousDraftForUser = async (
+  user: BuzzAuthUser,
+  options: { persistProfile?: boolean } = {},
+): Promise<void> => {
+  const draft = await anonymousOnboardingDraftStore.load();
+
+  if (!shouldClaimAnonymousDraft(draft)) {
+    return;
+  }
+
+  if (options.persistProfile !== false) {
+    await persistAnonymousDraftProfile(user, draft);
+  }
+
   await anonymousOnboardingDraftStore.update((draft) => {
     if (!shouldClaimAnonymousDraft(draft)) {
       return draft;
     }
 
-    return claimAnonymousOnboardingDraft(draft, userId);
+    return claimAnonymousOnboardingDraft(draft, user.id);
   });
 };
 
@@ -203,7 +242,10 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       pendingProfileQuizOverwriteRef.current = null;
       setProfileQuizOverwritePrompt(null);
-      await claimAnonymousDraftForUser(nextUser.id);
+
+      if (nextProfileQuizState) {
+        await claimAnonymousDraftForUser(nextUser);
+      }
     }
 
     currentSessionRef.current = nextSession;
@@ -362,7 +404,9 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       pendingProfileQuizOverwriteRef.current = null;
 
       if (decision === "overwrite") {
-        await claimAnonymousDraftForUser(pendingConflict.user.id);
+        await claimAnonymousDraftForUser(pendingConflict.user, {
+          persistProfile: false,
+        });
         setProfileQuizState(null);
       } else {
         await anonymousOnboardingDraftStore.update(() =>

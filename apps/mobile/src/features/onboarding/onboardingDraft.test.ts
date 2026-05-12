@@ -89,3 +89,23 @@ test("claimed anonymous onboarding drafts are not reused for a later account", (
     createAnonymousOnboardingDraft(),
   );
 });
+
+test("editing a claimed anonymous draft starts a reusable local draft", () => {
+  const completed = markAnonymousOnboardingComplete(
+    mergeQuizAnswerIntoDraft(
+      createAnonymousOnboardingDraft(),
+      "pace",
+      "low",
+      19,
+    ),
+    new Date("2026-05-12T00:00:00.000Z"),
+  );
+  const claimed = claimAnonymousOnboardingDraft(completed, "user-1");
+  const retaken = mergeQuizAnswerIntoDraft(claimed, "pace", "balanced", 1);
+
+  assert.equal(retaken.claimedUserId, undefined);
+  assert.equal(retaken.completedAt, undefined);
+  assert.equal(retaken.status, "partial");
+  assert.equal(retaken.answers.pace, "balanced");
+  assert.equal(isAnonymousOnboardingDraftReusable(retaken), true);
+});

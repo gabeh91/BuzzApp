@@ -427,6 +427,69 @@ describe("Buzz auth modal flow", () => {
     });
   });
 
+  it("persists a local anonymous quiz draft when signing into an account without saved answers", async () => {
+    mockAnonymousDraftLoad.mockResolvedValue({
+      activeQuestionIndex: 1,
+      answers: { "energy-after-work": "quiet-reset" },
+      selectedInterest: null,
+      status: "partial",
+    });
+    mockRpc.mockImplementation(async (functionName: string) => {
+      if (functionName === "getBuzzProfileQuizState") {
+        return {
+          data: {
+            profileExists: true,
+            quizAnswers: {},
+            quizCompleted: false,
+            quizTraits: {},
+            userId: "user-1",
+          },
+          error: null,
+        };
+      }
+
+      return {
+        data: { ok: true, profileId: "user-1", quizCompleted: false },
+        error: null,
+      };
+    });
+    mockSignInWithPassword.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "access-token",
+          user: {
+            email: "sam@example.com",
+            id: "user-1",
+            user_metadata: {},
+          },
+        },
+      },
+      error: null,
+    });
+
+    renderWithProviders(<AuthStartScreen />);
+
+    fireEvent.changeText(
+      await screen.findByPlaceholderText("you@example.com"),
+      "sam@example.com",
+    );
+    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.press(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => {
+      expect(mockRpc).toHaveBeenCalledWith(
+        "upsertBuzzProfile",
+        expect.objectContaining({
+          quizAnswers: { "energy-after-work": "quiet-reset" },
+          userId: "user-1",
+        }),
+      );
+      expect(mockAnonymousDraftUpdate).toHaveBeenCalledWith(
+        expect.any(Function),
+      );
+    });
+  });
+
   it("signs in an existing email password account and closes auth", async () => {
     mockSignInWithPassword.mockResolvedValue({
       data: {

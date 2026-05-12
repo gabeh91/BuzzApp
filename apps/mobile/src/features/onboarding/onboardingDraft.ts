@@ -12,6 +12,17 @@ export type AnonymousOnboardingDraft = {
   claimedUserId?: string;
 };
 
+const resetClaimMetadata = (
+  draft: AnonymousOnboardingDraft,
+): AnonymousOnboardingDraft => {
+  const reusableDraft = { ...draft };
+
+  delete reusableDraft.claimedUserId;
+  delete reusableDraft.completedAt;
+
+  return reusableDraft;
+};
+
 export const createAnonymousOnboardingDraft = (): AnonymousOnboardingDraft => ({
   activeQuestionIndex: 0,
   answers: {},
@@ -25,7 +36,7 @@ export const mergeQuizAnswerIntoDraft = (
   optionId: string,
   activeQuestionIndex: number,
 ): AnonymousOnboardingDraft => ({
-  ...draft,
+  ...resetClaimMetadata(draft),
   activeQuestionIndex,
   answers: {
     ...draft.answers,
@@ -38,7 +49,7 @@ export const selectDraftInterest = (
   draft: AnonymousOnboardingDraft,
   selectedInterest: BuzzInterest,
 ): AnonymousOnboardingDraft => ({
-  ...draft,
+  ...resetClaimMetadata(draft),
   selectedInterest,
   status: draft.status === "complete" ? "complete" : "partial",
 });
