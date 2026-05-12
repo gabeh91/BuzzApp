@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
@@ -43,7 +42,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button } from "@/ui";
+import { Button, Screen } from "@/ui";
 import { useOnboarding } from "@/features/onboarding/OnboardingProvider";
 import { canBrowseFromOnboardingStep } from "@/features/onboarding/onboardingFlow";
 import { markAnonymousOnboardingComplete } from "@/features/onboarding/onboardingDraft";
@@ -1030,7 +1029,12 @@ const OnboardingExperience = () => {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <Screen
+      contentStyle={styles.screenContent}
+      edges={["top"]}
+      scroll={false}
+      style={styles.screen}
+    >
       <FixedOnboardingHeader
         cityName={cityContext.city.name}
         flowProgress={onboarding.state.progress}
@@ -1099,7 +1103,7 @@ const OnboardingExperience = () => {
           </View>
         </Animated.ScrollView>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 };
 
@@ -1115,21 +1119,18 @@ export const OnboardingScreen = () => {
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const {
-    colors,
-    fontStyles,
-    fontSizes,
-    lineHeights,
-    radii,
-    spacing,
-    borderWidths,
-    shadows,
-  } = theme;
+  const { colors, fontStyles, radii, spacing, borderWidths, shadows } = theme;
 
   return StyleSheet.create({
     screen: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    screenContent: {
+      flex: 1,
+      flexGrow: 1,
+      gap: 0,
+      padding: 0,
     },
     scrollContent: {
       flexGrow: 1,

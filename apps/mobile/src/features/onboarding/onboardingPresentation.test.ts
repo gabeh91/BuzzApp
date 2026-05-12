@@ -37,6 +37,11 @@ test("onboarding presentation drives visible animated transitions", () => {
 
 test("onboarding keeps header and progress fixed above scrollable card content", () => {
   assert.match(onboardingScreenSource, /const FixedOnboardingHeader =/);
+  assert.match(onboardingScreenSource, /scroll=\{false\}/);
+  assert.match(
+    onboardingScreenSource,
+    /contentStyle=\{styles\.screenContent\}/,
+  );
   assert.match(
     onboardingScreenSource,
     /<(?:SafeAreaView|Screen)[\s\S]*?<FixedOnboardingHeader[\s\S]*?<Animated\.ScrollView[\s\S]*?<Animated\.View style=\{\[styles\.mainCard, transition\.cardStyle\]\}/,
