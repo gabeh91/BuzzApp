@@ -39,6 +39,7 @@ type QuizContextValue = {
   answerQuestion: (questionId: string, optionId: string) => void;
   nextQuestion: () => void;
   previousQuestion: () => void;
+  replaceAnswers: (answers: QuizAnswers) => void;
   markProfileSaving: (input: BuzzProfilePersistenceInput) => void;
   markProfilePersisted: (input: BuzzProfilePersistenceInput) => void;
   markProfilePersistenceFailed: (
@@ -56,7 +57,8 @@ type QuizContextValue = {
 const QuizContext = createContext<QuizContextValue | null>(null);
 
 export const QuizProvider = ({ children }: { children: ReactNode }) => {
-  const { status } = useBuzzAuth();
+  const { profileQuizOverwritePrompt, profileQuizState, status } =
+    useBuzzAuth();
   const { LL } = useI18n();
   const quizQuestions = useMemo(() => createQuizQuestions(LL), [LL]);
   const [answers, setAnswers] = useState<QuizAnswers>({});
@@ -102,6 +104,26 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
       active = false;
     };
   }, [quizQuestions.length, status]);
+
+  useEffect(() => {
+    if (status !== "authenticated" && status !== "locked") {
+      return;
+    }
+
+    const savedAnswers = profileQuizState?.quizAnswers;
+
+    if (
+      profileQuizOverwritePrompt ||
+      !savedAnswers ||
+      Object.keys(savedAnswers).length === 0
+    ) {
+      return;
+    }
+
+    setAnswers(savedAnswers);
+    setActiveQuestionIndex(0);
+    setProfilePersistence({ status: "idle" });
+  }, [profileQuizOverwritePrompt, profileQuizState, status]);
 
   if (!activeQuestion) {
     throw new Error("Quiz questions must include at least one question");
@@ -157,6 +179,11 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
 
         return nextIndex;
       });
+    },
+    replaceAnswers: (nextAnswers) => {
+      setAnswers(nextAnswers);
+      setActiveQuestionIndex(0);
+      setProfilePersistence({ status: "idle" });
     },
     markProfileSaving: (input) => {
       setProfilePersistence({ status: "saving", lastInput: input });

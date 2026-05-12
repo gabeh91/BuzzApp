@@ -8,6 +8,7 @@ import type { ReactElement } from "react";
 import { Pressable, Text as NativeText } from "react-native";
 
 import { routes } from "@/navigation/routes";
+import { I18nProvider } from "@/i18n/I18nProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { AuthCodeScreen } from "./AuthCodeScreen";
 import { BuzzAuthProvider, useBuzzAuth } from "./AuthProvider";
@@ -18,9 +19,11 @@ const mockRouterPush = jest.fn();
 const mockRouterReplace = jest.fn();
 const mockRootNavigationCanGoBack = jest.fn();
 const mockRootNavigationGoBack = jest.fn();
+const mockAnonymousDraftLoad = jest.fn();
 const mockAnonymousDraftUpdate = jest.fn();
 const mockGetSession = jest.fn();
 const mockPendingAuthAction = jest.fn();
+const mockRpc = jest.fn();
 const mockSignInWithPassword = jest.fn();
 const mockSignInWithOtp = jest.fn();
 const mockSignOut = jest.fn();
@@ -68,11 +71,13 @@ jest.mock("@/lib/supabase", () => ({
       signUp: (...args: unknown[]) => mockSignUp(...args),
       verifyOtp: (...args: unknown[]) => mockVerifyOtp(...args),
     },
+    rpc: (...args: unknown[]) => mockRpc(...args),
   },
 }));
 
 jest.mock("@/features/onboarding/onboardingDraftStorage", () => ({
   anonymousOnboardingDraftStore: {
+    load: (...args: unknown[]) => mockAnonymousDraftLoad(...args),
     update: (...args: unknown[]) => mockAnonymousDraftUpdate(...args),
   },
 }));
@@ -103,7 +108,9 @@ jest.mock("expo-web-browser", () => ({
 const renderWithProviders = (ui: ReactElement) => {
   return render(
     <ThemeProvider>
-      <BuzzAuthProvider>{ui}</BuzzAuthProvider>
+      <I18nProvider>
+        <BuzzAuthProvider>{ui}</BuzzAuthProvider>
+      </I18nProvider>
     </ThemeProvider>,
   );
 };
@@ -130,8 +137,8 @@ const AuthGateButtonWithPendingAction = () => {
     <Pressable
       accessibilityRole="button"
       onPress={() => {
-        void requireAuth("chat", async () => {
-          mockPendingAuthAction();
+        void requireAuth("chat", async (_user, _accessToken, context) => {
+          mockPendingAuthAction(context);
         });
       }}
     >
@@ -155,16 +162,63 @@ const AuthSignOutButton = () => {
   );
 };
 
+const AuthConflictControls = () => {
+  const { profileQuizOverwritePrompt, resolveProfileQuizOverwrite } =
+    useBuzzAuth();
+
+  return (
+    <>
+      <NativeText>
+        {profileQuizOverwritePrompt ? "Overwrite prompt visible" : "No prompt"}
+      </NativeText>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          void resolveProfileQuizOverwrite("keep_existing");
+        }}
+      >
+        <NativeText>Keep previous answers</NativeText>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          void resolveProfileQuizOverwrite("overwrite");
+        }}
+      >
+        <NativeText>Use new answers</NativeText>
+      </Pressable>
+    </>
+  );
+};
+
 describe("Buzz auth modal flow", () => {
   beforeEach(() => {
     mockRouterDismiss.mockReset();
     mockRouterPush.mockReset();
     mockRouterReplace.mockReset();
+    mockAnonymousDraftLoad.mockReset();
+    mockAnonymousDraftLoad.mockResolvedValue({
+      activeQuestionIndex: 0,
+      answers: {},
+      selectedInterest: null,
+      status: "empty",
+    });
     mockAnonymousDraftUpdate.mockReset();
     mockAnonymousDraftUpdate.mockResolvedValue(undefined);
     mockGetSession.mockReset();
     mockGetSession.mockResolvedValue({ data: { session: null } });
     mockPendingAuthAction.mockReset();
+    mockRpc.mockReset();
+    mockRpc.mockResolvedValue({
+      data: {
+        profileExists: false,
+        quizAnswers: {},
+        quizCompleted: false,
+        quizTraits: {},
+        userId: "user-1",
+      },
+      error: null,
+    });
     mockRootNavigationCanGoBack.mockReset();
     mockRootNavigationCanGoBack.mockReturnValue(true);
     mockRootNavigationGoBack.mockReset();
@@ -211,7 +265,7 @@ describe("Buzz auth modal flow", () => {
       await screen.findByPlaceholderText("you@example.com"),
       "sam@example.com",
     );
-    fireEvent.press(screen.getByRole("button", { name: "Send email code" }));
+    fireEvent.press(screen.getByRole("button", { name: "Email me a code" }));
 
     await waitFor(() => {
       expect(mockSignInWithOtp).toHaveBeenCalledWith(
@@ -310,6 +364,67 @@ describe("Buzz auth modal flow", () => {
     expect(closeCallOrder).toBeDefined();
     expect(pendingCallOrder).toBeDefined();
     expect(closeCallOrder ?? 0).toBeLessThan(pendingCallOrder ?? 0);
+  });
+
+  it("interrupts pending auth actions when local quiz answers would overwrite an existing completed profile", async () => {
+    mockAnonymousDraftLoad.mockResolvedValue({
+      activeQuestionIndex: 19,
+      answers: { pace: "low" },
+      selectedInterest: null,
+      status: "complete",
+    });
+    mockRpc.mockResolvedValue({
+      data: {
+        profileExists: true,
+        quizAnswers: { pace: "balanced" },
+        quizCompleted: true,
+        quizTraits: { quizCompleted: true },
+        userId: "user-1",
+      },
+      error: null,
+    });
+    mockSignInWithPassword.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "access-token",
+          user: {
+            email: "sam@example.com",
+            id: "user-1",
+            user_metadata: {},
+          },
+        },
+      },
+      error: null,
+    });
+
+    renderWithProviders(
+      <>
+        <AuthGateButtonWithPendingAction />
+        <AuthStartScreen />
+        <AuthConflictControls />
+      </>,
+    );
+
+    fireEvent.press(await screen.findByRole("button", { name: "Say hi" }));
+    fireEvent.changeText(
+      await screen.findByPlaceholderText("you@example.com"),
+      "sam@example.com",
+    );
+    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.press(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByText("Overwrite prompt visible")).toBeTruthy();
+    expect(mockPendingAuthAction).not.toHaveBeenCalled();
+
+    fireEvent.press(
+      screen.getByRole("button", { name: "Keep previous answers" }),
+    );
+
+    await waitFor(() => {
+      expect(mockPendingAuthAction).toHaveBeenCalledWith({
+        profileQuizOverwriteDecision: "keep_existing",
+      });
+    });
   });
 
   it("signs in an existing email password account and closes auth", async () => {

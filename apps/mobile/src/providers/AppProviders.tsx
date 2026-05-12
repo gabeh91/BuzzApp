@@ -6,6 +6,7 @@ import { BuzzAuthProvider } from "@/auth/AuthProvider";
 import { InterestFlowProvider } from "@/features/interests/InterestFlowProvider";
 import { OnboardingProvider } from "@/features/onboarding/OnboardingProvider";
 import { SettlingProgressProvider } from "@/features/progress/SettlingProgressProvider";
+import { ProfileQuizOverwritePrompt } from "@/features/quiz/ProfileQuizOverwritePrompt";
 import { QuizCompletionPrompt } from "@/features/quiz/QuizCompletionPrompt";
 import { QuizProvider } from "@/features/quiz/QuizProvider";
 import { I18nProvider } from "@/i18n/I18nProvider";
@@ -45,6 +46,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
             <OnboardingProvider>
               <QuizProvider>
                 <QuizCompletionPrompt />
+                <ProfileQuizOverwritePrompt />
                 <InterestFlowProvider>
                   <SettlingProgressProvider>
                     {children}

@@ -5,16 +5,17 @@ import { createHomePlanCopy } from "./homePlanCopy";
 
 const copy = {
   titleActivated: ({ interest }: { interest: string }) => `You activated ${interest}.`,
-  titleReady: () => "Your Buzz profile is ready.",
-  activatedBody: () => "You can now see practical next steps around this interest.",
-  readyBody: () => "Complete onboarding to unlock your first suggested plan.",
-  browsingBody: () => "Browse activities now and sign in when you are ready to join or activate a plan.",
+  titleReady: () => "You are set to keep exploring.",
+  activatedBody: () => "Here are practical next steps around this interest.",
+  readyBody: () => "Finish your first steps to see a suggested plan tailored to you.",
+  browsingBody: () =>
+    "Look around for now. Sign in when you want to join or say you are in for a plan.",
   emptyPlan: () => "No suggested plan yet.",
   inactiveInterestTitle: ({ interest }: { interest: string }) =>
     `Keep browsing around ${interest}.`,
   waitingForCandidateTitle: () => "Explore your best-fit suburbs",
   waitingForCandidateBody: ({ interest }: { interest: string }) =>
-    `Keep ${interest} active while Buzz looks for a real compatible plan.`
+    `Keep ${interest} on while we look for people who fit your pace and timing.`,
 };
 
 test("createHomePlanCopy keeps activated local onboarding plan-first without inventing a match", () => {
@@ -28,9 +29,12 @@ test("createHomePlanCopy keeps activated local onboarding plan-first without inv
   });
 
   assert.equal(planCopy.title, "You activated Golf.");
-  assert.equal(planCopy.body, "You can now see practical next steps around this interest.");
+  assert.equal(planCopy.body, "Here are practical next steps around this interest.");
   assert.equal(planCopy.suggestedTitle, "Explore your best-fit suburbs");
-  assert.equal(planCopy.suggestedBody, "Keep Golf active while Buzz looks for a real compatible plan.");
+  assert.equal(
+    planCopy.suggestedBody,
+    "Keep Golf on while we look for people who fit your pace and timing.",
+  );
   assert.equal(planCopy.canActOnMatch, false);
 });
 
@@ -70,8 +74,8 @@ test("createHomePlanCopy keeps incomplete onboarding copy before activation", ()
     copy
   });
 
-  assert.equal(planCopy.title, "Your Buzz profile is ready.");
-  assert.equal(planCopy.body, "Complete onboarding to unlock your first suggested plan.");
+  assert.equal(planCopy.title, "You are set to keep exploring.");
+  assert.equal(planCopy.body, "Finish your first steps to see a suggested plan tailored to you.");
   assert.equal(planCopy.suggestedTitle, "No suggested plan yet.");
   assert.equal(planCopy.suggestedBody, "Small weekend groups fit.");
   assert.equal(planCopy.canActOnMatch, false);

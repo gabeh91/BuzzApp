@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
+import { useI18n } from "@/i18n/I18nProvider";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import { Button, Text as UiText } from "@/ui";
@@ -24,6 +25,7 @@ const getEmailParam = (value: string | string[] | undefined): string => {
 export const AuthCodeScreen = () => {
   const router = useRouter();
   const closeAuthModal = useCloseAuthModal();
+  const { LL } = useI18n();
   const params = useLocalSearchParams<{
     email?: string | string[];
     intent?: string | string[];
@@ -50,10 +52,8 @@ export const AuthCodeScreen = () => {
       await verifyEmailOtp(email, normalizedCode);
       closeAuthModal();
       await completePendingAuthAction();
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "That code did not work.",
-      );
+    } catch {
+      setErrorMessage(LL.authModal.code.errors.codeInvalid());
     } finally {
       setBusy(false);
     }
@@ -66,29 +66,30 @@ export const AuthCodeScreen = () => {
 
     try {
       await sendEmailOtp(email);
-      setNoticeMessage("We sent a new code.");
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Unable to resend the code.",
-      );
+      setNoticeMessage(LL.authModal.code.resendNotice());
+    } catch {
+      setErrorMessage(LL.authModal.code.errors.resendFailed());
     } finally {
       setBusy(false);
     }
   };
 
+  const body = email
+    ? LL.authModal.code.bodyWithEmail({ email })
+    : LL.authModal.code.bodyMissingEmail();
+
   return (
     <AuthModalFrame
-      body={
-        email
-          ? `Enter the 6-digit code sent to ${email}.`
-          : "Enter your email first so Buzz can send a sign-in code."
-      }
-      eyebrow="Check your email"
-      title="Enter your code"
+      body={body}
+      closeAccessibilityLabel={LL.authModal.close()}
+      eyebrow={LL.authModal.code.eyebrow()}
+      title={LL.authModal.code.title()}
     >
       <View style={styles.codeCard}>
         <View style={styles.fieldStack}>
-          <UiText style={styles.fieldLabel}>Email code</UiText>
+          <UiText style={styles.fieldLabel}>
+            {LL.authModal.code.fieldLabel()}
+          </UiText>
           <TextInput
             autoComplete="one-time-code"
             editable={!busy && Boolean(email)}
@@ -108,7 +109,9 @@ export const AuthCodeScreen = () => {
 
         <Button
           disabled={!canVerify}
-          label={busy ? "Checking..." : "Continue"}
+          label={
+            busy ? LL.authModal.code.checking() : LL.authModal.code.continue()
+          }
           onPress={() => {
             void handleVerify();
           }}
@@ -123,14 +126,18 @@ export const AuthCodeScreen = () => {
             }}
             style={styles.textAction}
           >
-            <UiText style={styles.textActionLabel}>Send a new code</UiText>
+            <UiText style={styles.textActionLabel}>
+              {LL.authModal.code.sendNewCode()}
+            </UiText>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             onPress={() => router.replace(createAuthStartRoute(authIntent))}
             style={styles.textAction}
           >
-            <UiText style={styles.textActionLabel}>Use a different email</UiText>
+            <UiText style={styles.textActionLabel}>
+              {LL.authModal.code.differentEmail()}
+            </UiText>
           </Pressable>
         </View>
       </View>

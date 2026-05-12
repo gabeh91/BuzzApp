@@ -7,6 +7,7 @@ import {
   shouldClaimAnonymousDraft,
   type AuthGateState,
 } from "./authGate";
+import { shouldPromptForProfileQuizOverwrite } from "./profileQuizOverwrite";
 
 const authenticated: AuthGateState = {
   biometricEnabled: false,
@@ -99,6 +100,71 @@ test("partly filled anonymous quiz drafts are claimable after auth", () => {
       answers: { pace: "low" },
       claimedUserId: "user-1",
       selectedInterest: null,
+    }),
+    false,
+  );
+});
+
+test("profile quiz overwrite prompt appears only when local answers conflict with previous saved answers", () => {
+  const draft = {
+    activeQuestionIndex: 4,
+    answers: { pace: "low" },
+    selectedInterest: null,
+    status: "partial" as const,
+  };
+  const completedProfile = {
+    profileExists: true,
+    quizCompleted: true,
+    userId: "user-1",
+  };
+
+  assert.equal(
+    shouldPromptForProfileQuizOverwrite({
+      draft,
+      profileQuizState: completedProfile,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldPromptForProfileQuizOverwrite({
+      draft: { ...draft, claimedUserId: "user-1" },
+      profileQuizState: completedProfile,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldPromptForProfileQuizOverwrite({
+      draft: { ...draft, answers: {} },
+      profileQuizState: completedProfile,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldPromptForProfileQuizOverwrite({
+      draft,
+      profileQuizState: { ...completedProfile, quizCompleted: false },
+    }),
+    false,
+  );
+  assert.equal(
+    shouldPromptForProfileQuizOverwrite({
+      draft,
+      profileQuizState: {
+        ...completedProfile,
+        quizAnswers: { pace: "balanced" },
+        quizCompleted: false,
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    shouldPromptForProfileQuizOverwrite({
+      draft,
+      profileQuizState: {
+        ...completedProfile,
+        quizAnswers: {},
+        quizCompleted: false,
+      },
     }),
     false,
   );

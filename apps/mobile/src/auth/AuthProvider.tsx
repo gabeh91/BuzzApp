@@ -17,6 +17,7 @@ import type { Session } from "@supabase/supabase-js";
 import { buzzSupabase } from "@/lib/supabase";
 import {
   claimAnonymousOnboardingDraft,
+  createAnonymousOnboardingDraft,
   resetClaimedAnonymousOnboardingDraft,
 } from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
@@ -24,11 +25,15 @@ import { routes } from "@/navigation/routes";
 import type { AuthInteractionIntent } from "./authGate";
 import { getAuthGateDecision, shouldClaimAnonymousDraft } from "./authGate";
 import type {
+  AuthenticatedActionContext,
   BuzzAuthState,
   BuzzAuthUser,
+  ProfileQuizOverwriteDecision,
+  ProfileQuizState,
   SocialAuthProvider,
 } from "./auth.types";
 import { createAuthStartRoute } from "./authNavigation";
+import { shouldPromptForProfileQuizOverwrite } from "./profileQuizOverwrite";
 import {
   createAnonymousBuzzUser,
   createSupabaseBuzzUser,
@@ -72,6 +77,62 @@ const createUserFromSession = (session: Session): BuzzAuthUser =>
     id: session.user.id,
   });
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toStringRecord = (value: unknown): Record<string, string> | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  );
+};
+
+const createEmptyProfileQuizState = (userId: string): ProfileQuizState => ({
+  profileExists: false,
+  quizCompleted: false,
+  userId,
+});
+
+const normalizeProfileQuizState = (
+  value: unknown,
+  userId: string,
+): ProfileQuizState => {
+  if (!isRecord(value)) {
+    return createEmptyProfileQuizState(userId);
+  }
+
+  const quizAnswers = toStringRecord(value.quizAnswers);
+  const quizTraits = isRecord(value.quizTraits) ? value.quizTraits : undefined;
+
+  return {
+    profileExists: value.profileExists === true,
+    ...(quizAnswers ? { quizAnswers } : {}),
+    quizCompleted: value.quizCompleted === true,
+    ...(quizTraits ? { quizTraits } : {}),
+    userId:
+      typeof value.userId === "string" && value.userId.length > 0
+        ? value.userId
+        : userId,
+  };
+};
+
+const loadProfileQuizState = async (
+  userId: string,
+): Promise<ProfileQuizState> => {
+  const { data, error } = await buzzSupabase.rpc("getBuzzProfileQuizState");
+
+  if (error) {
+    return createEmptyProfileQuizState(userId);
+  }
+
+  return normalizeProfileQuizState(data, userId);
+};
+
 const claimAnonymousDraftForUser = async (userId: string): Promise<void> => {
   await anonymousOnboardingDraftStore.update((draft) => {
     if (!shouldClaimAnonymousDraft(draft)) {
@@ -87,12 +148,25 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
   const currentSessionRef = useRef<Session | null>(null);
   const currentUserRef = useRef<BuzzAuthUser>(initialUserRef.current);
   const pendingActionRef = useRef<
-    ((user: BuzzAuthUser, accessToken?: string) => Promise<void> | void) | null
+    | ((
+        user: BuzzAuthUser,
+        accessToken?: string,
+        context?: AuthenticatedActionContext,
+      ) => Promise<void> | void)
+    | null
   >(null);
+  const pendingProfileQuizOverwriteRef = useRef<{
+    session: Session;
+    user: BuzzAuthUser;
+  } | null>(null);
   const [user, setUser] = useState<BuzzAuthUser>(initialUserRef.current);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<BuzzAuthState["status"]>("loading");
   const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [profileQuizState, setProfileQuizState] =
+    useState<ProfileQuizState | null>(null);
+  const [profileQuizOverwritePrompt, setProfileQuizOverwritePrompt] =
+    useState<BuzzAuthState["profileQuizOverwritePrompt"]>(null);
 
   const completeSession = useCallback(async (nextSession: Session | null) => {
     if (!nextSession) {
@@ -102,20 +176,42 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(null);
       setUser(anonymousUser);
       setBiometricEnabled(false);
+      setProfileQuizOverwritePrompt(null);
+      setProfileQuizState(null);
       setStatus("anonymous");
       return;
     }
 
     const nextUser = createUserFromSession(nextSession);
     const nextBiometricEnabled = await getBiometricPreference(nextUser.id);
+    const [nextProfileQuizState, anonymousDraft] = await Promise.all([
+      loadProfileQuizState(nextUser.id),
+      anonymousOnboardingDraftStore.load(),
+    ]);
 
-    await claimAnonymousDraftForUser(nextUser.id);
+    if (
+      shouldPromptForProfileQuizOverwrite({
+        draft: anonymousDraft,
+        profileQuizState: nextProfileQuizState,
+      })
+    ) {
+      pendingProfileQuizOverwriteRef.current = {
+        session: nextSession,
+        user: nextUser,
+      };
+      setProfileQuizOverwritePrompt({ userId: nextUser.id });
+    } else {
+      pendingProfileQuizOverwriteRef.current = null;
+      setProfileQuizOverwritePrompt(null);
+      await claimAnonymousDraftForUser(nextUser.id);
+    }
 
     currentSessionRef.current = nextSession;
     currentUserRef.current = nextUser;
     setSession(nextSession);
     setUser(nextUser);
     setBiometricEnabled(nextBiometricEnabled);
+    setProfileQuizState(nextProfileQuizState);
     setStatus(
       shouldLockStoredSession({
         biometricEnabled: nextBiometricEnabled,
@@ -127,12 +223,16 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const runPendingAction = useCallback(
-    async (nextUser: BuzzAuthUser, accessToken?: string) => {
+    async (
+      nextUser: BuzzAuthUser,
+      accessToken?: string,
+      context?: AuthenticatedActionContext,
+    ) => {
       const pendingAction = pendingActionRef.current;
       pendingActionRef.current = null;
 
       if (pendingAction) {
-        await pendingAction(nextUser, accessToken);
+        await pendingAction(nextUser, accessToken, context);
       }
     },
     [],
@@ -237,6 +337,10 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const completePendingAuthAction = useCallback(async () => {
+    if (pendingProfileQuizOverwriteRef.current) {
+      return;
+    }
+
     const nextUser = currentUserRef.current;
 
     if (nextUser.authSource !== "supabase") {
@@ -245,6 +349,36 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
 
     await runPendingAction(nextUser, currentSessionRef.current?.access_token);
   }, [runPendingAction]);
+
+  const resolveProfileQuizOverwrite = useCallback(
+    async (decision: ProfileQuizOverwriteDecision) => {
+      const pendingConflict = pendingProfileQuizOverwriteRef.current;
+
+      if (!pendingConflict) {
+        setProfileQuizOverwritePrompt(null);
+        return;
+      }
+
+      pendingProfileQuizOverwriteRef.current = null;
+
+      if (decision === "overwrite") {
+        await claimAnonymousDraftForUser(pendingConflict.user.id);
+        setProfileQuizState(null);
+      } else {
+        await anonymousOnboardingDraftStore.update(() =>
+          createAnonymousOnboardingDraft(),
+        );
+      }
+
+      setProfileQuizOverwritePrompt(null);
+      await runPendingAction(
+        pendingConflict.user,
+        pendingConflict.session.access_token,
+        { profileQuizOverwriteDecision: decision },
+      );
+    },
+    [runPendingAction],
+  );
 
   const signInWithEmailPassword = useCallback(
     async (email: string, password: string) => {
@@ -452,7 +586,10 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated: status !== "loading" && user.authSource === "supabase",
     isLocked: status === "locked",
     mode: user.authSource,
+    profileQuizOverwritePrompt,
+    profileQuizState,
     requireAuth,
+    resolveProfileQuizOverwrite,
     sendEmailOtp,
     verifyEmailOtp,
     signInWithEmailPassword,

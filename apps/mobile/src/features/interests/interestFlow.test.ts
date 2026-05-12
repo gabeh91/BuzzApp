@@ -35,7 +35,7 @@ test("activateInterestLocally completes activation without creating a fake match
   assert.equal(activated.activation.status, "complete");
   assert.equal(
     activated.activation.message,
-    "Surfing is active. Your next suggestion can start from this.",
+    "Surfing is on. Your next suggestion can start from this.",
   );
   assert.equal(activated.matchPreview, null);
 });

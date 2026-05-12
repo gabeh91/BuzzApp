@@ -12,7 +12,13 @@ export const unstable_settings = {
 export const modalOptions = {
   ...Platform.select({
     ios: {
-      presentation: "modal",
+      // `pageSheet` / default modal often read full-screen on phones. `formSheet`
+      // + detents uses UISheetPresentationController so the presenting screen stays
+      // visibly behind the sheet and users can drag between stops.
+      presentation: "formSheet",
+      sheetAllowedDetents: [0.5, 1],
+      sheetInitialDetentIndex: "last",
+      sheetGrabberVisible: true,
     },
     android: {
       presentation: "containedTransparentModal",

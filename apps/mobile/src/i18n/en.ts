@@ -12,6 +12,88 @@ const en = {
       question: "Question {current:number} of {total:number}",
     },
   },
+  authModal: {
+    close: "Close sign-in",
+    noticeEmailConfirmation:
+      "Account created. Check your email, then sign in here when you are ready.",
+    errors: {
+      unableStartSignIn: "We could not start sign-in. Try again.",
+      unableSendCode: "We could not send the code. Try again.",
+      unableSignIn:
+        "We could not sign you in. Check your details or try again.",
+    },
+    start: {
+      continueWithApple: "Continue with Apple",
+      continueWithGoogle: "Continue with Google",
+      continueWithFacebook: "Continue with Facebook",
+      dividerEmail: "Or use email",
+      emailLabel: "Email",
+      passwordLabel: "Password",
+      emailPlaceholder: "you@example.com",
+      passwordPlaceholder: "Password",
+      signingIn: "Signing in...",
+      signInCta: "Sign in",
+      createAccount: "Create account",
+      creatingAccount: "Creating account...",
+      sendEmailCode: "Email me a code",
+      sendingEmailCode: "Sending code...",
+      openingProvider: "Opening...",
+    },
+    intents: {
+      save_profile: {
+        eyebrow: "Account",
+        title: "Sign in or create an account",
+        body: "Already have an account? Sign in below. New here? Create one—your quiz and picks from this session can carry over once you are signed in.",
+      },
+      activate_interest: {
+        eyebrow: "Activate",
+        title: "Sign in or create an account",
+        body: "Sign in or create an account to turn on this interest and join the list for a small plan near you.",
+      },
+      attend_activity: {
+        eyebrow: "Join in",
+        title: "Sign in or create an account",
+        body: "Sign in or create an account to respond to plans and update your attendance.",
+      },
+      invite_friend: {
+        eyebrow: "Invite",
+        title: "Sign in or create an account",
+        body: "Sign in or create an account to invite someone you trust to a group.",
+      },
+      chat: {
+        eyebrow: "Say hi",
+        title: "Sign in or create an account",
+        body: "Sign in or create an account to send a hi and keep the conversation on your account.",
+      },
+      safety_action: {
+        eyebrow: "Safety",
+        title: "Sign in or create an account",
+        body: "Sign in or create an account to report or block from your account.",
+      },
+      post_activity_feedback: {
+        eyebrow: "Feedback",
+        title: "Sign in or create an account",
+        body: "Sign in or create an account to share how the plan went.",
+      },
+    },
+    code: {
+      eyebrow: "Check your email",
+      title: "Enter your code",
+      bodyWithEmail:
+        "We sent a 6-digit code to {email:string}. Enter it below.",
+      bodyMissingEmail: "Go back and enter your email so we can send a code.",
+      fieldLabel: "Code",
+      continue: "Continue",
+      checking: "Checking...",
+      sendNewCode: "Send a new code",
+      differentEmail: "Use a different email",
+      resendNotice: "We sent a new code.",
+      errors: {
+        codeInvalid: "That code did not work. Try again or request a new code.",
+        resendFailed: "We could not resend the code. Try again.",
+      },
+    },
+  },
   navigation: {
     tabs: {
       discover: "Discover",
@@ -25,16 +107,26 @@ const en = {
     },
   },
   quizCompletionPrompt: {
-    eyebrow: "Profile step",
-    title: "Complete your quiz",
-    body: "You can join through an invite now. Complete the quiz to keep suburb fit, activity ideas, and future matches personal to you.",
+    eyebrow: "Almost there",
+    title: "Finish a few questions",
+    body: "A short quiz helps us suggest suburbs, activities, and people that fit how you like to spend time—not a generic feed.",
     completeQuiz: "Complete quiz",
     notNow: "Not now",
   },
+  profileQuizOverwritePrompt: {
+    eyebrow: "Quiz answers",
+    title: "Keep your previous quiz answers?",
+    body: "This account already has saved quiz answers. Use the new answers from this device, or keep the answers already on your profile.",
+    overwrite: "Use new answers",
+    overwriting: "Saving new answers...",
+    keepExisting: "Keep previous answers",
+    keeping: "Keeping previous...",
+    failed: "We could not update your quiz choice yet. Try again.",
+  },
   profileQuiz: {
-    eyebrow: "Profile quiz",
-    title: "Complete your quiz",
-    body: "Answer the remaining questions now, or close this and come back when you have a moment.",
+    eyebrow: "Your answers",
+    title: "Pick up the quiz",
+    body: "Answer the rest now, or close and return when you have a quiet moment.",
     saving: "Saving...",
     saved: "Quiz saved.",
     failed: "We could not save your quiz yet. Try again.",
@@ -49,25 +141,25 @@ const en = {
       finishQuiz: "Finish quiz",
       nextQuestion: "Next question",
       useInterest: "Use this interest",
-      activating: "Activating...",
-      signInToActivate: "Sign in to activate",
+      activating: "Turning on...",
+      signInToActivate: "Sign in to continue",
       signInExisting: "Already have an account? Sign in",
-      activateInterest: "Activate interest",
-      browseBuzz: "Browse Buzz for now",
-      enterBuzz: "Enter Buzz",
+      activateInterest: "Say I'm in",
+      browseBuzz: "Look around first",
+      enterBuzz: "Go to home",
     },
     howItWorks: {
       itemOne: "Choose what you actually want to do.",
-      itemTwo: "Activate when you are open to a plan.",
-      itemThree: "Match into a small activity group.",
+      itemTwo: "Say when you are open for a plan.",
+      itemThree: "Meet in a small group around that activity.",
     },
     interests: {
       loading: "Finding interests for your city",
-      error: "Showing starter interests for now",
+      error: "Using a starter list for now",
       ready: "Choose what feels doable this week",
     },
     activation: {
-      eyebrow: "Ready signal",
+      eyebrow: "Ready when you are",
       chooseInterestFirst: "Choose an interest first",
       availability: {
         label: "When works",
@@ -77,7 +169,8 @@ const en = {
       },
     },
     matchPreview: {
-      empty: "Activate an interest to preview your first suggested plan.",
+      empty:
+        "Choose an interest you are open to and we will suggest a simple first plan.",
       eyebrow: "First plan",
       suggestedNextStep: "Suggested next step",
     },
@@ -89,18 +182,19 @@ const en = {
       },
       howItWorks: {
         eyebrow: "How it works",
-        title: "Pick interests, activate one, then meet around a plan.",
-        body: "Match around shared momentum: tennis, coffee, climbing, singing, or whatever feels right.",
+        title:
+          "Pick something you want to do, say when you are free, then meet around a plan.",
+        body: "Think tennis, coffee, climbing, singing—whatever feels doable with the right people.",
       },
       quizIntro: {
-        eyebrow: "Discovery quiz",
-        title: "A few quick questions so matches feel less random.",
-        body: "The quiz captures practical signals like energy, availability, planning style, and group comfort.",
+        eyebrow: "A few questions",
+        title: "So suggestions feel less random.",
+        body: "We ask about energy, availability, how you plan, and what size group feels comfortable—nothing tricky.",
       },
       quiz: {
-        eyebrow: "Quiz",
+        eyebrow: "Your style",
         title: "Answer as you are, not as you think you should be.",
-        body: "Your answers capture your energy, planning style, availability, and group comfort.",
+        body: "Honest answers help us line up people and plans that fit how you actually like to spend time.",
       },
       interests: {
         eyebrow: "Interests",
@@ -108,14 +202,14 @@ const en = {
         body: "Start with something you would actually say yes to if the right people and plan appeared.",
       },
       activation: {
-        eyebrow: "Activation",
-        title: "Activate one interest when you are open to doing it.",
-        body: "Activating says you are ready for a plan, not just browsing.",
+        eyebrow: "Say you are in",
+        title: "Pick one thing you are open to doing soon.",
+        body: "This tells people you are up for a real plan—not just browsing.",
       },
       matchPreview: {
         eyebrow: "First match",
-        title: "Your first next step stays practical.",
-        body: "Your first preview keeps the next step practical: who it suits, why it fits, and what to do next.",
+        title: "Here is a practical next step.",
+        body: "We will show who it suits, why it could work, and a simple way to get started.",
       },
     },
   },
@@ -136,18 +230,19 @@ const en = {
     },
     firstPlan: "First plan",
     titleActivated: "You activated {interest:string}.",
-    titleReady: "Your Buzz profile is ready.",
-    activatedBody: "You can now see practical next steps around this interest.",
-    readyBody: "Complete onboarding to unlock your first suggested plan.",
+    titleReady: "You are set to keep exploring.",
+    activatedBody: "Here are practical next steps around this interest.",
+    readyBody:
+      "Finish your first steps to see a suggested plan tailored to you.",
     browsingBody:
-      "Browse activities now and sign in when you are ready to join or activate a plan.",
+      "Look around for now. Sign in when you want to join or say you are in for a plan.",
     suggestedNextStep: "Suggested next step",
     emptyPlan: "No suggested plan yet.",
     inactiveInterestTitle: "Keep browsing around {interest:string}.",
     waitingForCandidateTitle: "Explore your best-fit suburbs",
     waitingForCandidateBody:
-      "Keep {interest:string} active while Buzz looks for a real compatible plan.",
-    reviewOnboarding: "Review onboarding",
+      "Keep {interest:string} on while we look for people who fit your pace and timing.",
+    reviewOnboarding: "Finish first steps",
     fallbackInterest: "your next interest",
     acceptPlan: "Accept plan",
     declinePlan: "Pass for now",
@@ -165,7 +260,7 @@ const en = {
     suburbFit: {
       title: "Best-fit suburbs",
       body: "Top areas to explore from your city and lifestyle answers.",
-      fallbackReason: "Recommended city fit based on your onboarding profile.",
+      fallbackReason: "Suggested from your city and lifestyle answers.",
     },
     settlingProgress: {
       eyebrow: "Progress",
@@ -204,14 +299,13 @@ const en = {
     title: "Your activities",
     subtitle: "Keep track of interests you are open to and plans taking shape.",
     currentSignal: {
-      title: "Current signal",
-      active: "{interest:string} is active.",
-      selected: "{interest:string} is ready when you are.",
-      empty: "Choose an interest you would genuinely do this week.",
-      bodyActive:
-        "You are available for a practical plan around this interest.",
+      title: "What you are open to",
+      active: "{interest:string} is on.",
+      selected: "{interest:string} is lined up when you are ready.",
+      empty: "Choose something you would genuinely do this week.",
+      bodyActive: "You are open to a practical plan around this interest.",
       bodySelected:
-        "Activate when you are ready for Buzz to look for a real plan.",
+        "Turn it on when you want us to look for a small plan with the right people.",
       bodyEmpty: "Start with something that feels easy to say yes to.",
     },
     plans: {
@@ -223,7 +317,7 @@ const en = {
   chats: {
     eyebrow: "Chats",
     title: "Messages",
-    subtitle: "Requests and group chats stay together here.",
+    subtitle: "Connection requests and group chats live in one place.",
     requests: {
       title: "Requests",
       empty: "Connection requests will appear here when someone says hi.",
@@ -235,10 +329,10 @@ const en = {
   },
   profile: {
     title: "Your profile",
-    subtitle: "Keep your local plan and matching availability in one place.",
+    subtitle: "Your local rhythm, interests, and availability in one place.",
     auth: {
-      title: "Save your profile",
-      body: "Sign in to keep your quiz answers, selected interests, and matching availability attached to your account.",
+      title: "Sign in or create an account",
+      body: "Save your quiz and interests to your account, send requests, and join plans. Already registered? Sign in below.",
       signIn: "Sign in to save",
       biometricTitle: "Unlock with biometrics",
       biometricBody:
@@ -247,7 +341,7 @@ const en = {
       biometricSaving: "Enabling...",
       biometricFailed: "Biometric unlock is not available on this device yet.",
       signOutTitle: "Account",
-      signOutBody: "Sign out on this device when you are done testing.",
+      signOutBody: "Sign out on this device when you are finished.",
       signOut: "Log out",
       signingOut: "Logging out...",
       signOutFailed: "We could not log you out yet. Try again in a moment.",
@@ -276,7 +370,7 @@ const en = {
     suburbFit: {
       title: "Best-fit suburbs",
       body: "Top areas to explore from your city and lifestyle answers.",
-      fallbackReason: "Recommended city fit based on your onboarding profile.",
+      fallbackReason: "Suggested from your city and lifestyle answers.",
     },
     settlingProgress: {
       eyebrow: "Progress",
@@ -299,7 +393,7 @@ const en = {
   groups: {
     eyebrow: "Activity group",
     title: "{interest:string} group",
-    formingStatus: "Forming",
+    formingStatus: "Getting the group together",
     formingBody: "A small plan is taking shape around this activity.",
     matchedWith: "Matched with {name:string}",
     suggestedPlan: "Suggested plan",
@@ -310,7 +404,7 @@ const en = {
       "Your first group will appear after you accept a suggested plan.",
     backHome: "Back home",
     planCard: {
-      title: "Plan card",
+      title: "The plan",
       timing: "Timing: {timing:string}",
       location: "Location: {location:string}",
       capacity: "Capacity: {min:number}-{max:number}",
@@ -329,7 +423,7 @@ const en = {
       shared: "Invite ready to share.",
       failed: "We could not create that invite yet. Try again in a moment.",
       joinTitle: "Join this Buzz group",
-      joinBody: "Open Buzz to review the group invite before joining.",
+      joinBody: "Open the app to review the invite before you join.",
       missingToken: "This invite link is missing a token.",
       resolving: "Checking invite...",
       resolveFailed: "This invite could not be opened.",
@@ -384,22 +478,22 @@ const en = {
   },
   interests: {
     activation: {
-      initial: "Pick one interest to activate when you are open to doing it.",
-      selected: "{interest:string} is ready when you are.",
-      activating: "Activating your interest...",
+      initial: "Pick one interest you are open to doing soon.",
+      selected: "{interest:string} is lined up when you are.",
+      activating: "Turning this on...",
       complete:
-        "{interest:string} is active. Your next suggestion can start from this.",
-      chooseBeforeActivating: "Choose an interest before activating.",
+        "{interest:string} is on. Your next suggestion can start from this.",
+      chooseBeforeActivating: "Choose an interest first.",
       failed: "We could not activate that interest yet. Try again in a moment.",
     },
   },
   quiz: {
     summary:
-      "You seem best matched to {socialStyle:string}, {energy:string} plans, and {activityIntent:string} activities.",
+      "You lean toward {socialStyle:string}, {energy:string} plans, and {activityIntent:string} activities.",
     traitLabels: {
       energy: {
         low: "lower-pressure",
-        medium: "balanced-energy",
+        medium: "balanced pace",
         high: "high-momentum",
       },
       planning: {
@@ -418,7 +512,7 @@ const en = {
         mixed: "mixed",
       },
       activityIntent: {
-        learn: "learning-led",
+        learn: "learning together",
         practice: "routine-building",
         social: "social",
       },

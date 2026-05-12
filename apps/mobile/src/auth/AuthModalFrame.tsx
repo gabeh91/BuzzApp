@@ -18,6 +18,7 @@ import { useCloseAuthModal } from "./authNavigation";
 type AuthModalFrameProps = {
   body: string;
   children: ReactNode;
+  closeAccessibilityLabel?: string;
   eyebrow?: string;
   title: string;
 };
@@ -25,6 +26,7 @@ type AuthModalFrameProps = {
 export const AuthModalFrame = ({
   body,
   children,
+  closeAccessibilityLabel = "Close sign-in",
   eyebrow = "Sign in to continue",
   title,
 }: AuthModalFrameProps) => {
@@ -54,7 +56,7 @@ export const AuthModalFrame = ({
               </UiText>
             </View>
             <Pressable
-              accessibilityLabel="Close sign in"
+              accessibilityLabel={closeAccessibilityLabel}
               accessibilityRole="button"
               onPress={closeAuthModal}
               style={styles.closeButton}

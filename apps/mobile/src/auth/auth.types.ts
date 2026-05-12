@@ -21,6 +21,24 @@ export type EmailPasswordSignUpResult = {
   needsEmailConfirmation: boolean;
 };
 
+export type ProfileQuizOverwriteDecision = "overwrite" | "keep_existing";
+
+export type ProfileQuizState = {
+  profileExists: boolean;
+  quizAnswers?: Record<string, string>;
+  quizCompleted: boolean;
+  quizTraits?: Record<string, unknown>;
+  userId: string;
+};
+
+export type ProfileQuizOverwritePromptState = {
+  userId: string;
+};
+
+export type AuthenticatedActionContext = {
+  profileQuizOverwriteDecision?: ProfileQuizOverwriteDecision;
+};
+
 export type BuzzAuthState = {
   accessToken?: string | undefined;
   authSheetVisible: boolean;
@@ -30,10 +48,19 @@ export type BuzzAuthState = {
   isAuthenticated: boolean;
   isLocked: boolean;
   mode: BuzzAuthMode;
+  profileQuizOverwritePrompt: ProfileQuizOverwritePromptState | null;
+  profileQuizState: ProfileQuizState | null;
   requireAuth: (
     intent: AuthInteractionIntent,
-    action: (user: BuzzAuthUser, accessToken?: string) => Promise<void> | void,
+    action: (
+      user: BuzzAuthUser,
+      accessToken?: string,
+      context?: AuthenticatedActionContext,
+    ) => Promise<void> | void,
   ) => Promise<boolean>;
+  resolveProfileQuizOverwrite: (
+    decision: ProfileQuizOverwriteDecision,
+  ) => Promise<void>;
   sendEmailOtp: (email: string) => Promise<void>;
   verifyEmailOtp: (email: string, token: string) => Promise<void>;
   signInWithEmailPassword: (email: string, password: string) => Promise<void>;

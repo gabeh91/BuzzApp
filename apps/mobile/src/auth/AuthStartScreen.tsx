@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FontAwesome } from "@expo/vector-icons";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
+import { getAuthModalStartCopy } from "@/auth/getAuthModalStartCopy";
+import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
@@ -16,20 +18,11 @@ import {
   useCloseAuthModal,
 } from "./authNavigation";
 
-const socialOptions: Array<{
-  provider: SocialAuthProvider;
-  label: string;
-  icon: keyof typeof FontAwesome.glyphMap;
-}> = [
-  { provider: "apple", label: "Continue with Apple", icon: "apple" },
-  { provider: "google", label: "Continue with Google", icon: "google" },
-  { provider: "facebook", label: "Continue with Facebook", icon: "facebook" },
-];
-
 export const AuthStartScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ intent?: string | string[] }>();
   const closeAuthModal = useCloseAuthModal();
+  const { LL } = useI18n();
   const {
     completePendingAuthAction,
     sendEmailOtp,
@@ -56,9 +49,33 @@ export const AuthStartScreen = () => {
     !normalizedEmail || password.length < 6 || emailBusy || Boolean(busyProvider);
   const otpDisabled = !normalizedEmail || emailBusy || Boolean(busyProvider);
 
+  const socialOptions = useMemo(
+    () =>
+      [
+        {
+          provider: "apple" as const,
+          label: LL.authModal.start.continueWithApple(),
+          icon: "apple" as const,
+        },
+        {
+          provider: "google" as const,
+          label: LL.authModal.start.continueWithGoogle(),
+          icon: "google" as const,
+        },
+        {
+          provider: "facebook" as const,
+          label: LL.authModal.start.continueWithFacebook(),
+          icon: "facebook" as const,
+        },
+      ] as const,
+    [LL],
+  );
+
   if (!authIntent) {
     return <Redirect href={routes.onboarding} />;
   }
+
+  const frame = getAuthModalStartCopy(LL, authIntent);
 
   const handleSocial = async (provider: SocialAuthProvider) => {
     setBusyProvider(provider);
@@ -69,10 +86,8 @@ export const AuthStartScreen = () => {
       await signInWithOAuth(provider);
       closeAuthModal();
       await completePendingAuthAction();
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Unable to start sign in.",
-      );
+    } catch {
+      setErrorMessage(LL.authModal.errors.unableStartSignIn());
     } finally {
       setBusyProvider(null);
     }
@@ -88,10 +103,8 @@ export const AuthStartScreen = () => {
       router.push(
         createAuthCodeRoute({ email: normalizedEmail, intent: authIntent }),
       );
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Unable to send the code.",
-      );
+    } catch {
+      setErrorMessage(LL.authModal.errors.unableSendCode());
     } finally {
       setEmailAction(null);
     }
@@ -113,18 +126,14 @@ export const AuthStartScreen = () => {
       const result = await signUpWithEmailPassword(normalizedEmail, password);
 
       if (result.needsEmailConfirmation) {
-        setNoticeMessage(
-          "Account created. Check your email, then come back and sign in.",
-        );
+        setNoticeMessage(LL.authModal.noticeEmailConfirmation());
         return;
       }
 
       closeAuthModal();
       await completePendingAuthAction();
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Unable to sign in.",
-      );
+    } catch {
+      setErrorMessage(LL.authModal.errors.unableSignIn());
     } finally {
       setEmailAction(null);
     }
@@ -132,8 +141,10 @@ export const AuthStartScreen = () => {
 
   return (
     <AuthModalFrame
-      body="Create an account or sign in to keep your profile, requests, and chats in sync."
-      title="Save your Buzz profile"
+      body={frame.body}
+      closeAccessibilityLabel={LL.authModal.close()}
+      eyebrow={frame.eyebrow}
+      title={frame.title}
     >
       <View style={styles.socialStack}>
         {socialOptions.map((option) => (
@@ -157,7 +168,9 @@ export const AuthStartScreen = () => {
               />
             </View>
             <UiText style={styles.socialButtonText}>
-              {busyProvider === option.provider ? "Opening..." : option.label}
+              {busyProvider === option.provider
+                ? LL.authModal.start.openingProvider()
+                : option.label}
             </UiText>
           </Pressable>
         ))}
@@ -165,20 +178,24 @@ export const AuthStartScreen = () => {
 
       <View style={styles.dividerRow}>
         <View style={styles.dividerLine} />
-        <UiText style={styles.dividerText}>Or use email</UiText>
+        <UiText style={styles.dividerText}>
+          {LL.authModal.start.dividerEmail()}
+        </UiText>
         <View style={styles.dividerLine} />
       </View>
 
       <View style={styles.emailCard}>
         <View style={styles.fieldStack}>
-          <UiText style={styles.fieldLabel}>Email</UiText>
+          <UiText style={styles.fieldLabel}>
+            {LL.authModal.start.emailLabel()}
+          </UiText>
           <TextInput
             autoCapitalize="none"
             autoComplete="email"
             editable={!emailBusy && !busyProvider}
             inputMode="email"
             onChangeText={setEmail}
-            placeholder="you@example.com"
+            placeholder={LL.authModal.start.emailPlaceholder()}
             placeholderTextColor={theme.colors.textMuted}
             style={styles.input}
             value={email}
@@ -186,13 +203,15 @@ export const AuthStartScreen = () => {
         </View>
 
         <View style={styles.fieldStack}>
-          <UiText style={styles.fieldLabel}>Password</UiText>
+          <UiText style={styles.fieldLabel}>
+            {LL.authModal.start.passwordLabel()}
+          </UiText>
           <TextInput
             autoCapitalize="none"
             autoComplete="password"
             editable={!emailBusy && !busyProvider}
             onChangeText={setPassword}
-            placeholder="Password"
+            placeholder={LL.authModal.start.passwordPlaceholder()}
             placeholderTextColor={theme.colors.textMuted}
             secureTextEntry
             style={styles.input}
@@ -203,7 +222,11 @@ export const AuthStartScreen = () => {
 
         <Button
           disabled={passwordDisabled}
-          label={emailAction === "signIn" ? "Signing in..." : "Sign in"}
+          label={
+            emailAction === "signIn"
+              ? LL.authModal.start.signingIn()
+              : LL.authModal.start.signInCta()
+          }
           onPress={() => {
             void handleEmailPassword("signIn");
           }}
@@ -212,7 +235,9 @@ export const AuthStartScreen = () => {
         <Button
           disabled={passwordDisabled}
           label={
-            emailAction === "signUp" ? "Creating account..." : "Create account"
+            emailAction === "signUp"
+              ? LL.authModal.start.creatingAccount()
+              : LL.authModal.start.createAccount()
           }
           onPress={() => {
             void handleEmailPassword("signUp");
@@ -222,7 +247,11 @@ export const AuthStartScreen = () => {
 
         <Button
           disabled={otpDisabled}
-          label={emailAction === "code" ? "Sending code..." : "Send email code"}
+          label={
+            emailAction === "code"
+              ? LL.authModal.start.sendingEmailCode()
+              : LL.authModal.start.sendEmailCode()
+          }
           onPress={() => {
             void handleEmail();
           }}

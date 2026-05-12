@@ -15,10 +15,13 @@ export const createBuzzAuthState = (
     isAuthenticated: user.authSource === "supabase",
     isLocked: false,
     mode: user.authSource,
+    profileQuizOverwritePrompt: null,
+    profileQuizState: null,
     requireAuth: async (_intent, action) => {
       await action(user);
       return true;
     },
+    resolveProfileQuizOverwrite: async () => undefined,
     sendEmailOtp: async () => undefined,
     verifyEmailOtp: async () => undefined,
     signInWithEmailPassword: async () => undefined,

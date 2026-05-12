@@ -136,42 +136,48 @@ const OnboardingExperience = () => {
       return;
     }
 
-    await requireAuth("activate_interest", async (authUser) => {
-      await persistQuizProfile(authUser);
-      interestFlow.markActivating();
-      let shouldShowMatchPreview = false;
-
-      try {
-        if (shouldActivateInterestThroughSupabase(authUser)) {
-          const response = await activateInterest({
-            variables: {
-              interestId: selectedInterest.id,
-            },
-          });
-
-          if (!isBackendActivationResult(response.data?.activateInterest)) {
-            throw new Error("Activation response was invalid");
-          }
-
-          const result = response.data.activateInterest;
-          interestFlow.completeBackendActivation(result);
-          shouldShowMatchPreview = result.matchCandidates.length > 0;
-        } else {
-          interestFlow.completeLocalActivation();
+    await requireAuth(
+      "activate_interest",
+      async (authUser, _token, context) => {
+        if (!context?.profileQuizOverwriteDecision) {
+          await persistQuizProfile(authUser);
         }
-      } catch {
-        interestFlow.failActivation(LL.interests.activation.failed());
-        return;
-      }
 
-      if (shouldShowMatchPreview) {
-        onboarding.next();
-        return;
-      }
+        interestFlow.markActivating();
+        let shouldShowMatchPreview = false;
 
-      await completeAnonymousOnboarding();
-      router.replace(routes.home);
-    });
+        try {
+          if (shouldActivateInterestThroughSupabase(authUser)) {
+            const response = await activateInterest({
+              variables: {
+                interestId: selectedInterest.id,
+              },
+            });
+
+            if (!isBackendActivationResult(response.data?.activateInterest)) {
+              throw new Error("Activation response was invalid");
+            }
+
+            const result = response.data.activateInterest;
+            interestFlow.completeBackendActivation(result);
+            shouldShowMatchPreview = result.matchCandidates.length > 0;
+          } else {
+            interestFlow.completeLocalActivation();
+          }
+        } catch {
+          interestFlow.failActivation(LL.interests.activation.failed());
+          return;
+        }
+
+        if (shouldShowMatchPreview) {
+          onboarding.next();
+          return;
+        }
+
+        await completeAnonymousOnboarding();
+        router.replace(routes.home);
+      },
+    );
   };
 
   const primaryLabel =

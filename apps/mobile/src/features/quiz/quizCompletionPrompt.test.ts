@@ -44,6 +44,22 @@ test("quiz completion prompt is mounted globally inside app providers", () => {
   assert.match(promptSource, /routes\.profileQuiz/);
 });
 
+test("profile quiz overwrite prompt is mounted globally inside app providers", () => {
+  const providersSource = readFileSync(
+    "src/providers/AppProviders.tsx",
+    "utf8",
+  );
+  const promptSource = readFileSync(
+    "src/features/quiz/ProfileQuizOverwritePrompt.tsx",
+    "utf8",
+  );
+
+  assert.match(providersSource, /ProfileQuizOverwritePrompt/);
+  assert.match(promptSource, /profileQuizOverwritePrompt/);
+  assert.match(promptSource, /resolveProfileQuizOverwrite/);
+  assert.match(promptSource, /usePersistQuizProfile/);
+});
+
 test("quiz completion prompt does not cover onboarding, profile quiz, invite acceptance, anonymous browsing, or a dismissed session", () => {
   assert.equal(
     shouldShowQuizCompletionPrompt({
