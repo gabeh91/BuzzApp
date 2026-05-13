@@ -39,9 +39,11 @@ test("profile hides matching availability controls for anonymous browsing", () =
   const profileSource = readFileSync("src/features/profile/ProfileScreen.tsx", "utf8");
 
   assert.match(profileSource, /const \{\s*[\s\S]*isAuthenticated,/);
+  assert.match(profileSource, /!isAuthenticated\s*\?\s*\(/);
+  assert.match(profileSource, /LL\.profile\.auth\.body\(\)/);
   assert.match(
     profileSource,
-    /\{isAuthenticated \? \(\s*<Panel variant="muted" style=\{styles\.panel\}>\s*<UiText variant="panelTitle">\{LL\.profile\.settled\.title\(\)\}/,
+    /!isAuthenticated\s*\?\s*\([\s\S]*\)\s*:\s*\([\s\S]*LL\.profile\.settled\.title\(\)/,
   );
   assert.match(profileSource, /await requireAuth\("save_profile"/);
 });
@@ -55,7 +57,7 @@ test("profile exposes sign out only for authenticated users", () => {
   assert.match(profileSource, /await signOut\(\)/);
   assert.match(
     profileSource,
-    /\{isAuthenticated \? \(\s*<Panel variant="plain" style=\{styles\.panel\}>[\s\S]*LL\.profile\.auth\.signOut/,
+    /!isAuthenticated\s*\?\s*\([\s\S]*\)\s*:\s*\([\s\S]*LL\.profile\.auth\.signOut/,
   );
   assert.match(translationsSource, /signOut:/);
 });

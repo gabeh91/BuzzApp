@@ -1,13 +1,13 @@
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button, Header, Panel, Screen, Text as UiText } from "@/ui";
+import { Avatar, Button, Header, Panel, Screen, Text as UiText } from "@/ui";
 
 import { sendConnectionRequestToSupabase } from "./peopleFeedClient";
 
@@ -187,17 +187,12 @@ export const PeopleConnectionRequestScreen = ({
 
       <Panel variant="surface" style={styles.profilePanel}>
         <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            {profilePhotoUrl ? (
-              <Image
-                accessibilityIgnoresInvertColors
-                source={{ uri: profilePhotoUrl }}
-                style={styles.avatarImage}
-              />
-            ) : (
-              <UiText style={styles.avatarInitial}>{avatarInitial}</UiText>
-            )}
-          </View>
+          <Avatar
+            accessibilityLabel={`${displayName} avatar`}
+            fallbackInitial={avatarInitial}
+            size={64}
+            uri={profilePhotoUrl}
+          />
           <View style={styles.profileCopy}>
             <UiText variant="eyebrow">{LL.peopleConnect.profileLabel()}</UiText>
             <UiText variant="panelTitle">{metaLabel}</UiText>
@@ -315,25 +310,6 @@ const createStyles = (theme: BuzzTheme) => {
       alignItems: "center",
       flexDirection: "row",
       gap: spacing[3],
-    },
-    avatar: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceMuted,
-      borderRadius: radii.full,
-      height: 64,
-      justifyContent: "center",
-      overflow: "hidden",
-      width: 64,
-    },
-    avatarImage: {
-      height: "100%",
-      width: "100%",
-    },
-    avatarInitial: {
-      color: colors.brand,
-      fontSize: fontSizes["2xl"],
-      fontWeight: "900",
-      lineHeight: lineHeights.title,
     },
     profileCopy: {
       flex: 1,

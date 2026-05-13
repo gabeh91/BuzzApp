@@ -1,8 +1,8 @@
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button, Panel, Text as UiText } from "@/ui";
+import { Avatar, Button, Panel, Text as UiText } from "@/ui";
 import type { PeopleMatch } from "./peopleFeed";
 
 type ConnectionStatus = "idle" | "sending" | "sent" | "error";
@@ -44,17 +44,12 @@ export const PeopleMatchCard = ({
   return (
     <Panel variant="surface" style={styles.card}>
       <View style={styles.headerRow}>
-        <View style={styles.avatar}>
-          {match.profilePhotoUrl ? (
-            <Image
-              accessibilityIgnoresInvertColors
-              source={{ uri: match.profilePhotoUrl }}
-              style={styles.avatarImage}
-            />
-          ) : (
-            <UiText style={styles.avatarInitial}>{avatarInitial}</UiText>
-          )}
-        </View>
+        <Avatar
+          accessibilityLabel={`${match.displayName} avatar`}
+          fallbackInitial={avatarInitial}
+          size={58}
+          uri={match.profilePhotoUrl}
+        />
         <View style={styles.headerCopy}>
           <UiText variant="panelTitle">{nameLabel}</UiText>
           {match.inCityDurationLabel ? (
@@ -74,6 +69,19 @@ export const PeopleMatchCard = ({
       ) : null}
 
       <UiText variant="panelBody">{match.compatibilityLine}</UiText>
+
+      {match.compatibilityHighlights.length > 0 ? (
+        <View style={styles.highlightStack}>
+          {match.compatibilityHighlights.slice(0, 2).map((highlight) => (
+            <View key={highlight} style={styles.highlightRow}>
+              <View style={styles.highlightDot} />
+              <UiText variant="feedback" style={styles.highlightText}>
+                {highlight}
+              </UiText>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       <Button
         disabled={actionDisabled}
@@ -101,25 +109,6 @@ const createStyles = (theme: BuzzTheme) => {
       flexDirection: "row",
       gap: spacing[3],
     },
-    avatar: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceMuted,
-      borderRadius: radii.full,
-      height: 58,
-      justifyContent: "center",
-      overflow: "hidden",
-      width: 58,
-    },
-    avatarImage: {
-      height: "100%",
-      width: "100%",
-    },
-    avatarInitial: {
-      color: colors.brand,
-      fontSize: fontSizes["2xl"],
-      fontWeight: "900",
-      lineHeight: lineHeights.title,
-    },
     headerCopy: {
       flex: 1,
       gap: spacing[1],
@@ -139,6 +128,23 @@ const createStyles = (theme: BuzzTheme) => {
       overflow: "hidden",
       paddingHorizontal: spacing[3],
       paddingVertical: spacing[1],
+    },
+    highlightStack: {
+      gap: spacing[2],
+    },
+    highlightRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: spacing[2],
+    },
+    highlightDot: {
+      backgroundColor: colors.brand,
+      borderRadius: radii.full,
+      height: 6,
+      width: 6,
+    },
+    highlightText: {
+      flex: 1,
     },
   });
 };

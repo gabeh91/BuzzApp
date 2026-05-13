@@ -155,6 +155,9 @@ export const ProfileScreen = () => {
     }
   };
 
+  const showCityPlanPanel =
+    showCityStartingPoint || showFullLandingPlan || settlingProgress.percent > 0;
+
   return (
     <Screen contentStyle={styles.content} edges={["top"]}>
       <Header
@@ -168,218 +171,206 @@ export const ProfileScreen = () => {
         title={LL.profile.title()}
       />
 
-      {!isAuthenticated ? (
-        <Panel variant="muted" style={styles.panel}>
-          <UiText variant="panelTitle">{LL.profile.auth.title()}</UiText>
-          <UiText variant="panelBody">{LL.profile.auth.body()}</UiText>
-          <Button
-            label={LL.profile.auth.signIn()}
-            onPress={handleSaveProfile}
-          />
-        </Panel>
-      ) : !biometricEnabled ? (
-        <Panel variant="muted" style={styles.panel}>
-          <UiText variant="panelTitle">
-            {LL.profile.auth.biometricTitle()}
-          </UiText>
-          <UiText variant="panelBody">{LL.profile.auth.biometricBody()}</UiText>
-          <Button
-            disabled={biometricStatus === "saving"}
-            label={
-              biometricStatus === "saving"
-                ? LL.profile.auth.biometricSaving()
-                : LL.profile.auth.enableBiometric()
-            }
-            onPress={handleEnableBiometrics}
-            variant="secondary"
-          />
-          {biometricStatus === "failed" ? (
-            <UiText variant="feedback">
-              {LL.profile.auth.biometricFailed()}
-            </UiText>
-          ) : null}
-        </Panel>
-      ) : null}
+      <Panel variant="surface" style={styles.groupPanel}>
+        <UiText variant="panelTitle">
+          {isAuthenticated ? LL.profile.auth.signOutTitle() : LL.profile.auth.title()}
+        </UiText>
 
-      {isAuthenticated ? (
-        <Panel variant="muted" style={styles.panel}>
-          <UiText variant="panelTitle">{LL.profile.settled.title()}</UiText>
-          <UiText variant="panelBody">{LL.profile.settled.body()}</UiText>
-          <UiText variant="feedback">
-            {isSettled
-              ? LL.profile.settled.paused()
-              : LL.profile.settled.active()}
-          </UiText>
-          <Button
-            disabled={settledActionStatus === "saving"}
-            label={
-              settledActionStatus === "saving"
-                ? LL.profile.settled.saving()
-                : isSettled
-                  ? LL.profile.settled.markAvailable()
-                  : LL.profile.settled.markSettled()
-            }
-            onPress={handleToggleSettled}
-            variant={isSettled ? "secondary" : "primary"}
-          />
-          {settledActionStatus === "error" ? (
-            <UiText variant="feedback">{LL.profile.settled.failed()}</UiText>
-          ) : null}
-        </Panel>
-      ) : null}
-
-      {isAuthenticated ? (
-        <Panel variant="plain" style={styles.panel}>
-          <UiText variant="panelTitle">{LL.profile.auth.signOutTitle()}</UiText>
-          <UiText variant="panelBody">{LL.profile.auth.signOutBody()}</UiText>
-          <Button
-            disabled={signOutStatus === "saving"}
-            label={
-              signOutStatus === "saving"
-                ? LL.profile.auth.signingOut()
-                : LL.profile.auth.signOut()
-            }
-            onPress={handleSignOut}
-            variant="bordered"
-          />
-          {signOutStatus === "failed" ? (
-            <UiText variant="feedback">
-              {LL.profile.auth.signOutFailed()}
-            </UiText>
-          ) : null}
-        </Panel>
-      ) : null}
-
-      {showCityStartingPoint ? (
-        <Panel variant="plain" style={styles.panel}>
-          <UiText variant="eyebrow">
-            {LL.profile.cityStartingPoint.eyebrow()}
-          </UiText>
-          <UiText variant="panelTitle">
-            {LL.profile.cityStartingPoint.title({
-              city: cityContext.city.name,
-            })}
-          </UiText>
-          <UiText variant="panelBody">
-            {LL.profile.cityStartingPoint.body()}
-          </UiText>
-          <View style={styles.suburbFitBlock}>
-            <UiText style={styles.suburbFitTitle}>
-              {LL.profile.cityStartingPoint.areasTitle()}
-            </UiText>
-            <View style={styles.suburbFitList}>
-              {topSuburbMatches.map((suburb, index) => (
-                <View key={suburb.id} style={styles.suburbFitRow}>
-                  <UiText style={styles.suburbFitRank}>{index + 1}</UiText>
-                  <View style={styles.suburbFitCopy}>
-                    <UiText style={styles.suburbFitName}>{suburb.name}</UiText>
-                    <UiText style={styles.suburbFitReason}>
-                      {suburb.reasons[0] ??
-                        LL.profile.suburbFit.fallbackReason()}
-                    </UiText>
-                  </View>
-                </View>
-              ))}
-            </View>
+        {!isAuthenticated ? (
+          <View style={styles.groupSection}>
+            <UiText variant="panelBody">{LL.profile.auth.body()}</UiText>
+            <Button label={LL.profile.auth.signIn()} onPress={handleSaveProfile} />
           </View>
-          <View style={styles.suburbFitBlock}>
-            <UiText style={styles.suburbFitTitle}>
-              {LL.profile.cityStartingPoint.interestsTitle()}
-            </UiText>
-            <View style={styles.interestRow}>
-              {startingPointInterests.map((interest) => (
-                <UiText key={interest} style={styles.interestPill}>
-                  {interest}
+        ) : (
+          <View style={styles.groupStack}>
+            {!biometricEnabled ? (
+              <View style={styles.groupSection}>
+                <UiText style={styles.sectionTitle}>
+                  {LL.profile.auth.biometricTitle()}
                 </UiText>
-              ))}
-            </View>
-          </View>
-          <View style={styles.suburbFitBlock}>
-            <UiText style={styles.suburbFitTitle}>
-              {LL.profile.cityStartingPoint.firstActionTitle()}
-            </UiText>
-            <UiText style={styles.suburbFitBody}>{suggestedFirstAction}</UiText>
-          </View>
-        </Panel>
-      ) : null}
-
-      {showFullLandingPlan ? (
-        <Panel variant="plain" style={styles.panel}>
-          <UiText variant="eyebrow">{LL.profile.landingPlan.eyebrow()}</UiText>
-          <UiText variant="panelTitle">
-            {LL.profile.landingPlan.first30Days({
-              city: cityContext.city.name,
-            })}
-          </UiText>
-          <View style={styles.suburbFitBlock}>
-            <UiText style={styles.suburbFitTitle}>
-              {LL.profile.suburbFit.title()}
-            </UiText>
-            <UiText style={styles.suburbFitBody}>
-              {LL.profile.suburbFit.body()}
-            </UiText>
-            <View style={styles.suburbFitList}>
-              {topSuburbMatches.map((suburb, index) => (
-                <View key={suburb.id} style={styles.suburbFitRow}>
-                  <UiText style={styles.suburbFitRank}>{index + 1}</UiText>
-                  <View style={styles.suburbFitCopy}>
-                    <UiText style={styles.suburbFitName}>{suburb.name}</UiText>
-                    <UiText style={styles.suburbFitReason}>
-                      {suburb.reasons[0] ??
-                        LL.profile.suburbFit.fallbackReason()}
-                    </UiText>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-          <View style={styles.planList}>
-            {landingPlan.items.slice(0, 6).map((item) => (
-              <View
-                key={`${item.weekNumber}-${item.sortOrder}-${item.itemType}`}
-                style={styles.planItem}
-              >
-                <UiText
-                  style={[
-                    styles.planStatus,
-                    item.status === "completed"
-                      ? styles.planStatusCompleted
-                      : item.status === "active"
-                        ? styles.planStatusActive
-                        : styles.planStatusPending,
-                  ]}
-                >
-                  {getLandingPlanStatusLabel(item.status)}
+                <UiText variant="panelBody">
+                  {LL.profile.auth.biometricBody()}
                 </UiText>
-                <View style={styles.planItemCopy}>
-                  <UiText style={styles.planItemTitle}>{item.title}</UiText>
-                  <UiText style={styles.planItemBody}>
-                    {item.description}
+                <Button
+                  disabled={biometricStatus === "saving"}
+                  label={
+                    biometricStatus === "saving"
+                      ? LL.profile.auth.biometricSaving()
+                      : LL.profile.auth.enableBiometric()
+                  }
+                  onPress={handleEnableBiometrics}
+                  variant="secondary"
+                />
+                {biometricStatus === "failed" ? (
+                  <UiText variant="feedback">
+                    {LL.profile.auth.biometricFailed()}
                   </UiText>
+                ) : null}
+              </View>
+            ) : null}
+
+            <View style={styles.groupDivider} />
+
+            <View style={styles.groupSection}>
+              <UiText style={styles.sectionTitle}>
+                {LL.profile.settled.title()}
+              </UiText>
+              <UiText variant="panelBody">{LL.profile.settled.body()}</UiText>
+              <UiText variant="feedback">
+                {isSettled ? LL.profile.settled.paused() : LL.profile.settled.active()}
+              </UiText>
+              <Button
+                disabled={settledActionStatus === "saving"}
+                label={
+                  settledActionStatus === "saving"
+                    ? LL.profile.settled.saving()
+                    : isSettled
+                      ? LL.profile.settled.markAvailable()
+                      : LL.profile.settled.markSettled()
+                }
+                onPress={handleToggleSettled}
+                variant={isSettled ? "secondary" : "primary"}
+              />
+              {settledActionStatus === "error" ? (
+                <UiText variant="feedback">{LL.profile.settled.failed()}</UiText>
+              ) : null}
+            </View>
+
+            <View style={styles.groupDivider} />
+
+            <View style={styles.groupSection}>
+              <UiText variant="panelBody">{LL.profile.auth.signOutBody()}</UiText>
+              <Button
+                disabled={signOutStatus === "saving"}
+                label={
+                  signOutStatus === "saving"
+                    ? LL.profile.auth.signingOut()
+                    : LL.profile.auth.signOut()
+                }
+                onPress={handleSignOut}
+                variant="bordered"
+              />
+              {signOutStatus === "failed" ? (
+                <UiText variant="feedback">{LL.profile.auth.signOutFailed()}</UiText>
+              ) : null}
+            </View>
+          </View>
+        )}
+      </Panel>
+
+      {showCityPlanPanel ? (
+        <Panel variant="plain" style={styles.groupPanel}>
+          <UiText variant="eyebrow">
+            {showFullLandingPlan
+              ? LL.profile.landingPlan.eyebrow()
+              : LL.profile.cityStartingPoint.eyebrow()}
+          </UiText>
+          <UiText variant="panelTitle">
+            {showFullLandingPlan
+              ? LL.profile.landingPlan.first30Days({ city: cityContext.city.name })
+              : LL.profile.cityStartingPoint.title({ city: cityContext.city.name })}
+          </UiText>
+
+          {showCityStartingPoint ? (
+            <View style={styles.groupSection}>
+              <UiText variant="panelBody">{LL.profile.cityStartingPoint.body()}</UiText>
+              <View style={styles.suburbFitBlock}>
+                <UiText style={styles.suburbFitTitle}>
+                  {LL.profile.cityStartingPoint.areasTitle()}
+                </UiText>
+                <View style={styles.suburbFitList}>
+                  {topSuburbMatches.map((suburb, index) => (
+                    <View key={suburb.id} style={styles.suburbFitRow}>
+                      <UiText style={styles.suburbFitRank}>{index + 1}</UiText>
+                      <View style={styles.suburbFitCopy}>
+                        <UiText style={styles.suburbFitName}>{suburb.name}</UiText>
+                        <UiText style={styles.suburbFitReason}>
+                          {suburb.reasons[0] ?? LL.profile.suburbFit.fallbackReason()}
+                        </UiText>
+                      </View>
+                    </View>
+                  ))}
                 </View>
               </View>
-            ))}
-          </View>
-        </Panel>
-      ) : null}
 
-      {showFullLandingPlan ? (
-        <Panel variant="muted" style={styles.panel}>
-          <UiText variant="eyebrow">
-            {LL.profile.settlingProgress.eyebrow()}
-          </UiText>
-          <UiText variant="panelTitle">
-            {LL.profile.settlingProgress.title({
-              percent: settlingProgress.percent,
-            })}
-          </UiText>
-          <UiText variant="panelBody">
-            {settlingProgress.nextStep
-              ? LL.profile.settlingProgress.nextStep({
-                  step: settlingProgress.nextStep.label,
-                })
-              : LL.profile.settlingProgress.complete()}
-          </UiText>
+              <View style={styles.suburbFitBlock}>
+                <UiText style={styles.suburbFitTitle}>
+                  {LL.profile.cityStartingPoint.interestsTitle()}
+                </UiText>
+                <View style={styles.interestRow}>
+                  {startingPointInterests.map((interest) => (
+                    <UiText key={interest} style={styles.interestPill}>
+                      {interest}
+                    </UiText>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.suburbFitBlock}>
+                <UiText style={styles.suburbFitTitle}>
+                  {LL.profile.cityStartingPoint.firstActionTitle()}
+                </UiText>
+                <UiText style={styles.suburbFitBody}>{suggestedFirstAction}</UiText>
+              </View>
+            </View>
+          ) : null}
+
+          {showCityStartingPoint && showFullLandingPlan ? (
+            <View style={styles.groupDivider} />
+          ) : null}
+
+          {showFullLandingPlan ? (
+            <View style={styles.groupSection}>
+              <View style={styles.suburbFitBlock}>
+                <UiText style={styles.suburbFitTitle}>{LL.profile.suburbFit.title()}</UiText>
+                <UiText style={styles.suburbFitBody}>{LL.profile.suburbFit.body()}</UiText>
+              </View>
+
+              <View style={styles.planList}>
+                {landingPlan.items.slice(0, 6).map((item) => (
+                  <View
+                    key={`${item.weekNumber}-${item.sortOrder}-${item.itemType}`}
+                    style={styles.planItem}
+                  >
+                    <UiText
+                      style={[
+                        styles.planStatus,
+                        item.status === "completed"
+                          ? styles.planStatusCompleted
+                          : item.status === "active"
+                            ? styles.planStatusActive
+                            : styles.planStatusPending,
+                      ]}
+                    >
+                      {getLandingPlanStatusLabel(item.status)}
+                    </UiText>
+                    <View style={styles.planItemCopy}>
+                      <UiText style={styles.planItemTitle}>{item.title}</UiText>
+                      <UiText style={styles.planItemBody}>{item.description}</UiText>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          {showFullLandingPlan ? (
+            <>
+              <View style={styles.groupDivider} />
+              <View style={styles.groupSection}>
+                <UiText style={styles.sectionTitle}>
+                  {LL.profile.settlingProgress.title({ percent: settlingProgress.percent })}
+                </UiText>
+                <UiText variant="panelBody">
+                  {settlingProgress.nextStep
+                    ? LL.profile.settlingProgress.nextStep({
+                        step: settlingProgress.nextStep.label,
+                      })
+                    : LL.profile.settlingProgress.complete()}
+                </UiText>
+              </View>
+            </>
+          ) : null}
         </Panel>
       ) : null}
     </Screen>
@@ -387,7 +378,7 @@ export const ProfileScreen = () => {
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, fontSizes, lineHeights, spacing, radii } = theme;
+  const { colors, fontSizes, lineHeights, spacing, radii, borderWidths } = theme;
 
   return StyleSheet.create({
     content: {
@@ -395,8 +386,25 @@ const createStyles = (theme: BuzzTheme) => {
       gap: spacing[5],
       padding: spacing[6],
     },
-    panel: {
+    groupPanel: {
+      gap: spacing[4],
+    },
+    groupStack: {
+      gap: spacing[4],
+    },
+    groupSection: {
       gap: spacing[3],
+    },
+    groupDivider: {
+      backgroundColor: colors.border,
+      height: borderWidths.hairline,
+      width: "100%",
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: fontSizes.lg,
+      fontWeight: "900",
+      lineHeight: lineHeights.tight,
     },
     suburbFitBlock: {
       gap: spacing[3],
