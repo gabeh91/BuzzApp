@@ -35,6 +35,7 @@ import type {
   SocialAuthProvider,
 } from "./auth.types";
 import { createAuthStartRoute } from "./authNavigation";
+import { drainPostAuthPendingAction } from "./postAuthContinuation";
 import { shouldPromptForProfileQuizOverwrite } from "./profileQuizOverwrite";
 import {
   createAnonymousBuzzUser,
@@ -269,13 +270,16 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       nextUser: BuzzAuthUser,
       accessToken?: string,
       context?: AuthenticatedActionContext,
-    ) => {
+    ): Promise<boolean> => {
       const pendingAction = pendingActionRef.current;
       pendingActionRef.current = null;
 
       if (pendingAction) {
         await pendingAction(nextUser, accessToken, context);
+        return true;
       }
+
+      return false;
     },
     [],
   );
@@ -307,7 +311,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       active = false;
       data.subscription.unsubscribe();
     };
-  }, [completeSession, runPendingAction]);
+  }, [completeSession]);
 
   const unlockWithBiometrics = useCallback(async () => {
     if (!session) {
@@ -379,17 +383,14 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const completePendingAuthAction = useCallback(async () => {
-    if (pendingProfileQuizOverwriteRef.current) {
-      return;
-    }
-
-    const nextUser = currentUserRef.current;
-
-    if (nextUser.authSource !== "supabase") {
-      return;
-    }
-
-    await runPendingAction(nextUser, currentSessionRef.current?.access_token);
+    const session = currentSessionRef.current;
+    await drainPostAuthPendingAction({
+      user: currentUserRef.current,
+      accessToken: session?.access_token ?? undefined,
+      isProfileQuizOverwritePending:
+        pendingProfileQuizOverwriteRef.current !== null,
+      runPendingAction,
+    });
   }, [runPendingAction]);
 
   const resolveProfileQuizOverwrite = useCallback(
@@ -415,11 +416,13 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setProfileQuizOverwritePrompt(null);
-      await runPendingAction(
-        pendingConflict.user,
-        pendingConflict.session.access_token,
-        { profileQuizOverwriteDecision: decision },
-      );
+      await drainPostAuthPendingAction({
+        user: pendingConflict.user,
+        accessToken: pendingConflict.session.access_token ?? undefined,
+        isProfileQuizOverwritePending: false,
+        profileQuizOverwriteResolution: decision,
+        runPendingAction,
+      });
     },
     [runPendingAction],
   );

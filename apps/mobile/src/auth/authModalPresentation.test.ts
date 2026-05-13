@@ -14,8 +14,7 @@ test("auth uses a native route modal stack instead of an inline primitive modal"
   assert.equal(existsSync("app/auth/code.tsx"), true);
   assert.equal(existsSync("src/auth/AuthSheet.tsx"), false);
   assert.match(rootLayoutSource, /name="auth"/);
-  assert.match(rootLayoutSource, /presentation: "formSheet"/);
-  assert.match(rootLayoutSource, /sheetAllowedDetents/);
+  assert.match(rootLayoutSource, /presentation: "modal"/);
   assert.match(rootLayoutSource, /initialRouteName: "index"/);
   assert.match(authLayoutSource, /<Stack/);
   assert.match(frameSource, /KeyboardAvoidingView/);

@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Text as UiText } from "@/ui";
+import { Screen, Text as UiText } from "@/ui";
 import { useCloseAuthModal } from "./authNavigation";
 
 type AuthModalFrameProps = {
@@ -35,7 +35,7 @@ export const AuthModalFrame = ({
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <Screen style={styles.screen} edges={["top"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardRoot}
@@ -72,7 +72,7 @@ export const AuthModalFrame = ({
           {children}
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 };
 
@@ -92,8 +92,6 @@ const createStyles = (theme: BuzzTheme) => {
       gap: spacing[6],
       justifyContent: "flex-start",
       paddingBottom: spacing[16],
-      paddingHorizontal: spacing[6],
-      paddingTop: spacing[8],
     },
     headerRow: {
       alignItems: "flex-start",
