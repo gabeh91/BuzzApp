@@ -1,6 +1,6 @@
 # BuzzApp Agent Handover
 
-Last updated: 2026-05-12, after commit `3992d9c`.
+Last updated: 2026-05-13, after realtime activation ping and FAB interaction specs.
 
 ## Start Here
 
@@ -22,6 +22,9 @@ At handover time, the only known unstaged files were pre-existing user changes o
 
 Do not stage, revert, or overwrite those unless the user explicitly asks.
 
+The worktree may now contain active mobile/auth/UI changes from ongoing MVP work. Always inspect
+`git status --short` and treat unrelated dirty files as user or previous-agent work.
+
 ## Key Context Docs
 
 Read these first:
@@ -32,6 +35,9 @@ Read these first:
 - `docs/POST_COMPETITOR_VALIDATION.md`
 - `docs/plans/2026-05-06-mvp-implementation.md`
 - `docs/plans/2026-05-08-city-landing-safety-backfill.md`
+- `docs/REALTIME_ACTIVATION_PINGS_SPEC.md`
+- `docs/REALTIME_ACTIVATION_PINGS_UXUI_SPEC.md`
+- `docs/ACTIVATE_INTEREST_FAB_INTERACTION_SPEC.md`
 
 The founder PDF that has been driving screen-alignment discussions is outside the repo:
 
@@ -209,6 +215,55 @@ Feature flags are city/config driven. Important flags include:
 - `city_starting_point_enabled`
 - `landing_plan_enabled`
 - activity/group/chat/safety/invite-related MVP flags in city config and feature flag migrations
+
+### Realtime Activation Pings
+
+The founder PDF calls for a signature "activate interest" loop where a user pings nearby compatible
+people, recipients reply in realtime, and positive replies turn into activity groups and chat.
+
+Specs:
+
+- `docs/REALTIME_ACTIVATION_PINGS_SPEC.md`
+- `docs/REALTIME_ACTIVATION_PINGS_UXUI_SPEC.md`
+
+Important decisions:
+
+- Use first-class `activation_pings` rows instead of inferring ping delivery only from
+  `match_candidates`.
+- Extend `activateInterest` to create pings and notification outbox rows.
+- Add `respondToActivationPing` for `yes`, `maybe`, and `no`.
+- First `Yes` creates/opens a group because sender plus respondent is enough to coordinate.
+- Pending pings belong in `Activities`, not `Chats`.
+- Chats unread badge means unread messages only.
+- Sender sees response counts, not a pressure-heavy recipient list.
+- Anonymous users can browse but cannot send, receive, or respond to user-specific pings.
+
+### Activate Interest FAB Direction
+
+The FAB should become one of the most polished, memorable interactions in the app.
+
+Detailed spec:
+
+- `docs/ACTIVATE_INTEREST_FAB_INTERACTION_SPEC.md`
+
+Target interaction:
+
+1. First tap opens a radial wheel of activities from the FAB.
+2. Selecting an activity collapses it into the FAB.
+3. The FAB expands into a larger pill/blob with the activity label.
+4. Prompt changes to `Press and hold to activate`.
+5. Hold charges the FAB with progress/glow/energy.
+6. After roughly 1.5-2 seconds, prompt changes to `Release to ping nearby people`.
+7. Releasing sends a ripple upward through the phone and fires the normal activation/ping logic.
+
+Implementation guardrails:
+
+- Keep auth gating. Anonymous users can pick an activity, but releasing to ping must require auth.
+- Do not silently fire activation while the auth modal is still onscreen.
+- Prefer `react-native-reanimated` and, if needed, `react-native-gesture-handler`.
+- Keep reusable pieces: `ActivityRadialWheel`, `ChargingFab`, and `PingRippleOverlay`.
+- Keep copy in `apps/mobile/src/i18n/en.ts`.
+- Test behavior contracts, not exact animation constants.
 
 ## Recent Verified Commands
 

@@ -7,6 +7,10 @@ Before making product, architecture, or mobile UI changes, read:
 - `docs/PROJECT_CONTEXT.md`
 - `docs/UI_COMPONENT_GUIDELINES.md`
 
+When changing **auth-gated mobile actions** or anything that runs **after** the auth modal (including profile-quiz overwrite vs pending callbacks), read:
+
+- `docs/POST_AUTH_SEQUENCER.md`
+
 ## Mobile UI Expectations
 
 When building or editing mobile screens:

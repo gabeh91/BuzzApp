@@ -328,6 +328,18 @@ Screen-local styles are acceptable for:
 
 Screen-local styles should not duplicate shared component visual identity.
 
+## Modal Surfaces
+
+Use the shared `Sheet` primitive from `apps/mobile/src/ui` for bottom-sheet prompts,
+confirmation flows, and lightweight interruptive UI.
+
+- Do not import React Native's primitive `Modal` directly in feature screens.
+- Keep auth inside the native Expo Router auth modal stack.
+- Use `Sheet` props such as `dismissible`, `onDismiss`, and `contentStyle` instead of
+  rebuilding scrims, handles, and sheet cards locally.
+- If a flow needs a full route or multi-step stack, use Expo Router. If it is a focused
+  prompt or confirmation surface, use `Sheet`.
+
 ## Naming
 
 Do not prefix primitives with `Buzz`.
