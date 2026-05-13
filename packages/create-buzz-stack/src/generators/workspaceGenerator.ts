@@ -256,7 +256,7 @@ const en = {
       welcome: {
         eyebrow: "Welcome to Buzz",
         title: "A softer way to find your people in a new city.",
-        body: "Start with what you actually want to do. Buzz turns interests into low-pressure reasons to meet."
+        body: "Buzz helps you find like-minded people to join you in the things you love to do."
       },
       intent: {
         eyebrow: "Your intent",
