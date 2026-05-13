@@ -8,7 +8,7 @@ import {
 } from "react-native";
 
 import { useBuzzTheme } from "@/theme/ThemeProvider";
-import type { BuzzTheme } from "@/theme/tokens";
+import { fontSizes, type BuzzTheme } from "@/theme/tokens";
 import { Text } from "./Text";
 
 export type ButtonVariant =
@@ -56,7 +56,7 @@ export const Button = ({
       ]}
       {...pressableProps}
     >
-      <Text variant="button" style={[styles[`${variant}Text`], textStyle]}>
+      <Text variant="button" style={[styles[`${variant}Text`], styles.textCore, textStyle]}>
         {buttonLabel}
       </Text>
     </Pressable>
@@ -108,6 +108,9 @@ const createStyles = (theme: BuzzTheme) => {
     },
     secondaryText: {
       color: colors.brand,
+    },
+    textCore: {
+      fontSize: fontSizes.md,
     },
     neutralText: {
       color: colors.text,

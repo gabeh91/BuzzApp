@@ -1,4 +1,5 @@
 import { cleanup } from "@testing-library/react-native";
+import type { ReactNode, Ref } from "react";
 
 jest.mock("@expo/vector-icons", () => {
   const React = require("react");
@@ -43,6 +44,38 @@ jest.mock("@shopify/flash-list", () => {
       Measurement: "Measurement",
       StickyHeader: "StickyHeader",
     },
+  };
+});
+
+jest.mock("@gorhom/bottom-sheet", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+
+  const BottomSheetModal = React.forwardRef(
+    (
+      props: {
+        children?: ReactNode;
+        onDismiss?: () => void;
+      },
+      ref: Ref<{ dismiss: () => void; present: () => void }>,
+    ) => {
+      React.useImperativeHandle(ref, () => ({
+        dismiss: () => props.onDismiss?.(),
+        present: () => undefined,
+      }));
+
+      return React.createElement(View, null, props.children);
+    },
+  );
+
+  return {
+    BottomSheetBackdrop: (props: { children?: ReactNode }) =>
+      React.createElement(View, null, props.children),
+    BottomSheetModal,
+    BottomSheetModalProvider: ({ children }: { children?: ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+    BottomSheetView: (props: { children?: ReactNode }) =>
+      React.createElement(View, null, props.children),
   };
 });
 

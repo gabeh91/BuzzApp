@@ -1,6 +1,10 @@
+import "react-native-gesture-handler";
+
 import { Stack } from "expo-router";
 import { Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { StyleSheet } from "react-native";
 
 import { AppProviders } from "@/providers/AppProviders";
 import { colors } from "@/theme/tokens";
@@ -12,13 +16,7 @@ export const unstable_settings = {
 export const modalOptions = {
   ...Platform.select({
     ios: {
-      // `pageSheet` / default modal often read full-screen on phones. `formSheet`
-      // + detents uses UISheetPresentationController so the presenting screen stays
-      // visibly behind the sheet and users can drag between stops.
-      presentation: "formSheet",
-      sheetAllowedDetents: [0.5, 1],
-      sheetInitialDetentIndex: "last",
-      sheetGrabberVisible: true,
+      presentation: "modal",
     },
     android: {
       presentation: "containedTransparentModal",
@@ -29,23 +27,28 @@ export const modalOptions = {
 
 const RootLayout = () => {
   return (
-    <AppProviders>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: {
-            backgroundColor: colors.cream,
-          },
-        }}
-      >
-        <Stack.Screen
-          name="auth"
-          options={modalOptions}
-        />
-      </Stack>
-    </AppProviders>
+    <GestureHandlerRootView style={styles.gestureRoot}>
+      <AppProviders>
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: {
+              backgroundColor: colors.cream,
+            },
+          }}
+        >
+          <Stack.Screen name="auth" options={modalOptions} />
+        </Stack>
+      </AppProviders>
+    </GestureHandlerRootView>
   );
 };
+
+const styles = StyleSheet.create({
+  gestureRoot: {
+    flex: 1,
+  },
+});
 
 export default RootLayout;

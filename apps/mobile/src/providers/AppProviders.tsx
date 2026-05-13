@@ -1,6 +1,8 @@
 import { ApolloProvider } from "@apollo/client";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { useFonts } from "expo-font";
 import { useMemo, type ReactNode } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { BuzzAuthProvider } from "@/auth/AuthProvider";
 import { InterestFlowProvider } from "@/features/interests/InterestFlowProvider";
@@ -13,6 +15,7 @@ import { I18nProvider } from "@/i18n/I18nProvider";
 import { createBuzzApolloClient } from "@/lib/apollo";
 import { buzzSupabase } from "@/lib/supabase";
 import { ThemeProvider } from "@/theme/ThemeProvider";
+import { ToastProvider } from "@/ui/Toast";
 
 export const AppProviders = ({ children }: { children: ReactNode }) => {
   const client = useMemo(
@@ -39,24 +42,30 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <ApolloProvider client={client}>
-      <ThemeProvider>
-        <I18nProvider>
-          <BuzzAuthProvider>
-            <OnboardingProvider>
-              <QuizProvider>
-                <QuizCompletionPrompt />
-                <ProfileQuizOverwritePrompt />
-                <InterestFlowProvider>
-                  <SettlingProgressProvider>
-                    {children}
-                  </SettlingProgressProvider>
-                </InterestFlowProvider>
-              </QuizProvider>
-            </OnboardingProvider>
-          </BuzzAuthProvider>
-        </I18nProvider>
-      </ThemeProvider>
-    </ApolloProvider>
+    <SafeAreaProvider>
+      <ApolloProvider client={client}>
+        <ThemeProvider>
+          <BottomSheetModalProvider>
+            <I18nProvider>
+              <ToastProvider>
+                <BuzzAuthProvider>
+                  <OnboardingProvider>
+                    <QuizProvider>
+                      <QuizCompletionPrompt />
+                      <ProfileQuizOverwritePrompt />
+                      <InterestFlowProvider>
+                        <SettlingProgressProvider>
+                          {children}
+                        </SettlingProgressProvider>
+                      </InterestFlowProvider>
+                    </QuizProvider>
+                  </OnboardingProvider>
+                </BuzzAuthProvider>
+              </ToastProvider>
+            </I18nProvider>
+          </BottomSheetModalProvider>
+        </ThemeProvider>
+      </ApolloProvider>
+    </SafeAreaProvider>
   );
 };

@@ -102,4 +102,19 @@ describe("UI primitives", () => {
       );
     });
   });
+
+  it("uses the shared bottom sheet primitive instead of direct native modals", () => {
+    [
+      "src/features/quiz/QuizCompletionPrompt.tsx",
+      "src/features/quiz/ProfileQuizOverwritePrompt.tsx",
+      "src/features/activities/ActivitiesScreen.tsx",
+    ].forEach((path) => {
+      const source = readFileSync(path, "utf8");
+
+      expect(source).not.toMatch(
+        /import \{[^}]*\bModal\b[^}]*\} from "react-native"/,
+      );
+      expect(source).toMatch(/Sheet/);
+    });
+  });
 });
