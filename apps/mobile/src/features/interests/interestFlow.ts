@@ -158,6 +158,28 @@ export const isBackendActivationResult = (value: unknown): value is BackendActiv
   return Boolean(result.ok && result.activationId && result.interestId && result.interestName && Array.isArray(result.matchCandidates));
 };
 
+/**
+ * Supabase GraphQL sometimes returns JSON scalars as stringified objects. Normalise before
+ * {@link isBackendActivationResult}.
+ */
+export const parseActivateInterestJsonScalar = (value: unknown): unknown => {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+    return value;
+  }
+
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return value;
+  }
+};
+
 export const completeBackendActivation = (
   state: InterestFlowState,
   result: BackendActivationResult,

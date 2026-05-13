@@ -7,10 +7,21 @@ const en = {
   common: {
     back: "Back",
     continue: "Continue",
+    dismiss: "Dismiss",
+    activateInterestFab: {
+      label: "Activate interest",
+      hint: "Choose an interest or confirm activation.",
+    },
     progress: {
       step: "Step {current:number} of {total:number}",
       question: "Question {current:number} of {total:number}",
     },
+  },
+  toast: {
+    dismissHintTop:
+      "Swipe up or double tap Dismiss to close this notice.",
+    dismissHintBottom:
+      "Swipe down or double tap Dismiss to close this notice.",
   },
   authModal: {
     close: "Close sign-in",
@@ -228,6 +239,12 @@ const en = {
       sent: "Request sent",
       failed: "We could not send that yet. Try again in a moment.",
     },
+    activateFab: {
+      pickTitle: "Pick an interest",
+      pickBody:
+        "Choose one thing you would genuinely do soon. It powers Discover and Activate.",
+      nextConfirm: "Next: confirm",
+    },
     firstPlan: "First plan",
     titleActivated: "You activated {interest:string}.",
     titleReady: "You are set to keep exploring.",
@@ -298,6 +315,29 @@ const en = {
     eyebrow: "Activities",
     title: "Your activities",
     subtitle: "Keep track of interests you are open to and plans taking shape.",
+    activate: {
+      heroEyebrow: "Activate",
+      heroTitle: "What do you want to do?",
+      heroBody:
+        "Pick an interest. We will ping nearby people who want to do the same thing.",
+      pickTitle: "Pick an interest",
+      pickBody: "Choose one thing you would genuinely do soon.",
+      activate: "Activate",
+      activateAgain: "Activate again",
+      activating: "Activating...",
+      activatingCaption: "Sending your ping…",
+      notReadyHint: "Choose an interest above to unlock Activate.",
+      readySubtitle: "You are about to ping people for {interest:string}.",
+      sheetNotNow: "Not now",
+      confirmTitle: "Ping people for {interest:string}?",
+      confirmBody:
+        "We will notify nearby people who have also selected {interest:string}.",
+      confirm: "Ping people",
+      pingSentToast:
+        "Ping sent. We will let you know who responds.",
+      pingSentToastWithCount:
+        "Ping sent. We reached {count:number} people also open to {interest:string}. We will let you know who responds.",
+    },
     currentSignal: {
       title: "What you are open to",
       active: "{interest:string} is on.",

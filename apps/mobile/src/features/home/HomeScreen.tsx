@@ -1,10 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { createCityContextFallback } from "@/features/city/cityContext";
-import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
+import { ActivateInterestFab } from "@/features/interests/ActivateInterestFab";
+import { InterestToggleGrid } from "@/features/interests/InterestToggleGrid";
+import { useActivateInterestActions } from "@/features/interests/useActivateInterestActions";
 import { PeopleMatchCard } from "@/features/people/PeopleMatchCard";
 import type { PeopleMatch } from "@/features/people/peopleFeed";
 import { loadPeopleMatchesFromSupabase } from "@/features/people/peopleFeedClient";
@@ -14,11 +18,13 @@ import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import { spacing, type BuzzTheme } from "@/theme/tokens";
 import {
+  Button,
   Header,
   HeroPanel,
   List,
   Panel,
   Screen,
+  Sheet,
   Text as UiText,
   type ListRenderItem,
 } from "@/ui";
@@ -68,15 +74,24 @@ export const HomeScreen = () => {
     connectionSentProfileId?: string | string[];
   }>();
   const { theme } = useBuzzTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(() => createStyles(theme, insets.bottom), [theme, insets.bottom]);
   const { LL } = useI18n();
   const { requireAuth, user } = useBuzzAuth();
+  const {
+    activationBusy,
+    confirmActivate,
+    handleSelectInterest,
+    interests,
+    selectedInterest,
+  } = useActivateInterestActions();
+  const [sheet, setSheet] = useState<"confirm" | "pick" | null>(null);
+  const [sheetRemountKey, setSheetRemountKey] = useState(0);
   const cityContext = createCityContextFallback({
     cityId: user.cityId,
     cityName: user.cityName,
   });
   const { traits } = useQuiz();
-  const { state } = useInterestFlow();
   const [peopleFeedStatus, setPeopleFeedStatus] =
     useState<PeopleFeedStatus>("loading");
   const [peopleMatches, setPeopleMatches] = useState<PeopleMatch[]>([]);
@@ -87,8 +102,8 @@ export const HomeScreen = () => {
   const connectionSentProfileId = getSearchParam(
     routeParams.connectionSentProfileId,
   );
-  const selectedInterestId = state.selectedInterest?.id;
-  const selectedInterestSlug = state.selectedInterest?.slug;
+  const selectedInterestId = selectedInterest?.id;
+  const selectedInterestSlug = selectedInterest?.slug;
   const selectedInterestIds = useMemo(
     () =>
       selectedInterestId && uuidPattern.test(selectedInterestId)
@@ -192,6 +207,39 @@ export const HomeScreen = () => {
     }
   }, [loadPeopleForDiscover]);
 
+  const closeSheet = useCallback(() => setSheet(null), []);
+
+  const openActivateFab = useCallback(async () => {
+    if (activationBusy) {
+      return;
+    }
+
+    if (selectedInterest) {
+      await requireAuth("activate_interest", async () => {
+        setSheetRemountKey((key) => key + 1);
+        setSheet("confirm");
+      });
+    } else {
+      setSheetRemountKey((key) => key + 1);
+      setSheet("pick");
+    }
+  }, [activationBusy, requireAuth, selectedInterest]);
+
+  const goPickToConfirm = useCallback(async () => {
+    if (!selectedInterest) {
+      return;
+    }
+
+    await requireAuth("activate_interest", async () => {
+      setSheetRemountKey((key) => key + 1);
+      setSheet("confirm");
+    });
+  }, [requireAuth, selectedInterest]);
+
+  const runConfirmActivate = useCallback(async () => {
+    await confirmActivate(closeSheet);
+  }, [closeSheet, confirmActivate]);
+
   const handleSayHi = useCallback(
     async (person: PeopleMatch) => {
       await requireAuth("chat", async () => {
@@ -282,34 +330,121 @@ export const HomeScreen = () => {
       ? []
       : peopleMatches;
 
+  const stickyLabel = activationBusy
+    ? LL.activities.activate.activating()
+    : LL.activities.activate.activate();
+
   return (
-    <Screen contentStyle={styles.screenContent} edges={["top"]} scroll={false}>
-      <List
-        contentContainerStyle={styles.listContent}
-        data={discoverPeople}
-        extraData={connectionStatuses}
-        itemGap={spacing[4]}
-        keyExtractor={getPersonKey}
-        ListEmptyComponent={renderPeopleEmpty}
-        ListHeaderComponent={listHeader}
-        refreshControl={
-          <RefreshControl
-            onRefresh={() => {
-              void refreshPeopleMatches();
-            }}
-            refreshing={peopleFeedStatus === "refreshing"}
-            tintColor={theme.colors.brand}
-          />
-        }
-        renderItem={renderPeopleMatch}
-        style={styles.list}
-      />
-    </Screen>
+    <BottomSheetModalProvider>
+      <Screen contentStyle={styles.screenContent} edges={["top"]} scroll={false}>
+        <List
+          contentContainerStyle={styles.listContent}
+          data={discoverPeople}
+          extraData={connectionStatuses}
+          itemGap={spacing[4]}
+          keyExtractor={getPersonKey}
+          ListEmptyComponent={renderPeopleEmpty}
+          ListHeaderComponent={listHeader}
+          refreshControl={
+            <RefreshControl
+              onRefresh={() => {
+                void refreshPeopleMatches();
+              }}
+              refreshing={peopleFeedStatus === "refreshing"}
+              tintColor={theme.colors.brand}
+            />
+          }
+          renderItem={renderPeopleMatch}
+          style={styles.list}
+        />
+
+        <ActivateInterestFab
+          accessibilityHint={LL.common.activateInterestFab.hint()}
+          accessibilityLabel={`${LL.common.activateInterestFab.label()}. ${stickyLabel}`}
+          bottomInset={insets.bottom}
+          disabled={activationBusy}
+          label={LL.common.activateInterestFab.label()}
+          onPress={() => {
+            void openActivateFab();
+          }}
+        />
+
+        <Sheet
+          contentStyle={styles.sheetContent}
+          onDismiss={closeSheet}
+          remountKey={sheetRemountKey}
+          visible={sheet !== null}
+        >
+          {sheet === "pick" ? (
+            <>
+              <UiText variant="panelTitle">{LL.home.activateFab.pickTitle()}</UiText>
+              <UiText variant="panelBody">{LL.home.activateFab.pickBody()}</UiText>
+              <InterestToggleGrid
+                interests={interests}
+                onSelectInterest={handleSelectInterest}
+                selectedInterestId={selectedInterest?.id ?? ""}
+              />
+              <View style={styles.sheetActions}>
+                <Button
+                  label={LL.activities.activate.sheetNotNow()}
+                  onPress={closeSheet}
+                  style={styles.sheetActionButton}
+                  variant="bordered"
+                />
+                <Button
+                  disabled={!selectedInterest}
+                  label={LL.home.activateFab.nextConfirm()}
+                  onPress={() => {
+                    void goPickToConfirm();
+                  }}
+                  style={styles.sheetPrimaryButton}
+                  textStyle={styles.sheetPrimaryButtonText}
+                  variant="primary"
+                />
+              </View>
+            </>
+          ) : (
+            <>
+              <UiText variant="panelTitle">
+                {LL.activities.activate.confirmTitle({
+                  interest: selectedInterest?.name ?? "",
+                })}
+              </UiText>
+              <UiText variant="panelBody">
+                {LL.activities.activate.confirmBody({
+                  interest: selectedInterest?.name ?? "",
+                })}
+              </UiText>
+              <View style={styles.sheetActions}>
+                <Button
+                  label={LL.activities.activate.sheetNotNow()}
+                  onPress={closeSheet}
+                  style={styles.sheetActionButton}
+                  variant="bordered"
+                />
+                <Button
+                  label={LL.activities.activate.confirm()}
+                  onPress={() => {
+                    void runConfirmActivate();
+                  }}
+                  style={styles.sheetPrimaryButton}
+                  textStyle={styles.sheetPrimaryButtonText}
+                  variant="primary"
+                />
+              </View>
+            </>
+          )}
+        </Sheet>
+      </Screen>
+    </BottomSheetModalProvider>
   );
 };
 
-const createStyles = (theme: BuzzTheme) => {
-  const { spacing } = theme;
+const createStyles = (theme: BuzzTheme, bottomInset: number) => {
+  const { borderWidths, colors, fontSizes, lineHeights, shadows, spacing } =
+    theme;
+
+  const fabClearance = 72;
 
   return StyleSheet.create({
     screenContent: {
@@ -323,7 +458,7 @@ const createStyles = (theme: BuzzTheme) => {
     },
     listContent: {
       padding: spacing[6],
-      paddingBottom: spacing[8],
+      paddingBottom: spacing[8] + fabClearance + bottomInset,
     },
     headerStack: {
       gap: spacing[5],
@@ -331,6 +466,29 @@ const createStyles = (theme: BuzzTheme) => {
     },
     panel: {
       gap: spacing[3],
+    },
+    sheetContent: {
+      gap: spacing[4],
+      paddingBottom: spacing[6] + bottomInset,
+      paddingTop: spacing[2],
+    },
+    sheetActions: {
+      gap: spacing[3],
+      marginTop: spacing[1],
+    },
+    sheetActionButton: {
+      width: "100%",
+    },
+    sheetPrimaryButton: {
+      backgroundColor: colors.warning,
+      borderColor: colors.warning,
+      minHeight: 52,
+      width: "100%",
+    },
+    sheetPrimaryButtonText: {
+      color: colors.text,
+      fontSize: fontSizes.md,
+      fontWeight: "900",
     },
   });
 };

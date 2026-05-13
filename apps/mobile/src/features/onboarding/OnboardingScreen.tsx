@@ -16,6 +16,7 @@ import { createCityContextFallback } from "@/features/city/cityContext";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import {
   isBackendActivationResult,
+  parseActivateInterestJsonScalar,
   shouldActivateInterestThroughSupabase,
 } from "@/features/interests/interestFlow";
 import { useQuiz } from "@/features/quiz/QuizProvider";
@@ -154,13 +155,22 @@ const OnboardingExperience = () => {
               },
             });
 
-            if (!isBackendActivationResult(response.data?.activateInterest)) {
+            if (response.errors?.length) {
+              throw new Error(
+                response.errors.map((graphError) => graphError.message).join("; "),
+              );
+            }
+
+            const payload = parseActivateInterestJsonScalar(
+              response.data?.activateInterest,
+            );
+
+            if (!isBackendActivationResult(payload)) {
               throw new Error("Activation response was invalid");
             }
 
-            const result = response.data.activateInterest;
-            interestFlow.completeBackendActivation(result);
-            shouldShowMatchPreview = result.matchCandidates.length > 0;
+            interestFlow.completeBackendActivation(payload);
+            shouldShowMatchPreview = payload.matchCandidates.length > 0;
           } else {
             interestFlow.completeLocalActivation();
           }

@@ -8,6 +8,8 @@ import {
   activateInterestLocally,
   completeBackendActivation,
   createInitialInterestFlowState,
+  isBackendActivationResult,
+  parseActivateInterestJsonScalar,
   selectInterest,
   setActivationAvailabilityIntent,
   shouldActivateInterestThroughSupabase,
@@ -38,6 +40,19 @@ test("activateInterestLocally completes activation without creating a fake match
     "Surfing is on. Your next suggestion can start from this.",
   );
   assert.equal(activated.matchPreview, null);
+});
+
+test("parseActivateInterestJsonScalar parses stringified JSON from GraphQL JSON scalars", () => {
+  const raw = JSON.stringify({
+    ok: true,
+    activationId: "00000000-0000-0000-0000-000000000501",
+    interestId: "00000000-0000-0000-0000-000000000001",
+    interestName: "Surfing",
+    matchCandidates: [],
+  });
+  const parsed = parseActivateInterestJsonScalar(raw);
+
+  assert.equal(isBackendActivationResult(parsed), true);
 });
 
 test("shouldActivateInterestThroughSupabase only sends activation writes for Supabase users", () => {
