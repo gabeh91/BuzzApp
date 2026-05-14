@@ -107,7 +107,6 @@ describe("UI primitives", () => {
     [
       "src/features/quiz/QuizCompletionPrompt.tsx",
       "src/features/quiz/ProfileQuizOverwritePrompt.tsx",
-      "src/features/activities/ActivitiesScreen.tsx",
     ].forEach((path) => {
       const source = readFileSync(path, "utf8");
 

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   createAnonymousOnboardingDraft,
   claimAnonymousOnboardingDraft,
+  clearDraftInterest,
   isAnonymousOnboardingDraftReusable,
   mergeQuizAnswerIntoDraft,
   markAnonymousOnboardingComplete,
@@ -35,6 +36,22 @@ test("anonymous onboarding draft can store selected interest before auth", () =>
 
   assert.equal(draft.status, "partial");
   assert.equal(draft.selectedInterest?.name, "Golf");
+});
+
+test("clearing a selected interest starts a reusable local draft", () => {
+  const selected = selectDraftInterest(createAnonymousOnboardingDraft(), {
+    id: "interest-1",
+    name: "Golf",
+    slug: "golf",
+    category: "sport",
+  });
+  const claimed = claimAnonymousOnboardingDraft(selected, "user-1");
+  const cleared = clearDraftInterest(claimed);
+
+  assert.equal(cleared.selectedInterest, null);
+  assert.equal(cleared.claimedUserId, undefined);
+  assert.equal(cleared.status, "partial");
+  assert.equal(isAnonymousOnboardingDraftReusable(cleared), true);
 });
 
 test("anonymous onboarding draft completion is separate from auth claim", () => {

@@ -5,6 +5,7 @@ import { useMemo, type ReactNode } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { BuzzAuthProvider } from "@/auth/AuthProvider";
+import { ActivationGestureLockProvider } from "@/features/interests/ActivationGestureLockProvider";
 import { InterestFlowProvider } from "@/features/interests/InterestFlowProvider";
 import { OnboardingProvider } from "@/features/onboarding/OnboardingProvider";
 import { SettlingProgressProvider } from "@/features/progress/SettlingProgressProvider";
@@ -54,9 +55,11 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
                       <QuizCompletionPrompt />
                       <ProfileQuizOverwritePrompt />
                       <InterestFlowProvider>
-                        <SettlingProgressProvider>
-                          {children}
-                        </SettlingProgressProvider>
+                        <ActivationGestureLockProvider>
+                          <SettlingProgressProvider>
+                            {children}
+                          </SettlingProgressProvider>
+                        </ActivationGestureLockProvider>
                       </InterestFlowProvider>
                     </QuizProvider>
                   </OnboardingProvider>

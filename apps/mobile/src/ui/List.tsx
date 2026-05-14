@@ -3,7 +3,13 @@ import {
   type FlashListProps,
   type ListRenderItem,
 } from "@shopify/flash-list";
-import { useMemo } from "react";
+import {
+  forwardRef,
+  type ElementRef,
+  type ForwardedRef,
+  useMemo,
+  type ReactElement,
+} from "react";
 import { View, type ViewStyle } from "react-native";
 
 import { useBuzzTheme } from "@/theme/ThemeProvider";
@@ -25,14 +31,17 @@ const resolveGap = (theme: BuzzTheme, gap: ListGap | undefined) => {
   return gap === undefined ? 0 : theme.spacing[gap];
 };
 
-export const List = <TItem,>({
-  horizontal,
-  itemGap,
-  ItemSeparatorComponent,
-  showsHorizontalScrollIndicator,
-  showsVerticalScrollIndicator,
-  ...props
-}: ListProps<TItem>) => {
+function ListInner<TItem>(
+  {
+    horizontal,
+    itemGap,
+    ItemSeparatorComponent,
+    showsHorizontalScrollIndicator,
+    showsVerticalScrollIndicator,
+    ...props
+  }: ListProps<TItem>,
+  ref: ForwardedRef<ElementRef<typeof FlashList<TItem>>> | null,
+) {
   const { theme } = useBuzzTheme();
   const resolvedGap = resolveGap(theme, itemGap);
 
@@ -51,7 +60,8 @@ export const List = <TItem,>({
   }, [ItemSeparatorComponent, horizontal, resolvedGap]);
 
   return (
-    <FlashList
+    <FlashList<TItem>
+      ref={ref}
       horizontal={horizontal}
       ItemSeparatorComponent={GapSeparatorComponent}
       showsHorizontalScrollIndicator={showsHorizontalScrollIndicator ?? false}
@@ -59,4 +69,10 @@ export const List = <TItem,>({
       {...props}
     />
   );
-};
+}
+
+export const List = forwardRef(ListInner) as <TItem>(
+  props: ListProps<TItem> & {
+    ref?: ForwardedRef<ElementRef<typeof FlashList<TItem>>> | null;
+  },
+) => ReactElement | null;

@@ -1,11 +1,24 @@
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { useCallback, useMemo, useState } from "react";
+import { FlashList } from "@shopify/flash-list";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type ElementRef,
+} from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { createCityContextFallback } from "@/features/city/cityContext";
-import { ActivateInterestFab } from "@/features/interests/ActivateInterestFab";
+import { useActivationGestureLock } from "@/features/interests/ActivationGestureLockProvider";
 import { InterestToggleGrid } from "@/features/interests/InterestToggleGrid";
 import { useActivateInterestActions } from "@/features/interests/useActivateInterestActions";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
@@ -13,70 +26,126 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import {
-  Button,
   Header,
   HeroPanel,
   List,
   Panel,
   Screen,
-  Sheet,
   Text as UiText,
 } from "@/ui";
+
+import { useActivitiesPickerFocus } from "./ActivitiesPickerFocusContext";
+
+const PICKER_SCROLL_TOP_INSET_SPACING: keyof BuzzTheme["spacing"] = 3;
+const PULSE_DURATION_MS = 240;
+const PULSE_GAP_MS = 520;
+const PULSE_REPEAT_MS = 240;
+const PULSE_TAIL_MS = 400;
+
+type ActivitiesFeedPlaceholder = { readonly _placeholder: true };
 
 export const ActivitiesScreen = () => {
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
+  const { colors } = theme;
   const insets = useSafeAreaInsets();
   const styles = useMemo(
     () => createStyles(theme, insets.bottom),
     [theme, insets.bottom],
   );
-  const { requireAuth, user } = useBuzzAuth();
+  const { user } = useBuzzAuth();
+  const { isActivationGestureLocked } = useActivationGestureLock();
   const interestFlow = useInterestFlow();
   const {
-    activationBusy,
-    confirmActivate,
     handleSelectInterest,
     interests,
     selectedInterest,
   } = useActivateInterestActions();
+  const { registerFocusHandler } = useActivitiesPickerFocus();
   const activationStatus = interestFlow.state.activation.status;
   const activationComplete = activationStatus === "complete";
   const cityContext = createCityContextFallback({
     cityId: user.cityId,
     cityName: user.cityName,
   });
-  const [sheet, setSheet] = useState<"confirm" | null>(null);
-  const [sheetRemountKey, setSheetRemountKey] = useState(0);
 
-  const openConfirm = useCallback(async () => {
-    if (!selectedInterest || activationBusy) {
+  const listRef = useRef<ElementRef<
+    typeof FlashList<ActivitiesFeedPlaceholder>
+  > | null>(null);
+  const headerStackRef = useRef<View>(null);
+  const pickerWrapRef = useRef<View>(null);
+  const pickerPulse = useSharedValue(0);
+
+  const pulseRingStyle = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(
+      pickerPulse.value,
+      [0, 1],
+      ["rgba(0, 0, 0, 0)", colors.warning],
+    ),
+  }));
+
+  const runPickerPulse = useCallback(() => {
+    pickerPulse.value = 0;
+    pickerPulse.value = withSequence(
+      withTiming(1, { duration: PULSE_DURATION_MS }),
+      withTiming(0, { duration: PULSE_GAP_MS }),
+      withTiming(1, { duration: PULSE_REPEAT_MS }),
+      withTiming(0, { duration: PULSE_TAIL_MS }),
+    );
+  }, [pickerPulse]);
+
+  const scrollListToOffset = useCallback((offset: number) => {
+    const scrollable = listRef.current as {
+      scrollToOffset: (params: { animated?: boolean; offset: number }) => void;
+    } | null;
+
+    scrollable?.scrollToOffset({ animated: true, offset });
+  }, []);
+
+  const scrollPickerIntoViewAndPulse = useCallback(() => {
+    const header = headerStackRef.current;
+    const picker = pickerWrapRef.current;
+
+    const afterScroll = () => {
+      setTimeout(runPickerPulse, 280);
+    };
+
+    if (!listRef.current) {
+      afterScroll();
       return;
     }
 
-    await requireAuth("activate_interest", async () => {
-      setSheetRemountKey((key) => key + 1);
-      setSheet("confirm");
-    });
-  }, [activationBusy, requireAuth, selectedInterest]);
+    if (!header || !picker) {
+      scrollListToOffset(0);
+      afterScroll();
+      return;
+    }
 
-  const closeSheet = useCallback(() => setSheet(null), []);
+    picker.measureLayout(
+      header,
+      (_left, top) => {
+        const inset = theme.spacing[PICKER_SCROLL_TOP_INSET_SPACING];
+        scrollListToOffset(Math.max(0, top - inset));
+        afterScroll();
+      },
+      () => {
+        scrollListToOffset(0);
+        afterScroll();
+      },
+    );
+  }, [runPickerPulse, scrollListToOffset, theme.spacing]);
 
-  const runConfirmActivate = useCallback(async () => {
-    await confirmActivate(closeSheet);
-  }, [closeSheet, confirmActivate]);
+  useEffect(() => {
+    registerFocusHandler(scrollPickerIntoViewAndPulse);
 
-  const stickyLabel = activationBusy
-    ? LL.activities.activate.activating()
-    : activationComplete
-      ? LL.activities.activate.activateAgain()
-      : LL.activities.activate.activate();
-
-  const fabDisabled = !selectedInterest || activationBusy;
+    return () => {
+      registerFocusHandler(null);
+    };
+  }, [registerFocusHandler, scrollPickerIntoViewAndPulse]);
 
   const header = useMemo(
     () => (
-      <View style={styles.headerStack}>
+      <View ref={headerStackRef} style={styles.headerStack}>
         <Header
           left={<UiText variant="logo">{LL.brand.name()}</UiText>}
           right={<UiText variant="city">{cityContext.city.name}</UiText>}
@@ -88,20 +157,24 @@ export const ActivitiesScreen = () => {
           title={LL.activities.activate.heroTitle()}
         />
 
-        <Panel variant="plain" style={styles.pickerPanel}>
-          <UiText variant="panelTitle">
-            {LL.activities.activate.pickTitle()}
-          </UiText>
-          <UiText variant="panelBody">
-            {LL.activities.activate.pickBody()}
-          </UiText>
+        <View ref={pickerWrapRef} collapsable={false}>
+          <Animated.View style={[styles.pickerEmphasis, pulseRingStyle]}>
+            <Panel variant="surface" style={styles.pickerPanel}>
+              <UiText variant="panelTitle">
+                {LL.activities.activate.pickTitle()}
+              </UiText>
+              <UiText variant="panelBody">
+                {LL.activities.activate.pickBody()}
+              </UiText>
 
-          <InterestToggleGrid
-            interests={interests}
-            onSelectInterest={handleSelectInterest}
-            selectedInterestId={selectedInterest?.id ?? ""}
-          />
-        </Panel>
+              <InterestToggleGrid
+                interests={interests}
+                onSelectInterest={handleSelectInterest}
+                selectedInterestId={selectedInterest?.id ?? ""}
+              />
+            </Panel>
+          </Animated.View>
+        </View>
 
         <Panel
           variant={activationComplete ? "plain" : "muted"}
@@ -121,83 +194,37 @@ export const ActivitiesScreen = () => {
       activationComplete,
       cityContext.city.name,
       handleSelectInterest,
-      interestFlow.state.activation.message,
       interests,
+      interestFlow.state.activation.message,
+      pulseRingStyle,
       selectedInterest?.id,
       styles.headerStack,
+      styles.pickerEmphasis,
       styles.pickerPanel,
       styles.statusPanel,
     ],
   );
 
   return (
-    <BottomSheetModalProvider>
-      <Screen contentStyle={styles.screenContent} edges={["top"]} scroll={false}>
-        <List
-          contentContainerStyle={styles.listContent}
-          data={[]}
-          itemGap={0}
-          keyExtractor={() => "empty"}
-          ListEmptyComponent={() => null}
-          ListHeaderComponent={header}
-          renderItem={() => null}
-          style={styles.list}
-        />
-
-        <ActivateInterestFab
-          accessibilityHint={LL.common.activateInterestFab.hint()}
-          accessibilityLabel={`${LL.common.activateInterestFab.label()}. ${stickyLabel}`}
-          bottomInset={insets.bottom}
-          disabled={fabDisabled}
-          label={LL.common.activateInterestFab.label()}
-          onPress={() => {
-            void openConfirm();
-          }}
-        />
-
-        <Sheet
-          contentStyle={styles.sheetContent}
-          onDismiss={closeSheet}
-          remountKey={sheetRemountKey}
-          visible={sheet === "confirm"}
-        >
-          <>
-            <UiText variant="panelTitle">
-              {LL.activities.activate.confirmTitle({
-                interest: selectedInterest?.name ?? "",
-              })}
-            </UiText>
-            <UiText variant="panelBody">
-              {LL.activities.activate.confirmBody({
-                interest: selectedInterest?.name ?? "",
-              })}
-            </UiText>
-            <View style={styles.sheetActions}>
-              <Button
-                label={LL.activities.activate.sheetNotNow()}
-                onPress={closeSheet}
-                style={styles.sheetActionButton}
-                variant="bordered"
-              />
-              <Button
-                label={LL.activities.activate.confirm()}
-                onPress={() => {
-                  void runConfirmActivate();
-                }}
-                style={styles.sheetPrimaryButton}
-                textStyle={styles.sheetPrimaryButtonText}
-                variant="primary"
-              />
-            </View>
-          </>
-        </Sheet>
-      </Screen>
-    </BottomSheetModalProvider>
+    <Screen contentStyle={styles.screenContent} edges={["top"]} scroll={false}>
+      <List<ActivitiesFeedPlaceholder>
+        ref={listRef}
+        contentContainerStyle={styles.listContent}
+        data={[]}
+        itemGap={0}
+        keyExtractor={() => "empty"}
+        ListEmptyComponent={() => null}
+        ListHeaderComponent={header}
+        renderItem={() => null}
+        scrollEnabled={!isActivationGestureLocked}
+        style={styles.list}
+      />
+    </Screen>
   );
 };
 
 const createStyles = (theme: BuzzTheme, bottomInset: number) => {
-  const { colors, fontSizes, shadows, spacing } = theme;
+  const { borderWidths, radii, spacing } = theme;
 
   const fabClearance = 72;
 
@@ -219,34 +246,17 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
       gap: spacing[5],
       paddingBottom: spacing[4],
     },
+    pickerEmphasis: {
+      borderColor: "rgba(0, 0, 0, 0)",
+      borderRadius: radii.xl + 3,
+      borderWidth: borderWidths.hairline,
+      padding: spacing[1],
+    },
     pickerPanel: {
       gap: spacing[4],
     },
     statusPanel: {
       gap: spacing[3],
-    },
-    sheetContent: {
-      gap: spacing[4],
-      paddingBottom: spacing[6] + bottomInset,
-      paddingTop: spacing[2],
-    },
-    sheetActions: {
-      gap: spacing[3],
-      marginTop: spacing[1],
-    },
-    sheetActionButton: {
-      width: "100%",
-    },
-    sheetPrimaryButton: {
-      backgroundColor: colors.warning,
-      borderColor: colors.warning,
-      minHeight: 52,
-      width: "100%",
-    },
-    sheetPrimaryButtonText: {
-      color: colors.text,
-      fontSize: fontSizes.md,
-      fontWeight: "900",
     },
   });
 };

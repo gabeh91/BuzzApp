@@ -10,7 +10,16 @@ const en = {
     dismiss: "Dismiss",
     activateInterestFab: {
       label: "Activate interest",
-      hint: "Choose an interest or confirm activation.",
+      chooseActivity: "Choose an activity",
+      chooseActivityHint: "Pick something you would actually do soon.",
+      clearSelection: "Clear selected activity",
+      closeWheel: "Close activity picker",
+      hint: "Choose an interest, then press and hold to activate.",
+      holdToActivate: "Press and hold to activate",
+      keepHolding: "Keep holding",
+      releaseToPing: "Release to ping nearby people",
+      pickOnActivitiesTabFirst:
+        "Choose an interest first, then press and hold to ping others.",
     },
     progress: {
       step: "Step {current:number} of {total:number}",
@@ -316,7 +325,7 @@ const en = {
     title: "Your activities",
     subtitle: "Keep track of interests you are open to and plans taking shape.",
     activate: {
-      heroEyebrow: "Activate",
+      heroEyebrow: "Activities",
       heroTitle: "What do you want to do?",
       heroBody:
         "Pick an interest. We will ping nearby people who want to do the same thing.",

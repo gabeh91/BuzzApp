@@ -79,4 +79,14 @@ jest.mock("@gorhom/bottom-sheet", () => {
   };
 });
 
+jest.mock("expo-linear-gradient", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+
+  return {
+    LinearGradient: (props: { children?: ReactNode }) =>
+      React.createElement(View, null, props.children),
+  };
+});
+
 afterEach(cleanup);

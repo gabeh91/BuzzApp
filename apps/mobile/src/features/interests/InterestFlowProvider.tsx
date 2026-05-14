@@ -10,12 +10,14 @@ import {
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import {
+  clearDraftInterest,
   selectDraftInterest,
   shouldRestoreAnonymousOnboardingDraft,
 } from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
 import {
   activateInterestLocally,
+  clearSelectedInterest,
   completeBackendActivation,
   createInterestFlowCopy,
   createInitialInterestFlowState,
@@ -32,6 +34,7 @@ import {
 type InterestFlowContextValue = {
   state: InterestFlowState;
   select: (interest: BuzzInterest) => void;
+  clearSelection: () => void;
   markActivating: () => void;
   completeLocalActivation: () => void;
   completeBackendActivation: (result: BackendActivationResult) => void;
@@ -92,6 +95,10 @@ export const InterestFlowProvider = ({ children }: { children: ReactNode }) => {
       void anonymousOnboardingDraftStore.update((draft) =>
         selectDraftInterest(draft, interest),
       );
+    },
+    clearSelection: () => {
+      setState((current) => clearSelectedInterest(current, copy));
+      void anonymousOnboardingDraftStore.update(clearDraftInterest);
     },
     markActivating: () => {
       setState((current) => markInterestActivating(current, copy));

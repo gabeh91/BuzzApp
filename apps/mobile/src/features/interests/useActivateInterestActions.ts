@@ -20,7 +20,7 @@ import { getInterestsFromGraphql } from "@/features/onboarding/onboardingInteres
  */
 export const useActivateInterestActions = () => {
   const { LL } = useI18n();
-  const { requireAuth } = useBuzzAuth();
+  const { isAuthenticated, requireAuth } = useBuzzAuth();
   const { showToast } = useToast();
   const interestFlow = useInterestFlow();
   const { data } = useBuzzHomeQuery();
@@ -37,6 +37,10 @@ export const useActivateInterestActions = () => {
     },
     [interestFlow],
   );
+
+  const handleClearSelectedInterest = useCallback(() => {
+    interestFlow.clearSelection();
+  }, [interestFlow]);
 
   const confirmActivate = useCallback(
     async (closeSheet: () => void) => {
@@ -97,9 +101,30 @@ export const useActivateInterestActions = () => {
     ],
   );
 
+  const handleActivateSelectedInterest = useCallback(async () => {
+    if (!selectedInterest || activationBusy) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      await requireAuth("activate_interest", async () => undefined);
+      return;
+    }
+
+    await confirmActivate(() => undefined);
+  }, [
+    activationBusy,
+    confirmActivate,
+    isAuthenticated,
+    requireAuth,
+    selectedInterest,
+  ]);
+
   return {
     activationBusy,
     confirmActivate,
+    handleActivateSelectedInterest,
+    handleClearSelectedInterest,
     handleSelectInterest,
     interests,
     selectedInterest,

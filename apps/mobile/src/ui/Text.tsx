@@ -24,6 +24,10 @@ export type TextVariant =
 type TextPrimitiveProps = TextProps & {
   variant?: TextVariant;
   style?: StyleProp<TextStyle>;
+  /** Android-only; forwarded to `Text`. */
+  includeFontPadding?: boolean;
+  /** Android-only; forwarded to `Text`. */
+  textBreakStrategy?: "simple" | "highQuality" | "balanced";
 };
 
 export const Text = ({

@@ -54,6 +54,14 @@ export const selectDraftInterest = (
   status: draft.status === "complete" ? "complete" : "partial",
 });
 
+export const clearDraftInterest = (
+  draft: AnonymousOnboardingDraft,
+): AnonymousOnboardingDraft => ({
+  ...resetClaimMetadata(draft),
+  selectedInterest: null,
+  status: draft.status === "empty" ? "empty" : "partial",
+});
+
 export const markAnonymousOnboardingComplete = (
   draft: AnonymousOnboardingDraft,
   now: Date = new Date(),

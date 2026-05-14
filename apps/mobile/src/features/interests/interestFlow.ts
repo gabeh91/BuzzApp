@@ -100,6 +100,19 @@ export const selectInterest = (
   };
 };
 
+export const clearSelectedInterest = (
+  state: InterestFlowState,
+  copy: InterestFlowCopy = defaultInterestFlowCopy
+): InterestFlowState => ({
+  ...state,
+  selectedInterest: null,
+  activation: {
+    status: "idle",
+    message: copy.initialMessage
+  },
+  matchPreview: null
+});
+
 export const setActivationAvailabilityIntent = (
   state: InterestFlowState,
   intent: ActivationAvailabilityIntent
