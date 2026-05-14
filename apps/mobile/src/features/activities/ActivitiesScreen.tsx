@@ -1,4 +1,5 @@
 import { FlashList } from "@shopify/flash-list";
+import { useRouter } from "expo-router";
 import {
   useCallback,
   useEffect,
@@ -22,10 +23,24 @@ import { useActivationGestureLock } from "@/features/interests/ActivationGesture
 import { InterestToggleGrid } from "@/features/interests/InterestToggleGrid";
 import { useActivateInterestActions } from "@/features/interests/useActivateInterestActions";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
+import {
+  useIncomingActivationPings,
+  type IncomingActivationPing,
+} from "@/features/interests/useIncomingActivationPings";
+import {
+  useOutgoingActivationSummary,
+  type OutgoingActivationSummary,
+} from "@/features/interests/useOutgoingActivationSummary";
+import {
+  useRespondToActivationPing,
+  type ActivationPingResponse,
+} from "@/features/interests/useRespondToActivationPing";
 import { useI18n } from "@/i18n/I18nProvider";
+import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import {
+  Button,
   Header,
   HeroPanel,
   List,
@@ -45,6 +60,7 @@ const PULSE_TAIL_MS = 400;
 type ActivitiesFeedPlaceholder = { readonly _placeholder: true };
 
 export const ActivitiesScreen = () => {
+  const router = useRouter();
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
   const { colors } = theme;
@@ -53,7 +69,7 @@ export const ActivitiesScreen = () => {
     () => createStyles(theme, insets.bottom),
     [theme, insets.bottom],
   );
-  const { user } = useBuzzAuth();
+  const { isAuthenticated, user } = useBuzzAuth();
   const { isActivationGestureLocked } = useActivationGestureLock();
   const interestFlow = useInterestFlow();
   const {
@@ -62,6 +78,20 @@ export const ActivitiesScreen = () => {
     selectedInterest,
   } = useActivateInterestActions();
   const { registerFocusHandler } = useActivitiesPickerFocus();
+  const incomingPings = useIncomingActivationPings({
+    enabled: isAuthenticated,
+    userId: user.id,
+  });
+  const outgoingSummary = useOutgoingActivationSummary({
+    enabled: isAuthenticated,
+    userId: user.id,
+  });
+  const {
+    loading: respondingToPing,
+    respondToPing,
+  } = useRespondToActivationPing();
+  const { refetch: refetchIncomingPings } = incomingPings;
+  const { refetch: refetchOutgoingSummary } = outgoingSummary;
   const activationStatus = interestFlow.state.activation.status;
   const activationComplete = activationStatus === "complete";
   const cityContext = createCityContextFallback({
@@ -75,6 +105,14 @@ export const ActivitiesScreen = () => {
   const headerStackRef = useRef<View>(null);
   const pickerWrapRef = useRef<View>(null);
   const pickerPulse = useSharedValue(0);
+  const visibleIncomingPings = useMemo(
+    () => incomingPings.pings.slice(0, 3),
+    [incomingPings.pings],
+  );
+  const visibleOutgoingActivations = useMemo(
+    () => outgoingSummary.activations.slice(0, 3),
+    [outgoingSummary.activations],
+  );
 
   const pulseRingStyle = useAnimatedStyle(() => ({
     borderColor: interpolateColor(
@@ -143,6 +181,19 @@ export const ActivitiesScreen = () => {
     };
   }, [registerFocusHandler, scrollPickerIntoViewAndPulse]);
 
+  const handlePingResponse = useCallback(
+    async (ping: IncomingActivationPing, response: ActivationPingResponse) => {
+      const result = await respondToPing(ping.id, response);
+
+      await Promise.all([refetchIncomingPings(), refetchOutgoingSummary()]);
+
+      if (response === "yes" && result.ok && result.activityGroupId) {
+        router.push(routes.group(result.activityGroupId));
+      }
+    },
+    [refetchIncomingPings, refetchOutgoingSummary, respondToPing, router],
+  );
+
   const header = useMemo(
     () => (
       <View ref={headerStackRef} style={styles.headerStack}>
@@ -156,6 +207,20 @@ export const ActivitiesScreen = () => {
           eyebrow={LL.activities.activate.heroEyebrow()}
           title={LL.activities.activate.heroTitle()}
         />
+
+        {isAuthenticated && visibleIncomingPings.length > 0 ? (
+          <Panel variant="muted" style={styles.pingsPanel}>
+            <UiText variant="panelTitle">{LL.activities.pings.title()}</UiText>
+            {visibleIncomingPings.map((ping) => (
+              <IncomingPingCard
+                key={ping.id}
+                disabled={respondingToPing}
+                onRespond={handlePingResponse}
+                ping={ping}
+              />
+            ))}
+          </Panel>
+        ) : null}
 
         <View ref={pickerWrapRef} collapsable={false}>
           <Animated.View style={[styles.pickerEmphasis, pulseRingStyle]}>
@@ -187,6 +252,18 @@ export const ActivitiesScreen = () => {
             {interestFlow.state.activation.message}
           </UiText>
         </Panel>
+
+        {isAuthenticated && visibleOutgoingActivations.length > 0 ? (
+          <Panel variant="plain" style={styles.outgoingPanel}>
+            <UiText variant="panelTitle">{LL.activities.outgoing.title()}</UiText>
+            {visibleOutgoingActivations.map((activation) => (
+              <OutgoingActivationCard
+                activation={activation}
+                key={activation.activationId}
+              />
+            ))}
+          </Panel>
+        ) : null}
       </View>
     ),
     [
@@ -194,14 +271,21 @@ export const ActivitiesScreen = () => {
       activationComplete,
       cityContext.city.name,
       handleSelectInterest,
+      handlePingResponse,
       interests,
+      isAuthenticated,
       interestFlow.state.activation.message,
       pulseRingStyle,
+      respondingToPing,
       selectedInterest?.id,
       styles.headerStack,
+      styles.outgoingPanel,
       styles.pickerEmphasis,
       styles.pickerPanel,
+      styles.pingsPanel,
       styles.statusPanel,
+      visibleIncomingPings,
+      visibleOutgoingActivations,
     ],
   );
 
@@ -220,6 +304,108 @@ export const ActivitiesScreen = () => {
         style={styles.list}
       />
     </Screen>
+  );
+};
+
+type IncomingPingCardProps = {
+  disabled: boolean;
+  onRespond: (
+    ping: IncomingActivationPing,
+    response: ActivationPingResponse,
+  ) => Promise<void>;
+  ping: IncomingActivationPing;
+};
+
+const IncomingPingCard = ({
+  disabled,
+  onRespond,
+  ping,
+}: IncomingPingCardProps) => {
+  const { LL } = useI18n();
+  const { theme } = useBuzzTheme();
+  const styles = useMemo(() => createPingCardStyles(theme), [theme]);
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.copyStack}>
+        <UiText variant="feedback" style={styles.title}>
+          {LL.activities.pings.body({
+            interest: ping.interestName,
+            name: ping.senderName,
+          })}
+        </UiText>
+      </View>
+
+      <View style={styles.actionRow}>
+        <Button
+          disabled={disabled}
+          label={
+            disabled
+              ? LL.activities.pings.responding()
+              : LL.activities.pings.yes()
+          }
+          onPress={() => {
+            void onRespond(ping, "yes");
+          }}
+          style={styles.primaryAction}
+          textStyle={styles.actionText}
+          variant="primary"
+        />
+        <Button
+          disabled={disabled}
+          label={LL.activities.pings.maybe()}
+          onPress={() => {
+            void onRespond(ping, "maybe");
+          }}
+          style={styles.secondaryAction}
+          textStyle={styles.actionText}
+          variant="tonal"
+        />
+        <Button
+          disabled={disabled}
+          label={LL.activities.pings.no()}
+          onPress={() => {
+            void onRespond(ping, "no");
+          }}
+          style={styles.secondaryAction}
+          textStyle={styles.actionText}
+          variant="plain"
+        />
+      </View>
+    </View>
+  );
+};
+
+const OutgoingActivationCard = ({
+  activation,
+}: {
+  activation: OutgoingActivationSummary;
+}) => {
+  const { LL } = useI18n();
+  const { theme } = useBuzzTheme();
+  const styles = useMemo(() => createOutgoingCardStyles(theme), [theme]);
+  const summary = activation.responseSummary;
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.titleRow}>
+        <UiText variant="feedback" style={styles.title}>
+          {activation.interestName}
+        </UiText>
+        {activation.activityGroupId ? (
+          <UiText variant="status" style={styles.readyBadge}>
+            {LL.activities.outgoing.groupReady()}
+          </UiText>
+        ) : null}
+      </View>
+      <UiText variant="panelBody" style={styles.summary}>
+        {LL.activities.outgoing.summary({
+          maybe: summary.maybe,
+          pending: summary.pending,
+          yes: summary.yes,
+        })}
+      </UiText>
+    </View>
   );
 };
 
@@ -257,6 +443,88 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     },
     statusPanel: {
       gap: spacing[3],
+    },
+    pingsPanel: {
+      gap: spacing[4],
+    },
+    outgoingPanel: {
+      gap: spacing[3],
+    },
+  });
+};
+
+const createPingCardStyles = (theme: BuzzTheme) => {
+  const { colors, radii, spacing } = theme;
+
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radii.lg,
+      gap: spacing[3],
+      padding: spacing[4],
+    },
+    copyStack: {
+      gap: spacing[1],
+    },
+    title: {
+      color: colors.text,
+      fontSize: theme.fontSizes.md,
+      lineHeight: theme.lineHeights.tight,
+    },
+    actionRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing[2],
+    },
+    primaryAction: {
+      flexGrow: 1,
+      minHeight: 42,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+    },
+    secondaryAction: {
+      flexGrow: 1,
+      minHeight: 42,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+    },
+    actionText: {
+      fontSize: theme.fontSizes.xs,
+    },
+  });
+};
+
+const createOutgoingCardStyles = (theme: BuzzTheme) => {
+  const { colors, radii, spacing } = theme;
+
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.background,
+      borderRadius: radii.lg,
+      gap: spacing[2],
+      padding: spacing[4],
+    },
+    titleRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: spacing[2],
+      justifyContent: "space-between",
+    },
+    title: {
+      color: colors.text,
+      flex: 1,
+      fontSize: theme.fontSizes.md,
+    },
+    readyBadge: {
+      backgroundColor: colors.warningSoft,
+      borderRadius: radii.full,
+      color: colors.text,
+      overflow: "hidden",
+      paddingHorizontal: spacing[2],
+      paddingVertical: spacing[1],
+    },
+    summary: {
+      color: colors.textMuted,
     },
   });
 };

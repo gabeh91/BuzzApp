@@ -357,6 +357,21 @@ const en = {
         "Turn it on when you want us to look for a small plan with the right people.",
       bodyEmpty: "Start with something that feels easy to say yes to.",
     },
+    pings: {
+      title: "People are open now",
+      body: "{name:string} is also open to {interest:string}.",
+      yes: "I'm interested",
+      maybe: "Maybe",
+      no: "Not this one",
+      responding: "Updating...",
+    },
+    outgoing: {
+      title: "Your active pings",
+      empty: "Your recent pings will appear here.",
+      summary:
+        "{yes:number} interested · {maybe:number} maybe · {pending:number} pending",
+      groupReady: "Group ready",
+    },
     plans: {
       title: "Plans",
       active: "{plan:string}",
@@ -374,6 +389,10 @@ const en = {
     groups: {
       title: "Group chats",
       empty: "Group chats will appear after a plan starts.",
+      loading: "Loading group chats...",
+      members: "{count:number} people",
+      unread: "{count:number} unread",
+      noMessages: "No messages yet.",
     },
   },
   profile: {

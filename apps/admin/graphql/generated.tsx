@@ -26,6 +26,247 @@ export type Scalars = {
   UUID: { input: string; output: string; }
 };
 
+export type ActivationPingEvents = Node & {
+  actor?: Maybe<Profiles>;
+  actorId?: Maybe<Scalars['UUID']['output']>;
+  createdAt: Scalars['Datetime']['output'];
+  eventType: Scalars['String']['output'];
+  id: Scalars['UUID']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  payload: Scalars['JSON']['output'];
+  ping?: Maybe<ActivationPings>;
+  pingId: Scalars['UUID']['output'];
+};
+
+export type ActivationPingEventsConnection = {
+  edges: Array<ActivationPingEventsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type ActivationPingEventsDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivationPingEvents>;
+};
+
+export type ActivationPingEventsEdge = {
+  cursor: Scalars['String']['output'];
+  node: ActivationPingEvents;
+};
+
+export type ActivationPingEventsFilter = {
+  actorId?: InputMaybe<UuidFilter>;
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<ActivationPingEventsFilter>>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  eventType?: InputMaybe<StringFilter>;
+  id?: InputMaybe<UuidFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<ActivationPingEventsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<ActivationPingEventsFilter>>;
+  pingId?: InputMaybe<UuidFilter>;
+};
+
+export type ActivationPingEventsInsertInput = {
+  actorId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  eventType?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  payload?: InputMaybe<Scalars['JSON']['input']>;
+  pingId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type ActivationPingEventsInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivationPingEvents>;
+};
+
+export type ActivationPingEventsOrderBy = {
+  actorId?: InputMaybe<OrderByDirection>;
+  createdAt?: InputMaybe<OrderByDirection>;
+  eventType?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  pingId?: InputMaybe<OrderByDirection>;
+};
+
+export type ActivationPingEventsUpdateInput = {
+  actorId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  eventType?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  payload?: InputMaybe<Scalars['JSON']['input']>;
+  pingId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type ActivationPingEventsUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivationPingEvents>;
+};
+
+export type ActivationPings = Node & {
+  activation?: Maybe<InterestActivations>;
+  activationId: Scalars['UUID']['output'];
+  activationPingEventsCollection?: Maybe<ActivationPingEventsConnection>;
+  activityGroup?: Maybe<ActivityGroups>;
+  activityGroupId?: Maybe<Scalars['UUID']['output']>;
+  activityGroupMembersCollection?: Maybe<ActivityGroupMembersConnection>;
+  city: Cities;
+  cityId: Scalars['UUID']['output'];
+  createdAt: Scalars['Datetime']['output'];
+  deliveredAt?: Maybe<Scalars['Datetime']['output']>;
+  expiresAt: Scalars['Datetime']['output'];
+  id: Scalars['UUID']['output'];
+  interest?: Maybe<Interests>;
+  interestId: Scalars['UUID']['output'];
+  matchCandidate?: Maybe<MatchCandidates>;
+  matchCandidateId?: Maybe<Scalars['UUID']['output']>;
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  recipient?: Maybe<Profiles>;
+  recipientId: Scalars['UUID']['output'];
+  respondedAt?: Maybe<Scalars['Datetime']['output']>;
+  sender?: Maybe<Profiles>;
+  senderId: Scalars['UUID']['output'];
+  status: Scalars['String']['output'];
+  updatedAt: Scalars['Datetime']['output'];
+};
+
+
+export type ActivationPingsActivationPingEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingEventsOrderBy>>;
+};
+
+
+export type ActivationPingsActivityGroupMembersCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivityGroupMembersFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivityGroupMembersOrderBy>>;
+};
+
+export type ActivationPingsConnection = {
+  edges: Array<ActivationPingsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type ActivationPingsDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivationPings>;
+};
+
+export type ActivationPingsEdge = {
+  cursor: Scalars['String']['output'];
+  node: ActivationPings;
+};
+
+export type ActivationPingsFilter = {
+  activationId?: InputMaybe<UuidFilter>;
+  activityGroupId?: InputMaybe<UuidFilter>;
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<ActivationPingsFilter>>;
+  cityId?: InputMaybe<UuidFilter>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  deliveredAt?: InputMaybe<DatetimeFilter>;
+  expiresAt?: InputMaybe<DatetimeFilter>;
+  id?: InputMaybe<UuidFilter>;
+  interestId?: InputMaybe<UuidFilter>;
+  matchCandidateId?: InputMaybe<UuidFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<ActivationPingsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<ActivationPingsFilter>>;
+  recipientId?: InputMaybe<UuidFilter>;
+  respondedAt?: InputMaybe<DatetimeFilter>;
+  senderId?: InputMaybe<UuidFilter>;
+  status?: InputMaybe<StringFilter>;
+  updatedAt?: InputMaybe<DatetimeFilter>;
+};
+
+export type ActivationPingsInsertInput = {
+  activationId?: InputMaybe<Scalars['UUID']['input']>;
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
+  cityId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  deliveredAt?: InputMaybe<Scalars['Datetime']['input']>;
+  expiresAt?: InputMaybe<Scalars['Datetime']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  interestId?: InputMaybe<Scalars['UUID']['input']>;
+  matchCandidateId?: InputMaybe<Scalars['UUID']['input']>;
+  recipientId?: InputMaybe<Scalars['UUID']['input']>;
+  respondedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  senderId?: InputMaybe<Scalars['UUID']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+};
+
+export type ActivationPingsInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivationPings>;
+};
+
+export type ActivationPingsOrderBy = {
+  activationId?: InputMaybe<OrderByDirection>;
+  activityGroupId?: InputMaybe<OrderByDirection>;
+  cityId?: InputMaybe<OrderByDirection>;
+  createdAt?: InputMaybe<OrderByDirection>;
+  deliveredAt?: InputMaybe<OrderByDirection>;
+  expiresAt?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  interestId?: InputMaybe<OrderByDirection>;
+  matchCandidateId?: InputMaybe<OrderByDirection>;
+  recipientId?: InputMaybe<OrderByDirection>;
+  respondedAt?: InputMaybe<OrderByDirection>;
+  senderId?: InputMaybe<OrderByDirection>;
+  status?: InputMaybe<OrderByDirection>;
+  updatedAt?: InputMaybe<OrderByDirection>;
+};
+
+export type ActivationPingsUpdateInput = {
+  activationId?: InputMaybe<Scalars['UUID']['input']>;
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
+  cityId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  deliveredAt?: InputMaybe<Scalars['Datetime']['input']>;
+  expiresAt?: InputMaybe<Scalars['Datetime']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  interestId?: InputMaybe<Scalars['UUID']['input']>;
+  matchCandidateId?: InputMaybe<Scalars['UUID']['input']>;
+  recipientId?: InputMaybe<Scalars['UUID']['input']>;
+  respondedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  senderId?: InputMaybe<Scalars['UUID']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+};
+
+export type ActivationPingsUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ActivationPings>;
+};
+
 export type ActivityGroupCheckins = Node & {
   activityGroup: ActivityGroups;
   activityGroupId: Scalars['UUID']['output'];
@@ -142,6 +383,8 @@ export type ActivityGroupMembers = Node & {
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
   rsvpStatus: Scalars['String']['output'];
+  sourcePing?: Maybe<ActivationPings>;
+  sourcePingId?: Maybe<Scalars['UUID']['output']>;
   user?: Maybe<Profiles>;
   userId: Scalars['UUID']['output'];
 };
@@ -178,6 +421,7 @@ export type ActivityGroupMembersFilter = {
   /** Returns true if at least one of its inner filters is true, otherwise returns false */
   or?: InputMaybe<Array<ActivityGroupMembersFilter>>;
   rsvpStatus?: InputMaybe<StringFilter>;
+  sourcePingId?: InputMaybe<UuidFilter>;
   userId?: InputMaybe<UuidFilter>;
 };
 
@@ -189,6 +433,7 @@ export type ActivityGroupMembersInsertInput = {
   feedbackCompletedAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   rsvpStatus?: InputMaybe<Scalars['String']['input']>;
+  sourcePingId?: InputMaybe<Scalars['UUID']['input']>;
   userId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
@@ -207,6 +452,7 @@ export type ActivityGroupMembersOrderBy = {
   feedbackCompletedAt?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
   rsvpStatus?: InputMaybe<OrderByDirection>;
+  sourcePingId?: InputMaybe<OrderByDirection>;
   userId?: InputMaybe<OrderByDirection>;
 };
 
@@ -218,6 +464,7 @@ export type ActivityGroupMembersUpdateInput = {
   feedbackCompletedAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   rsvpStatus?: InputMaybe<Scalars['String']['input']>;
+  sourcePingId?: InputMaybe<Scalars['UUID']['input']>;
   userId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
@@ -229,6 +476,7 @@ export type ActivityGroupMembersUpdateResponse = {
 };
 
 export type ActivityGroups = Node & {
+  activationPingsCollection?: Maybe<ActivationPingsConnection>;
   activityGroupCheckinsCollection?: Maybe<ActivityGroupCheckinsConnection>;
   activityGroupMembersCollection?: Maybe<ActivityGroupMembersConnection>;
   activityPlansCollection?: Maybe<ActivityPlansConnection>;
@@ -250,6 +498,17 @@ export type ActivityGroups = Node & {
   reportsCollection?: Maybe<ReportsConnection>;
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
+};
+
+
+export type ActivityGroupsActivationPingsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingsOrderBy>>;
 };
 
 
@@ -1269,12 +1528,14 @@ export type BusinessesUpdateResponse = {
 };
 
 export type Cities = Node & {
+  activationPingsCollection?: Maybe<ActivationPingsConnection>;
   activityGroupsCollection?: Maybe<ActivityGroupsConnection>;
   activityPlansCollection?: Maybe<ActivityPlansConnection>;
   businessesCollection?: Maybe<BusinessesConnection>;
   cityFeatureFlagsCollection?: Maybe<CityFeatureFlagsConnection>;
   cityInterestsCollection?: Maybe<CityInterestsConnection>;
   citySettings?: Maybe<CitySettings>;
+  connectionRequestsCollection?: Maybe<ConnectionRequestsConnection>;
   countryCode: Scalars['String']['output'];
   createdAt: Scalars['Datetime']['output'];
   currency: Scalars['String']['output'];
@@ -1295,6 +1556,17 @@ export type Cities = Node & {
   timezone: Scalars['String']['output'];
   updatedAt: Scalars['Datetime']['output'];
   userSuburbMatchesCollection?: Maybe<UserSuburbMatchesConnection>;
+};
+
+
+export type CitiesActivationPingsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingsOrderBy>>;
 };
 
 
@@ -1350,6 +1622,17 @@ export type CitiesCityInterestsCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<CityInterestsOrderBy>>;
+};
+
+
+export type CitiesConnectionRequestsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ConnectionRequestsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ConnectionRequestsOrderBy>>;
 };
 
 
@@ -1816,6 +2099,114 @@ export type CitySettingsUpdateResponse = {
   affectedCount: Scalars['Int']['output'];
   /** Array of records impacted by the mutation */
   records: Array<CitySettings>;
+};
+
+export type ConnectionRequests = Node & {
+  city?: Maybe<Cities>;
+  cityId?: Maybe<Scalars['UUID']['output']>;
+  createdAt: Scalars['Datetime']['output'];
+  id: Scalars['UUID']['output'];
+  message?: Maybe<Scalars['String']['output']>;
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  recipient?: Maybe<Profiles>;
+  recipientId: Scalars['UUID']['output'];
+  requester?: Maybe<Profiles>;
+  requesterId: Scalars['UUID']['output'];
+  respondedAt?: Maybe<Scalars['Datetime']['output']>;
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  updatedAt: Scalars['Datetime']['output'];
+};
+
+export type ConnectionRequestsConnection = {
+  edges: Array<ConnectionRequestsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type ConnectionRequestsDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ConnectionRequests>;
+};
+
+export type ConnectionRequestsEdge = {
+  cursor: Scalars['String']['output'];
+  node: ConnectionRequests;
+};
+
+export type ConnectionRequestsFilter = {
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<ConnectionRequestsFilter>>;
+  cityId?: InputMaybe<UuidFilter>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  id?: InputMaybe<UuidFilter>;
+  message?: InputMaybe<StringFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<ConnectionRequestsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<ConnectionRequestsFilter>>;
+  recipientId?: InputMaybe<UuidFilter>;
+  requesterId?: InputMaybe<UuidFilter>;
+  respondedAt?: InputMaybe<DatetimeFilter>;
+  source?: InputMaybe<StringFilter>;
+  status?: InputMaybe<StringFilter>;
+  updatedAt?: InputMaybe<DatetimeFilter>;
+};
+
+export type ConnectionRequestsInsertInput = {
+  cityId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  message?: InputMaybe<Scalars['String']['input']>;
+  recipientId?: InputMaybe<Scalars['UUID']['input']>;
+  requesterId?: InputMaybe<Scalars['UUID']['input']>;
+  respondedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  source?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+};
+
+export type ConnectionRequestsInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ConnectionRequests>;
+};
+
+export type ConnectionRequestsOrderBy = {
+  cityId?: InputMaybe<OrderByDirection>;
+  createdAt?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  message?: InputMaybe<OrderByDirection>;
+  recipientId?: InputMaybe<OrderByDirection>;
+  requesterId?: InputMaybe<OrderByDirection>;
+  respondedAt?: InputMaybe<OrderByDirection>;
+  source?: InputMaybe<OrderByDirection>;
+  status?: InputMaybe<OrderByDirection>;
+  updatedAt?: InputMaybe<OrderByDirection>;
+};
+
+export type ConnectionRequestsUpdateInput = {
+  cityId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  message?: InputMaybe<Scalars['String']['input']>;
+  recipientId?: InputMaybe<Scalars['UUID']['input']>;
+  requesterId?: InputMaybe<Scalars['UUID']['input']>;
+  respondedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  source?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+};
+
+export type ConnectionRequestsUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ConnectionRequests>;
 };
 
 /** Boolean expression comparing fields on type "Date" */
@@ -2387,6 +2778,7 @@ export type GroupMessages = Node & {
   createdAt: Scalars['Datetime']['output'];
   id: Scalars['UUID']['output'];
   messageType: Scalars['String']['output'];
+  metadata: Scalars['JSON']['output'];
   moderationStatus: Scalars['String']['output'];
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
@@ -2434,6 +2826,7 @@ export type GroupMessagesInsertInput = {
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   messageType?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   moderationStatus?: InputMaybe<Scalars['String']['input']>;
   senderId?: InputMaybe<Scalars['UUID']['input']>;
 };
@@ -2461,6 +2854,7 @@ export type GroupMessagesUpdateInput = {
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   messageType?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
   moderationStatus?: InputMaybe<Scalars['String']['input']>;
   senderId?: InputMaybe<Scalars['UUID']['input']>;
 };
@@ -2499,6 +2893,7 @@ export type IntListFilter = {
 };
 
 export type InterestActivations = Node & {
+  activationPingsCollection?: Maybe<ActivationPingsConnection>;
   availabilityWindow: Scalars['String']['output'];
   city?: Maybe<Cities>;
   cityId?: Maybe<Scalars['UUID']['output']>;
@@ -2516,6 +2911,17 @@ export type InterestActivations = Node & {
   urgency: Scalars['String']['output'];
   user?: Maybe<Profiles>;
   userId: Scalars['UUID']['output'];
+};
+
+
+export type InterestActivationsActivationPingsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingsOrderBy>>;
 };
 
 
@@ -2624,6 +3030,7 @@ export type InterestActivationsUpdateResponse = {
 };
 
 export type Interests = Node & {
+  activationPingsCollection?: Maybe<ActivationPingsConnection>;
   activityGroupsCollection?: Maybe<ActivityGroupsConnection>;
   activityPlansCollection?: Maybe<ActivityPlansConnection>;
   category: Scalars['String']['output'];
@@ -2638,6 +3045,17 @@ export type Interests = Node & {
   slug: Scalars['String']['output'];
   starterPlansCollection?: Maybe<StarterPlansConnection>;
   userInterestsCollection?: Maybe<UserInterestsConnection>;
+};
+
+
+export type InterestsActivationPingsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingsOrderBy>>;
 };
 
 
@@ -3037,6 +3455,7 @@ export type LandingPlansUpdateResponse = {
 export type MatchCandidates = Node & {
   activation?: Maybe<InterestActivations>;
   activationId: Scalars['UUID']['output'];
+  activationPingsCollection?: Maybe<ActivationPingsConnection>;
   activityGroup?: Maybe<ActivityGroups>;
   activityGroupId?: Maybe<Scalars['UUID']['output']>;
   createdAt: Scalars['Datetime']['output'];
@@ -3050,6 +3469,17 @@ export type MatchCandidates = Node & {
   score: Scalars['BigFloat']['output'];
   source: Scalars['String']['output'];
   status: Scalars['String']['output'];
+};
+
+
+export type MatchCandidatesActivationPingsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingsOrderBy>>;
 };
 
 export type MatchCandidatesConnection = {
@@ -3246,6 +3676,10 @@ export type ModerationActionsUpdateResponse = {
 /** The root type for creating and mutating data */
 export type Mutation = {
   activateInterest?: Maybe<Scalars['JSON']['output']>;
+  /** Deletes zero or more records from the `ActivationPingEvents` collection */
+  deleteFromActivationPingEventsCollection: ActivationPingEventsDeleteResponse;
+  /** Deletes zero or more records from the `ActivationPings` collection */
+  deleteFromActivationPingsCollection: ActivationPingsDeleteResponse;
   /** Deletes zero or more records from the `ActivityGroupCheckins` collection */
   deleteFromActivityGroupCheckinsCollection: ActivityGroupCheckinsDeleteResponse;
   /** Deletes zero or more records from the `ActivityGroupMembers` collection */
@@ -3276,6 +3710,8 @@ export type Mutation = {
   deleteFromCityInterestsCollection: CityInterestsDeleteResponse;
   /** Deletes zero or more records from the `CitySettings` collection */
   deleteFromCitySettingsCollection: CitySettingsDeleteResponse;
+  /** Deletes zero or more records from the `ConnectionRequests` collection */
+  deleteFromConnectionRequestsCollection: ConnectionRequestsDeleteResponse;
   /** Deletes zero or more records from the `EventInterests` collection */
   deleteFromEventInterestsCollection: EventInterestsDeleteResponse;
   /** Deletes zero or more records from the `Events` collection */
@@ -3300,10 +3736,14 @@ export type Mutation = {
   deleteFromMatchCandidatesCollection: MatchCandidatesDeleteResponse;
   /** Deletes zero or more records from the `ModerationActions` collection */
   deleteFromModerationActionsCollection: ModerationActionsDeleteResponse;
+  /** Deletes zero or more records from the `NotificationOutbox` collection */
+  deleteFromNotificationOutboxCollection: NotificationOutboxDeleteResponse;
   /** Deletes zero or more records from the `PlanRecipes` collection */
   deleteFromPlanRecipesCollection: PlanRecipesDeleteResponse;
   /** Deletes zero or more records from the `PlanSafetyChecks` collection */
   deleteFromPlanSafetyChecksCollection: PlanSafetyChecksDeleteResponse;
+  /** Deletes zero or more records from the `ProfileDevices` collection */
+  deleteFromProfileDevicesCollection: ProfileDevicesDeleteResponse;
   /** Deletes zero or more records from the `Profiles` collection */
   deleteFromProfilesCollection: ProfilesDeleteResponse;
   /** Deletes zero or more records from the `RepeatConnectionPreferences` collection */
@@ -3335,6 +3775,10 @@ export type Mutation = {
   disablelongtransactions?: Maybe<Scalars['String']['output']>;
   enablelongtransactions?: Maybe<Scalars['String']['output']>;
   gettransactionid?: Maybe<Scalars['Opaque']['output']>;
+  /** Adds one or more `ActivationPingEvents` records to the collection */
+  insertIntoActivationPingEventsCollection?: Maybe<ActivationPingEventsInsertResponse>;
+  /** Adds one or more `ActivationPings` records to the collection */
+  insertIntoActivationPingsCollection?: Maybe<ActivationPingsInsertResponse>;
   /** Adds one or more `ActivityGroupCheckins` records to the collection */
   insertIntoActivityGroupCheckinsCollection?: Maybe<ActivityGroupCheckinsInsertResponse>;
   /** Adds one or more `ActivityGroupMembers` records to the collection */
@@ -3365,6 +3809,8 @@ export type Mutation = {
   insertIntoCityInterestsCollection?: Maybe<CityInterestsInsertResponse>;
   /** Adds one or more `CitySettings` records to the collection */
   insertIntoCitySettingsCollection?: Maybe<CitySettingsInsertResponse>;
+  /** Adds one or more `ConnectionRequests` records to the collection */
+  insertIntoConnectionRequestsCollection?: Maybe<ConnectionRequestsInsertResponse>;
   /** Adds one or more `EventInterests` records to the collection */
   insertIntoEventInterestsCollection?: Maybe<EventInterestsInsertResponse>;
   /** Adds one or more `Events` records to the collection */
@@ -3389,10 +3835,14 @@ export type Mutation = {
   insertIntoMatchCandidatesCollection?: Maybe<MatchCandidatesInsertResponse>;
   /** Adds one or more `ModerationActions` records to the collection */
   insertIntoModerationActionsCollection?: Maybe<ModerationActionsInsertResponse>;
+  /** Adds one or more `NotificationOutbox` records to the collection */
+  insertIntoNotificationOutboxCollection?: Maybe<NotificationOutboxInsertResponse>;
   /** Adds one or more `PlanRecipes` records to the collection */
   insertIntoPlanRecipesCollection?: Maybe<PlanRecipesInsertResponse>;
   /** Adds one or more `PlanSafetyChecks` records to the collection */
   insertIntoPlanSafetyChecksCollection?: Maybe<PlanSafetyChecksInsertResponse>;
+  /** Adds one or more `ProfileDevices` records to the collection */
+  insertIntoProfileDevicesCollection?: Maybe<ProfileDevicesInsertResponse>;
   /** Adds one or more `Profiles` records to the collection */
   insertIntoProfilesCollection?: Maybe<ProfilesInsertResponse>;
   /** Adds one or more `RepeatConnectionPreferences` records to the collection */
@@ -3424,8 +3874,14 @@ export type Mutation = {
   longtransactionsenabled?: Maybe<Scalars['Boolean']['output']>;
   postgisExtensionsUpgrade?: Maybe<Scalars['String']['output']>;
   postgisSelectivity?: Maybe<Scalars['Float']['output']>;
+  respondToActivationPing?: Maybe<Scalars['JSON']['output']>;
+  sendConnectionRequest?: Maybe<Scalars['JSON']['output']>;
   stClusterkmeans?: Maybe<Scalars['Int']['output']>;
   stSymmetricdifference?: Maybe<Scalars['Opaque']['output']>;
+  /** Updates zero or more records in the `ActivationPingEvents` collection */
+  updateActivationPingEventsCollection: ActivationPingEventsUpdateResponse;
+  /** Updates zero or more records in the `ActivationPings` collection */
+  updateActivationPingsCollection: ActivationPingsUpdateResponse;
   /** Updates zero or more records in the `ActivityGroupCheckins` collection */
   updateActivityGroupCheckinsCollection: ActivityGroupCheckinsUpdateResponse;
   /** Updates zero or more records in the `ActivityGroupMembers` collection */
@@ -3456,6 +3912,8 @@ export type Mutation = {
   updateCityInterestsCollection: CityInterestsUpdateResponse;
   /** Updates zero or more records in the `CitySettings` collection */
   updateCitySettingsCollection: CitySettingsUpdateResponse;
+  /** Updates zero or more records in the `ConnectionRequests` collection */
+  updateConnectionRequestsCollection: ConnectionRequestsUpdateResponse;
   /** Updates zero or more records in the `EventInterests` collection */
   updateEventInterestsCollection: EventInterestsUpdateResponse;
   /** Updates zero or more records in the `Events` collection */
@@ -3480,10 +3938,14 @@ export type Mutation = {
   updateMatchCandidatesCollection: MatchCandidatesUpdateResponse;
   /** Updates zero or more records in the `ModerationActions` collection */
   updateModerationActionsCollection: ModerationActionsUpdateResponse;
+  /** Updates zero or more records in the `NotificationOutbox` collection */
+  updateNotificationOutboxCollection: NotificationOutboxUpdateResponse;
   /** Updates zero or more records in the `PlanRecipes` collection */
   updatePlanRecipesCollection: PlanRecipesUpdateResponse;
   /** Updates zero or more records in the `PlanSafetyChecks` collection */
   updatePlanSafetyChecksCollection: PlanSafetyChecksUpdateResponse;
+  /** Updates zero or more records in the `ProfileDevices` collection */
+  updateProfileDevicesCollection: ProfileDevicesUpdateResponse;
   /** Updates zero or more records in the `Profiles` collection */
   updateProfilesCollection: ProfilesUpdateResponse;
   /** Updates zero or more records in the `RepeatConnectionPreferences` collection */
@@ -3519,6 +3981,20 @@ export type Mutation = {
 /** The root type for creating and mutating data */
 export type MutationActivateInterestArgs = {
   interestId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromActivationPingEventsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ActivationPingEventsFilter>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromActivationPingsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ActivationPingsFilter>;
 };
 
 
@@ -3628,6 +4104,13 @@ export type MutationDeleteFromCitySettingsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationDeleteFromConnectionRequestsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ConnectionRequestsFilter>;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationDeleteFromEventInterestsCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<EventInterestsFilter>;
@@ -3712,6 +4195,13 @@ export type MutationDeleteFromModerationActionsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationDeleteFromNotificationOutboxCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<NotificationOutboxFilter>;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationDeleteFromPlanRecipesCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<PlanRecipesFilter>;
@@ -3722,6 +4212,13 @@ export type MutationDeleteFromPlanRecipesCollectionArgs = {
 export type MutationDeleteFromPlanSafetyChecksCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<PlanSafetyChecksFilter>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromProfileDevicesCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ProfileDevicesFilter>;
 };
 
 
@@ -3824,6 +4321,18 @@ export type MutationDeleteFromUserVerificationsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationInsertIntoActivationPingEventsCollectionArgs = {
+  objects: Array<ActivationPingEventsInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationInsertIntoActivationPingsCollectionArgs = {
+  objects: Array<ActivationPingsInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationInsertIntoActivityGroupCheckinsCollectionArgs = {
   objects: Array<ActivityGroupCheckinsInsertInput>;
 };
@@ -3914,6 +4423,12 @@ export type MutationInsertIntoCitySettingsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationInsertIntoConnectionRequestsCollectionArgs = {
+  objects: Array<ConnectionRequestsInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationInsertIntoEventInterestsCollectionArgs = {
   objects: Array<EventInterestsInsertInput>;
 };
@@ -3986,6 +4501,12 @@ export type MutationInsertIntoModerationActionsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationInsertIntoNotificationOutboxCollectionArgs = {
+  objects: Array<NotificationOutboxInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationInsertIntoPlanRecipesCollectionArgs = {
   objects: Array<PlanRecipesInsertInput>;
 };
@@ -3994,6 +4515,12 @@ export type MutationInsertIntoPlanRecipesCollectionArgs = {
 /** The root type for creating and mutating data */
 export type MutationInsertIntoPlanSafetyChecksCollectionArgs = {
   objects: Array<PlanSafetyChecksInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationInsertIntoProfileDevicesCollectionArgs = {
+  objects: Array<ProfileDevicesInsertInput>;
 };
 
 
@@ -4091,6 +4618,20 @@ export type MutationPostgisSelectivityArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationRespondToActivationPingArgs = {
+  pingId: Scalars['UUID']['input'];
+  response: Scalars['String']['input'];
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationSendConnectionRequestArgs = {
+  message?: InputMaybe<Scalars['String']['input']>;
+  recipientId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationStClusterkmeansArgs = {
   geom: Scalars['Opaque']['input'];
   k: Scalars['Int']['input'];
@@ -4102,6 +4643,22 @@ export type MutationStClusterkmeansArgs = {
 export type MutationStSymmetricdifferenceArgs = {
   geom1: Scalars['Opaque']['input'];
   geom2: Scalars['Opaque']['input'];
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateActivationPingEventsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ActivationPingEventsFilter>;
+  set: ActivationPingEventsUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateActivationPingsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ActivationPingsFilter>;
+  set: ActivationPingsUpdateInput;
 };
 
 
@@ -4226,6 +4783,14 @@ export type MutationUpdateCitySettingsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationUpdateConnectionRequestsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ConnectionRequestsFilter>;
+  set: ConnectionRequestsUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationUpdateEventInterestsCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<EventInterestsFilter>;
@@ -4322,6 +4887,14 @@ export type MutationUpdateModerationActionsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationUpdateNotificationOutboxCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<NotificationOutboxFilter>;
+  set: NotificationOutboxUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationUpdatePlanRecipesCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<PlanRecipesFilter>;
@@ -4334,6 +4907,14 @@ export type MutationUpdatePlanSafetyChecksCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<PlanSafetyChecksFilter>;
   set: PlanSafetyChecksUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateProfileDevicesCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<ProfileDevicesFilter>;
+  set: ProfileDevicesUpdateInput;
 };
 
 
@@ -4461,6 +5042,105 @@ export type MutationUpsertBuzzProfileArgs = {
 export type Node = {
   /** Retrieves a record by `ID` */
   nodeId: Scalars['ID']['output'];
+};
+
+export type NotificationOutbox = Node & {
+  createdAt: Scalars['Datetime']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  id: Scalars['UUID']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  payload: Scalars['JSON']['output'];
+  providerMessageId?: Maybe<Scalars['String']['output']>;
+  sentAt?: Maybe<Scalars['Datetime']['output']>;
+  status: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+  user?: Maybe<Profiles>;
+  userId: Scalars['UUID']['output'];
+};
+
+export type NotificationOutboxConnection = {
+  edges: Array<NotificationOutboxEdge>;
+  pageInfo: PageInfo;
+};
+
+export type NotificationOutboxDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<NotificationOutbox>;
+};
+
+export type NotificationOutboxEdge = {
+  cursor: Scalars['String']['output'];
+  node: NotificationOutbox;
+};
+
+export type NotificationOutboxFilter = {
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<NotificationOutboxFilter>>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  error?: InputMaybe<StringFilter>;
+  id?: InputMaybe<UuidFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<NotificationOutboxFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<NotificationOutboxFilter>>;
+  providerMessageId?: InputMaybe<StringFilter>;
+  sentAt?: InputMaybe<DatetimeFilter>;
+  status?: InputMaybe<StringFilter>;
+  type?: InputMaybe<StringFilter>;
+  userId?: InputMaybe<UuidFilter>;
+};
+
+export type NotificationOutboxInsertInput = {
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  error?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  payload?: InputMaybe<Scalars['JSON']['input']>;
+  providerMessageId?: InputMaybe<Scalars['String']['input']>;
+  sentAt?: InputMaybe<Scalars['Datetime']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['String']['input']>;
+  userId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type NotificationOutboxInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<NotificationOutbox>;
+};
+
+export type NotificationOutboxOrderBy = {
+  createdAt?: InputMaybe<OrderByDirection>;
+  error?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  providerMessageId?: InputMaybe<OrderByDirection>;
+  sentAt?: InputMaybe<OrderByDirection>;
+  status?: InputMaybe<OrderByDirection>;
+  type?: InputMaybe<OrderByDirection>;
+  userId?: InputMaybe<OrderByDirection>;
+};
+
+export type NotificationOutboxUpdateInput = {
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  error?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  payload?: InputMaybe<Scalars['JSON']['input']>;
+  providerMessageId?: InputMaybe<Scalars['String']['input']>;
+  sentAt?: InputMaybe<Scalars['Datetime']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['String']['input']>;
+  userId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type NotificationOutboxUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<NotificationOutbox>;
 };
 
 /** Boolean expression comparing fields on type "Opaque" */
@@ -4709,7 +5389,100 @@ export type PlanSafetyChecksUpdateResponse = {
   records: Array<PlanSafetyChecks>;
 };
 
+export type ProfileDevices = Node & {
+  createdAt: Scalars['Datetime']['output'];
+  expoPushToken: Scalars['String']['output'];
+  id: Scalars['UUID']['output'];
+  lastSeenAt: Scalars['Datetime']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  platform: Scalars['String']['output'];
+  pushEnabled: Scalars['Boolean']['output'];
+  user?: Maybe<Profiles>;
+  userId: Scalars['UUID']['output'];
+};
+
+export type ProfileDevicesConnection = {
+  edges: Array<ProfileDevicesEdge>;
+  pageInfo: PageInfo;
+};
+
+export type ProfileDevicesDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ProfileDevices>;
+};
+
+export type ProfileDevicesEdge = {
+  cursor: Scalars['String']['output'];
+  node: ProfileDevices;
+};
+
+export type ProfileDevicesFilter = {
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<ProfileDevicesFilter>>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  expoPushToken?: InputMaybe<StringFilter>;
+  id?: InputMaybe<UuidFilter>;
+  lastSeenAt?: InputMaybe<DatetimeFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<ProfileDevicesFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<ProfileDevicesFilter>>;
+  platform?: InputMaybe<StringFilter>;
+  pushEnabled?: InputMaybe<BooleanFilter>;
+  userId?: InputMaybe<UuidFilter>;
+};
+
+export type ProfileDevicesInsertInput = {
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  expoPushToken?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  lastSeenAt?: InputMaybe<Scalars['Datetime']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  pushEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  userId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type ProfileDevicesInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ProfileDevices>;
+};
+
+export type ProfileDevicesOrderBy = {
+  createdAt?: InputMaybe<OrderByDirection>;
+  expoPushToken?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  lastSeenAt?: InputMaybe<OrderByDirection>;
+  platform?: InputMaybe<OrderByDirection>;
+  pushEnabled?: InputMaybe<OrderByDirection>;
+  userId?: InputMaybe<OrderByDirection>;
+};
+
+export type ProfileDevicesUpdateInput = {
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  expoPushToken?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  lastSeenAt?: InputMaybe<Scalars['Datetime']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  pushEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  userId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type ProfileDevicesUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<ProfileDevices>;
+};
+
 export type Profiles = Node & {
+  activationPingEventsCollection?: Maybe<ActivationPingEventsConnection>;
+  activationPingsCollection?: Maybe<ActivationPingsConnection>;
   activityGroupCheckinsCollection?: Maybe<ActivityGroupCheckinsConnection>;
   activityGroupMembersCollection?: Maybe<ActivityGroupMembersConnection>;
   activityGroupsCollection?: Maybe<ActivityGroupsConnection>;
@@ -4719,9 +5492,13 @@ export type Profiles = Node & {
   blocksCollection?: Maybe<BlocksConnection>;
   businessImpressionsCollection?: Maybe<BusinessImpressionsConnection>;
   city?: Maybe<Cities>;
+  cityArrivedAt?: Maybe<Scalars['Date']['output']>;
   cityId?: Maybe<Scalars['UUID']['output']>;
+  connectionRequestsCollection?: Maybe<ConnectionRequestsConnection>;
   createdAt: Scalars['Datetime']['output'];
+  dateOfBirth?: Maybe<Scalars['Date']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
+  firstName?: Maybe<Scalars['String']['output']>;
   groupInviteEventsCollection?: Maybe<GroupInviteEventsConnection>;
   groupInvitesCollection?: Maybe<GroupInvitesConnection>;
   groupMessagesCollection?: Maybe<GroupMessagesConnection>;
@@ -4733,6 +5510,9 @@ export type Profiles = Node & {
   moderationActionsCollection?: Maybe<ModerationActionsConnection>;
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
+  notificationOutboxCollection?: Maybe<NotificationOutboxConnection>;
+  profileDevicesCollection?: Maybe<ProfileDevicesConnection>;
+  profilePhotoUrl?: Maybe<Scalars['String']['output']>;
   quizAnswers: Scalars['JSON']['output'];
   quizTraits: Scalars['JSON']['output'];
   repeatConnectionPreferencesCollection?: Maybe<RepeatConnectionPreferencesConnection>;
@@ -4746,6 +5526,28 @@ export type Profiles = Node & {
   userSuburbMatchesCollection?: Maybe<UserSuburbMatchesConnection>;
   userVerificationsCollection?: Maybe<UserVerificationsConnection>;
   visible: Scalars['Boolean']['output'];
+};
+
+
+export type ProfilesActivationPingEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingEventsOrderBy>>;
+};
+
+
+export type ProfilesActivationPingsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingsOrderBy>>;
 };
 
 
@@ -4826,6 +5628,17 @@ export type ProfilesBusinessImpressionsCollectionArgs = {
 };
 
 
+export type ProfilesConnectionRequestsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ConnectionRequestsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ConnectionRequestsOrderBy>>;
+};
+
+
 export type ProfilesGroupInviteEventsCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
@@ -4900,6 +5713,28 @@ export type ProfilesModerationActionsCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<ModerationActionsOrderBy>>;
+};
+
+
+export type ProfilesNotificationOutboxCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<NotificationOutboxFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<NotificationOutboxOrderBy>>;
+};
+
+
+export type ProfilesProfileDevicesCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ProfileDevicesFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ProfileDevicesOrderBy>>;
 };
 
 
@@ -4978,9 +5813,12 @@ export type ProfilesFilter = {
   /** Returns true only if all its inner filters are true, otherwise returns false */
   and?: InputMaybe<Array<ProfilesFilter>>;
   bio?: InputMaybe<StringFilter>;
+  cityArrivedAt?: InputMaybe<DateFilter>;
   cityId?: InputMaybe<UuidFilter>;
   createdAt?: InputMaybe<DatetimeFilter>;
+  dateOfBirth?: InputMaybe<DateFilter>;
   displayName?: InputMaybe<StringFilter>;
+  firstName?: InputMaybe<StringFilter>;
   id?: InputMaybe<UuidFilter>;
   lastActiveAt?: InputMaybe<DatetimeFilter>;
   nodeId?: InputMaybe<IdFilter>;
@@ -4988,6 +5826,7 @@ export type ProfilesFilter = {
   not?: InputMaybe<ProfilesFilter>;
   /** Returns true if at least one of its inner filters is true, otherwise returns false */
   or?: InputMaybe<Array<ProfilesFilter>>;
+  profilePhotoUrl?: InputMaybe<StringFilter>;
   settled?: InputMaybe<BooleanFilter>;
   updatedAt?: InputMaybe<DatetimeFilter>;
   visible?: InputMaybe<BooleanFilter>;
@@ -4995,11 +5834,15 @@ export type ProfilesFilter = {
 
 export type ProfilesInsertInput = {
   bio?: InputMaybe<Scalars['String']['input']>;
+  cityArrivedAt?: InputMaybe<Scalars['Date']['input']>;
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  dateOfBirth?: InputMaybe<Scalars['Date']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   lastActiveAt?: InputMaybe<Scalars['Datetime']['input']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   quizAnswers?: InputMaybe<Scalars['JSON']['input']>;
   quizTraits?: InputMaybe<Scalars['JSON']['input']>;
   settled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -5016,11 +5859,15 @@ export type ProfilesInsertResponse = {
 
 export type ProfilesOrderBy = {
   bio?: InputMaybe<OrderByDirection>;
+  cityArrivedAt?: InputMaybe<OrderByDirection>;
   cityId?: InputMaybe<OrderByDirection>;
   createdAt?: InputMaybe<OrderByDirection>;
+  dateOfBirth?: InputMaybe<OrderByDirection>;
   displayName?: InputMaybe<OrderByDirection>;
+  firstName?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
   lastActiveAt?: InputMaybe<OrderByDirection>;
+  profilePhotoUrl?: InputMaybe<OrderByDirection>;
   settled?: InputMaybe<OrderByDirection>;
   updatedAt?: InputMaybe<OrderByDirection>;
   visible?: InputMaybe<OrderByDirection>;
@@ -5028,11 +5875,15 @@ export type ProfilesOrderBy = {
 
 export type ProfilesUpdateInput = {
   bio?: InputMaybe<Scalars['String']['input']>;
+  cityArrivedAt?: InputMaybe<Scalars['Date']['input']>;
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  dateOfBirth?: InputMaybe<Scalars['Date']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   lastActiveAt?: InputMaybe<Scalars['Datetime']['input']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   quizAnswers?: InputMaybe<Scalars['JSON']['input']>;
   quizTraits?: InputMaybe<Scalars['JSON']['input']>;
   settled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -5049,6 +5900,11 @@ export type ProfilesUpdateResponse = {
 
 /** The root type for querying data */
 export type Query = {
+  /** A pagable collection of type `ActivationPingEvents` */
+  activationPingEventsCollection?: Maybe<ActivationPingEventsConnection>;
+  activationPingResponseSummary?: Maybe<Scalars['JSON']['output']>;
+  /** A pagable collection of type `ActivationPings` */
+  activationPingsCollection?: Maybe<ActivationPingsConnection>;
   /** A pagable collection of type `ActivityGroupCheckins` */
   activityGroupCheckinsCollection?: Maybe<ActivityGroupCheckinsConnection>;
   /** A pagable collection of type `ActivityGroupMembers` */
@@ -5079,6 +5935,8 @@ export type Query = {
   cityInterestsCollection?: Maybe<CityInterestsConnection>;
   /** A pagable collection of type `CitySettings` */
   citySettingsCollection?: Maybe<CitySettingsConnection>;
+  /** A pagable collection of type `ConnectionRequests` */
+  connectionRequestsCollection?: Maybe<ConnectionRequestsConnection>;
   equals?: Maybe<Scalars['Boolean']['output']>;
   /** A pagable collection of type `EventInterests` */
   eventInterestsCollection?: Maybe<EventInterestsConnection>;
@@ -5110,6 +5968,13 @@ export type Query = {
   geometrySame?: Maybe<Scalars['Boolean']['output']>;
   geometrySame3d?: Maybe<Scalars['Boolean']['output']>;
   geometryWithin?: Maybe<Scalars['Boolean']['output']>;
+  getBuzzProfileQuizState?: Maybe<Scalars['JSON']['output']>;
+  getChatSummaries?: Maybe<Scalars['JSON']['output']>;
+  getIncomingActivationPings?: Maybe<Scalars['JSON']['output']>;
+  getOutgoingActivationSummary?: Maybe<Scalars['JSON']['output']>;
+  getPeopleMatches?: Maybe<Scalars['JSON']['output']>;
+  getPeopleMatchesForDiscover?: Maybe<Scalars['JSON']['output']>;
+  getPeopleProfile?: Maybe<Scalars['JSON']['output']>;
   /** A pagable collection of type `GroupInviteEvents` */
   groupInviteEventsCollection?: Maybe<GroupInviteEventsConnection>;
   /** A pagable collection of type `GroupInvites` */
@@ -5130,6 +5995,8 @@ export type Query = {
   moderationActionsCollection?: Maybe<ModerationActionsConnection>;
   /** Retrieve a record by its `ID` */
   node?: Maybe<Node>;
+  /** A pagable collection of type `NotificationOutbox` */
+  notificationOutboxCollection?: Maybe<NotificationOutboxConnection>;
   /** A pagable collection of type `PlanRecipes` */
   planRecipesCollection?: Maybe<PlanRecipesConnection>;
   /** A pagable collection of type `PlanSafetyChecks` */
@@ -5158,6 +6025,8 @@ export type Query = {
   postgisTypeName?: Maybe<Scalars['String']['output']>;
   postgisVersion?: Maybe<Scalars['String']['output']>;
   postgisWagyuVersion?: Maybe<Scalars['String']['output']>;
+  /** A pagable collection of type `ProfileDevices` */
+  profileDevicesCollection?: Maybe<ProfileDevicesConnection>;
   /** A pagable collection of type `Profiles` */
   profilesCollection?: Maybe<ProfilesConnection>;
   /** A pagable collection of type `RepeatConnectionPreferences` */
@@ -5262,6 +6131,36 @@ export type Query = {
   userSuburbMatchesCollection?: Maybe<UserSuburbMatchesConnection>;
   /** A pagable collection of type `UserVerifications` */
   userVerificationsCollection?: Maybe<UserVerificationsConnection>;
+};
+
+
+/** The root type for querying data */
+export type QueryActivationPingEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingEventsOrderBy>>;
+};
+
+
+/** The root type for querying data */
+export type QueryActivationPingResponseSummaryArgs = {
+  activationId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for querying data */
+export type QueryActivationPingsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ActivationPingsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ActivationPingsOrderBy>>;
 };
 
 
@@ -5442,6 +6341,18 @@ export type QueryCitySettingsCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<CitySettingsOrderBy>>;
+};
+
+
+/** The root type for querying data */
+export type QueryConnectionRequestsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ConnectionRequestsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ConnectionRequestsOrderBy>>;
 };
 
 
@@ -5657,6 +6568,33 @@ export type QueryGeometryWithinArgs = {
 
 
 /** The root type for querying data */
+export type QueryGetPeopleMatchesArgs = {
+  cityId?: InputMaybe<Scalars['UUID']['input']>;
+  cityName?: InputMaybe<Scalars['String']['input']>;
+  interestIds?: InputMaybe<Array<InputMaybe<Scalars['UUID']['input']>>>;
+  limitCount?: InputMaybe<Scalars['Int']['input']>;
+  quizTraits?: InputMaybe<Scalars['JSON']['input']>;
+};
+
+
+/** The root type for querying data */
+export type QueryGetPeopleMatchesForDiscoverArgs = {
+  cityId?: InputMaybe<Scalars['UUID']['input']>;
+  cityName?: InputMaybe<Scalars['String']['input']>;
+  interestIds?: InputMaybe<Array<InputMaybe<Scalars['UUID']['input']>>>;
+  interestSlugs?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  limitCount?: InputMaybe<Scalars['Int']['input']>;
+  quizTraits?: InputMaybe<Scalars['JSON']['input']>;
+};
+
+
+/** The root type for querying data */
+export type QueryGetPeopleProfileArgs = {
+  profileId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for querying data */
 export type QueryGroupInviteEventsCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
@@ -5771,6 +6709,18 @@ export type QueryNodeArgs = {
 
 
 /** The root type for querying data */
+export type QueryNotificationOutboxCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<NotificationOutboxFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<NotificationOutboxOrderBy>>;
+};
+
+
+/** The root type for querying data */
 export type QueryPlanRecipesCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
@@ -5838,6 +6788,18 @@ export type QueryPostgisTypeNameArgs = {
   coordDimension: Scalars['Int']['input'];
   geomname: Scalars['String']['input'];
   useNewName?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+/** The root type for querying data */
+export type QueryProfileDevicesCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<ProfileDevicesFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<ProfileDevicesOrderBy>>;
 };
 
 

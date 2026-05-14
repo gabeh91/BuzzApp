@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import Animated, {
@@ -13,17 +14,24 @@ import Animated, {
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { createCityContextFallback } from "@/features/city/cityContext";
 import { useI18n } from "@/i18n/I18nProvider";
+import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import { Header, HeroPanel, List, Panel, Screen, Text as UiText } from "@/ui";
+import { useChatSummaries, type ChatSummary } from "./useChatSummaries";
 
 export const ChatsScreen = () => {
+  const router = useRouter();
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
-  const styles = createStyles(theme);
-  const { user } = useBuzzAuth();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isAuthenticated, user } = useBuzzAuth();
   const [activeTab, setActiveTab] = useState<"requests" | "groups">("requests");
   const [tabWidth, setTabWidth] = useState(0);
+  const chatSummaries = useChatSummaries({
+    enabled: isAuthenticated,
+    userId: user.id,
+  });
   const cityContext = createCityContextFallback({
     cityId: user.cityId,
     cityName: user.cityName,
@@ -135,6 +143,8 @@ export const ChatsScreen = () => {
     ],
   );
 
+  const visibleChats = activeTab === "groups" ? chatSummaries.summaries : [];
+
   const empty = useMemo(() => {
     if (activeTab === "groups") {
       return (
@@ -153,16 +163,47 @@ export const ChatsScreen = () => {
     );
   }, [LL, activeTab, styles.emptyPanel]);
 
+  const renderChatSummary = ({ item }: { item: ChatSummary }) => (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push(routes.group(item.activityGroupId))}
+      style={({ pressed }) => [
+        styles.chatCard,
+        pressed ? styles.chatCardPressed : null,
+      ]}
+    >
+      <View style={styles.chatTitleRow}>
+        <View style={styles.chatTitleStack}>
+          <UiText variant="panelTitle" style={styles.chatTitle}>
+            {item.title}
+          </UiText>
+          <UiText variant="panelBody" style={styles.chatMeta}>
+            {LL.chats.groups.members({ count: item.memberCount })}
+          </UiText>
+        </View>
+        {item.unreadCount > 0 ? (
+          <UiText variant="status" style={styles.unreadBadge}>
+            {LL.chats.groups.unread({ count: item.unreadCount })}
+          </UiText>
+        ) : null}
+      </View>
+
+      <UiText variant="panelBody" style={styles.lastMessage}>
+        {item.lastMessageBody ?? LL.chats.groups.noMessages()}
+      </UiText>
+    </Pressable>
+  );
+
   return (
     <Screen contentStyle={styles.screenContent} edges={["top"]} scroll={false}>
-      <List
+      <List<ChatSummary>
         contentContainerStyle={styles.listContent}
-        data={[]}
-        itemGap={0}
-        keyExtractor={() => "empty"}
+        data={visibleChats}
+        itemGap={theme.spacing[3]}
+        keyExtractor={(item) => item.activityGroupId}
         ListEmptyComponent={empty}
         ListHeaderComponent={header}
-        renderItem={() => null}
+        renderItem={renderChatSummary}
         style={styles.list}
       />
     </Screen>
@@ -227,6 +268,45 @@ const createStyles = (theme: BuzzTheme) => {
     },
     emptyPanel: {
       gap: spacing[3],
+    },
+    chatCard: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radii.xl,
+      borderWidth: borderWidths.hairline,
+      gap: spacing[3],
+      padding: spacing[5],
+      ...theme.shadows.card,
+    },
+    chatCardPressed: {
+      opacity: 0.9,
+    },
+    chatTitleRow: {
+      alignItems: "flex-start",
+      flexDirection: "row",
+      gap: spacing[3],
+      justifyContent: "space-between",
+    },
+    chatTitleStack: {
+      flex: 1,
+      gap: spacing[1],
+    },
+    chatTitle: {
+      color: colors.text,
+    },
+    chatMeta: {
+      color: colors.textMuted,
+    },
+    unreadBadge: {
+      backgroundColor: colors.warningSoft,
+      borderRadius: radii.full,
+      color: colors.text,
+      overflow: "hidden",
+      paddingHorizontal: spacing[2],
+      paddingVertical: spacing[1],
+    },
+    lastMessage: {
+      color: colors.brand,
     },
   });
 };

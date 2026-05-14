@@ -15,6 +15,22 @@ mutation ActivateInterest($interestId: UUID!) {
   activateInterest(interestId: $interestId)
 }
 
+query IncomingActivationPings {
+  getIncomingActivationPings
+}
+
+query OutgoingActivationSummary {
+  getOutgoingActivationSummary
+}
+
+query ChatSummaries {
+  getChatSummaries
+}
+
+mutation RespondToActivationPing($pingId: UUID!, $response: String!) {
+  respondToActivationPing(pingId: $pingId, response: $response)
+}
+
 mutation UpsertBuzzProfile(
   $userId: UUID!
   $displayName: String!
