@@ -263,12 +263,12 @@ The group should feel like the next step, not a separate feature. Keep the trans
 
 ## Chats Screen
 
-Chats should not become the place for generic pings.
+Chats should hold the actionable backlog without becoming an interruption surface.
 
 Tabs:
 
 - `Groups`: activity groups from accepted pings.
-- `People`: direct messages and connection requests.
+- `Requests`: pending ping responses and direct connection requests.
 
 Group row:
 
@@ -284,6 +284,25 @@ Empty state:
 - Body: `Say yes to an activity or ping people from Activities.`
 
 Use `List`/FlashList for all chat summaries.
+
+## Global Ping Nudge
+
+Incoming pings are live intent, but the app must not become a conveyor belt of sheets.
+
+MVP behavior:
+
+- Mount one global ping inbox provider at the app root.
+- If the user is signed in and has pending pings, show one compact app-level nudge.
+- The nudge should include the strongest pending ping and, when relevant, a count that more are waiting.
+- Primary action can respond to the highlighted ping.
+- Secondary action opens `Chats > Requests` to review the full backlog.
+- Dismissing the nudge suppresses further nudges for the current user session only.
+- Pending pings remain in Requests until answered, expired, or cancelled.
+- Only fresh items should trigger the foreground nudge. MVP freshness is 48 hours.
+- Activity pings expire from the inbox when their ping expiry passes.
+- Say Hi requests expire from the inbox after 14 days.
+
+For a larger userbase, the Requests screen is the durable work queue. The global nudge is just a prompt that something is waiting.
 
 ## Discover Screen
 
@@ -322,6 +341,7 @@ Add or reuse these components:
 - `PingCard`: compact pending ping summary.
 - `IncomingPingsTray`: Activities section for pending pings.
 - `IncomingPingSheet`: response sheet content.
+- `ActivationPingInboxSingleton`: global provider for incoming ping data and one-off app-level nudge.
 - `ActivationConfirmSheet`: sender confirmation.
 - `ActivationResultSheet`: sender result state.
 - `OutgoingActivationCard`: active signal and response counts.

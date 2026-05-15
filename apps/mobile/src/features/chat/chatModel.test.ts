@@ -8,13 +8,13 @@ test("createChatDraft trims message bodies and rejects empty sends", () => {
   assert.deepEqual(createChatDraft("  See you at 6  "), {
     body: "See you at 6",
     canSend: true,
-    moderationStatus: "clean"
+    moderationStatus: "clean",
   });
   assert.deepEqual(createChatDraft("   "), {
     body: "",
     canSend: false,
     moderationStatus: "clean",
-    reason: "empty"
+    reason: "empty",
   });
 });
 
@@ -23,26 +23,34 @@ test("createChatDraft blocks rude message bodies before they are sent", () => {
     body: "you are an idiot",
     canSend: false,
     moderationStatus: "blocked",
-    reason: "blocked"
+    reason: "blocked",
   });
 });
 
-test("mobile GraphQL operations read and send group messages", () => {
+test("mobile GraphQL operations read group messages but do not directly insert them", () => {
   const source = readFileSync("graphql/operations.graphql", "utf8");
 
   assert.match(source, /query GroupMessages/);
   assert.match(source, /groupMessagesCollection/);
-  assert.match(source, /mutation SendGroupMessage/);
-  assert.match(source, /insertIntoGroupMessagesCollection/);
+  assert.match(source, /sender\s*\{/);
+  assert.match(source, /profilePhotoUrl/);
+  assert.doesNotMatch(source, /mutation SendGroupMessage/);
+  assert.doesNotMatch(source, /insertIntoGroupMessagesCollection/);
 });
 
-test("group screen renders the virtualized message timeline and composer from localized chat copy", () => {
-  const source = existsSync("src/features/groups/GroupScreen.tsx") ? readFileSync("src/features/groups/GroupScreen.tsx", "utf8") : "";
+test("group screen renders the virtualized message timeline and sends group messages through the RPC boundary", () => {
+  const source = existsSync("src/features/groups/GroupScreen.tsx")
+    ? readFileSync("src/features/groups/GroupScreen.tsx", "utf8")
+    : "";
 
   assert.match(source, /<List/);
   assert.match(source, /MessageBubble/);
+  assert.match(source, /chatMessageAvatarSlot/);
+  assert.match(source, /senderPhotoUrl/);
   assert.match(source, /ChatComposer/);
   assert.match(source, /useGroupMessagesQuery/);
-  assert.match(source, /useSendGroupMessageMutation/);
+  assert.doesNotMatch(source, /useSendGroupMessageMutation/);
+  assert.match(source, /sendGroupMessage/);
+  assert.match(source, /buzzSupabase\.rpc\("sendGroupMessage"/);
   assert.match(source, /LL\.chat/);
 });

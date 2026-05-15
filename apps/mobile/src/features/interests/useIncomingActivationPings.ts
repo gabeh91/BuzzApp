@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useIncomingActivationPingsQuery } from "@graphql/generated";
 import { buzzSupabase } from "@/lib/supabase";
@@ -8,6 +8,7 @@ export type IncomingActivationPing = {
   activationId: string;
   interestId: string;
   interestName: string;
+  existingDirectConversationId?: string | null;
   senderId: string;
   senderName: string;
   senderPhotoUrl?: string | null;
@@ -58,11 +59,15 @@ const normalizeIncomingPing = (
     activationId,
     cityId: readString(value, "cityId"),
     createdAt: readString(value, "createdAt"),
+    existingDirectConversationId:
+      typeof value.existingDirectConversationId === "string"
+        ? value.existingDirectConversationId
+        : null,
     expiresAt: readString(value, "expiresAt"),
     interestId,
-    interestName: readString(value, "interestName", "Activity"),
+    interestName: readString(value, "interestName", "this activity"),
     senderId,
-    senderName: readString(value, "senderName", "Buzz Member"),
+    senderName: readString(value, "senderName", "Someone nearby"),
     senderPhotoUrl:
       typeof value.senderPhotoUrl === "string" ? value.senderPhotoUrl : null,
     status:
@@ -76,29 +81,28 @@ const normalizeIncomingPing = (
   };
 };
 
-const normalizeIncomingPings = (value: unknown): IncomingActivationPing[] =>
-  Array.isArray(value)
-    ? value.flatMap((item) => {
+const normalizeIncomingPings = (value: unknown): IncomingActivationPing[] => {
+  const parsedValue = parseJsonScalar(value);
+
+  return Array.isArray(parsedValue)
+    ? parsedValue.flatMap((item) => {
         const ping = normalizeIncomingPing(item);
         return ping ? [ping] : [];
       })
     : [];
+};
 
-const mapRealtimeRowToPatch = (
-  row: ActivationPingRealtimeRow,
-): IncomingActivationPing => ({
-  activationId: row.activation_id,
-  cityId: row.city_id,
-  createdAt: row.created_at,
-  expiresAt: row.expires_at,
-  id: row.id,
-  interestId: row.interest_id,
-  interestName: "Activity",
-  senderId: row.sender_id,
-  senderName: "Buzz Member",
-  senderPhotoUrl: null,
-  status: row.status,
-});
+const parseJsonScalar = (value: unknown): unknown => {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
 
 type UseIncomingActivationPingsInput = {
   enabled: boolean;
@@ -109,18 +113,37 @@ export const useIncomingActivationPings = ({
   enabled,
   userId,
 }: UseIncomingActivationPingsInput) => {
+  const channelInstanceId = useMemo(
+    () => Math.random().toString(36).slice(2),
+    [],
+  );
   const query = useIncomingActivationPingsQuery({
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-and-network",
     skip: !enabled || !userId,
   });
+  const { data, error, loading, networkStatus, refetch } = query;
   const initialPings = useMemo(
-    () => normalizeIncomingPings(query.data?.getIncomingActivationPings),
-    [query.data?.getIncomingActivationPings],
+    () => normalizeIncomingPings(data?.getIncomingActivationPings),
+    [data?.getIncomingActivationPings],
   );
   const [pings, setPings] = useState<IncomingActivationPing[]>(initialPings);
+  const refetchIncomingPings = useCallback(async () => {
+    const result = await refetch();
+    setPings(normalizeIncomingPings(result.data?.getIncomingActivationPings));
+  }, [refetch]);
 
   useEffect(() => {
     setPings(initialPings);
-  }, [initialPings]);
+  }, [
+    enabled,
+    initialPings,
+    data,
+    error?.message,
+    loading,
+    networkStatus,
+    userId,
+  ]);
 
   useEffect(() => {
     if (!enabled || !userId) {
@@ -128,7 +151,7 @@ export const useIncomingActivationPings = ({
     }
 
     const channel = buzzSupabase
-      .channel(`activation-pings-${userId}`)
+      .channel(`activation-pings-${userId}-${channelInstanceId}`)
       .on(
         "postgres_changes",
         {
@@ -144,37 +167,26 @@ export const useIncomingActivationPings = ({
 
           if (!row?.id) return;
 
-          setPings((current) => {
-            if (row.status !== "pending") {
-              return current.filter((ping) => ping.id !== row.id);
-            }
-
-            const nextPing = mapRealtimeRowToPatch(row);
-            const existingIndex = current.findIndex(
-              (ping) => ping.id === nextPing.id,
+          if (row.status !== "pending") {
+            setPings((current) =>
+              current.filter((ping) => ping.id !== row.id),
             );
+            return;
+          }
 
-            if (existingIndex === -1) {
-              return [nextPing, ...current];
-            }
-
-            return current.map((ping, index) =>
-              index === existingIndex ? { ...ping, ...nextPing } : ping,
-            );
-          });
+          void refetchIncomingPings();
         },
       )
-      .subscribe();
+      .subscribe(() => undefined);
 
     return () => {
       void buzzSupabase.removeChannel(channel);
     };
-  }, [enabled, userId]);
+  }, [channelInstanceId, enabled, refetchIncomingPings, userId]);
 
   return {
-    loading: query.loading,
+    loading,
     pings,
-    refetch: query.refetch,
+    refetch: refetchIncomingPings,
   };
 };
-

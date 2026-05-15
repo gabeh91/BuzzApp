@@ -118,7 +118,7 @@ export type ActivationPings = Node & {
   activityGroup?: Maybe<ActivityGroups>;
   activityGroupId?: Maybe<Scalars['UUID']['output']>;
   activityGroupMembersCollection?: Maybe<ActivityGroupMembersConnection>;
-  city: Cities;
+  city?: Maybe<Cities>;
   cityId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   deliveredAt?: Maybe<Scalars['Datetime']['output']>;
@@ -268,7 +268,7 @@ export type ActivationPingsUpdateResponse = {
 };
 
 export type ActivityGroupCheckins = Node & {
-  activityGroup: ActivityGroups;
+  activityGroup?: Maybe<ActivityGroups>;
   activityGroupId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   didHappen: Scalars['Boolean']['output'];
@@ -373,7 +373,7 @@ export type ActivityGroupCheckinsUpdateResponse = {
 };
 
 export type ActivityGroupMembers = Node & {
-  activityGroup: ActivityGroups;
+  activityGroup?: Maybe<ActivityGroups>;
   activityGroupId: Scalars['UUID']['output'];
   attendanceConfirmedAt?: Maybe<Scalars['Datetime']['output']>;
   attendanceStatus: Scalars['String']['output'];
@@ -689,7 +689,7 @@ export type ActivityGroupsUpdateResponse = {
 };
 
 export type ActivityPlans = Node & {
-  activityGroup: ActivityGroups;
+  activityGroup?: Maybe<ActivityGroups>;
   activityGroupId: Scalars['UUID']['output'];
   activityName: Scalars['String']['output'];
   capacityMax: Scalars['Int']['output'];
@@ -1264,7 +1264,7 @@ export type BusinessCategoriesUpdateResponse = {
 };
 
 export type BusinessImpressions = Node & {
-  business: Businesses;
+  business?: Maybe<Businesses>;
   businessId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   id: Scalars['UUID']['output'];
@@ -1341,7 +1341,7 @@ export type BusinessImpressionsUpdateResponse = {
 };
 
 export type BusinessLeads = Node & {
-  business: Businesses;
+  business?: Maybe<Businesses>;
   businessId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   id: Scalars['UUID']['output'];
@@ -1814,7 +1814,7 @@ export type CitiesUpdateResponse = {
 };
 
 export type CityFeatureFlags = Node & {
-  city: Cities;
+  city?: Maybe<Cities>;
   cityId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   enabled: Scalars['Boolean']['output'];
@@ -1908,7 +1908,7 @@ export type CityFeatureFlagsUpdateResponse = {
 };
 
 export type CityInterests = Node & {
-  city: Cities;
+  city?: Maybe<Cities>;
   cityId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   id: Scalars['UUID']['output'];
@@ -1996,7 +1996,7 @@ export type CityInterestsUpdateResponse = {
 
 export type CitySettings = Node & {
   activationExpiryHours: Scalars['Int']['output'];
-  city: Cities;
+  city?: Maybe<Cities>;
   cityId: Scalars['UUID']['output'];
   copyJson: Scalars['JSON']['output'];
   createdAt: Scalars['Datetime']['output'];
@@ -2105,6 +2105,7 @@ export type ConnectionRequests = Node & {
   city?: Maybe<Cities>;
   cityId?: Maybe<Scalars['UUID']['output']>;
   createdAt: Scalars['Datetime']['output'];
+  expiresAt: Scalars['Datetime']['output'];
   id: Scalars['UUID']['output'];
   message?: Maybe<Scalars['String']['output']>;
   /** Globally Unique Record Identifier */
@@ -2141,6 +2142,7 @@ export type ConnectionRequestsFilter = {
   and?: InputMaybe<Array<ConnectionRequestsFilter>>;
   cityId?: InputMaybe<UuidFilter>;
   createdAt?: InputMaybe<DatetimeFilter>;
+  expiresAt?: InputMaybe<DatetimeFilter>;
   id?: InputMaybe<UuidFilter>;
   message?: InputMaybe<StringFilter>;
   nodeId?: InputMaybe<IdFilter>;
@@ -2159,6 +2161,7 @@ export type ConnectionRequestsFilter = {
 export type ConnectionRequestsInsertInput = {
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  expiresAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   message?: InputMaybe<Scalars['String']['input']>;
   recipientId?: InputMaybe<Scalars['UUID']['input']>;
@@ -2179,6 +2182,7 @@ export type ConnectionRequestsInsertResponse = {
 export type ConnectionRequestsOrderBy = {
   cityId?: InputMaybe<OrderByDirection>;
   createdAt?: InputMaybe<OrderByDirection>;
+  expiresAt?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
   message?: InputMaybe<OrderByDirection>;
   recipientId?: InputMaybe<OrderByDirection>;
@@ -2192,6 +2196,7 @@ export type ConnectionRequestsOrderBy = {
 export type ConnectionRequestsUpdateInput = {
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  expiresAt?: InputMaybe<Scalars['Datetime']['input']>;
   id?: InputMaybe<Scalars['UUID']['input']>;
   message?: InputMaybe<Scalars['String']['input']>;
   recipientId?: InputMaybe<Scalars['UUID']['input']>;
@@ -2251,8 +2256,218 @@ export type DatetimeListFilter = {
   overlaps?: InputMaybe<Array<Scalars['Datetime']['input']>>;
 };
 
+export type DirectConversations = Node & {
+  closedAt?: Maybe<Scalars['Datetime']['output']>;
+  closedBy?: Maybe<Scalars['UUID']['output']>;
+  createdAt: Scalars['Datetime']['output'];
+  directMessagesCollection?: Maybe<DirectMessagesConnection>;
+  id: Scalars['UUID']['output'];
+  lastMessageAt?: Maybe<Scalars['Datetime']['output']>;
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  profiles?: Maybe<Profiles>;
+  status: Scalars['String']['output'];
+  updatedAt: Scalars['Datetime']['output'];
+  userHigh?: Maybe<Profiles>;
+  userHighId: Scalars['UUID']['output'];
+  userLow?: Maybe<Profiles>;
+  userLowId: Scalars['UUID']['output'];
+};
+
+
+export type DirectConversationsDirectMessagesCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<DirectMessagesFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<DirectMessagesOrderBy>>;
+};
+
+export type DirectConversationsConnection = {
+  edges: Array<DirectConversationsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type DirectConversationsDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<DirectConversations>;
+};
+
+export type DirectConversationsEdge = {
+  cursor: Scalars['String']['output'];
+  node: DirectConversations;
+};
+
+export type DirectConversationsFilter = {
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<DirectConversationsFilter>>;
+  closedAt?: InputMaybe<DatetimeFilter>;
+  closedBy?: InputMaybe<UuidFilter>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  id?: InputMaybe<UuidFilter>;
+  lastMessageAt?: InputMaybe<DatetimeFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<DirectConversationsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<DirectConversationsFilter>>;
+  status?: InputMaybe<StringFilter>;
+  updatedAt?: InputMaybe<DatetimeFilter>;
+  userHighId?: InputMaybe<UuidFilter>;
+  userLowId?: InputMaybe<UuidFilter>;
+};
+
+export type DirectConversationsInsertInput = {
+  closedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  closedBy?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  lastMessageAt?: InputMaybe<Scalars['Datetime']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  userHighId?: InputMaybe<Scalars['UUID']['input']>;
+  userLowId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type DirectConversationsInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<DirectConversations>;
+};
+
+export type DirectConversationsOrderBy = {
+  closedAt?: InputMaybe<OrderByDirection>;
+  closedBy?: InputMaybe<OrderByDirection>;
+  createdAt?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  lastMessageAt?: InputMaybe<OrderByDirection>;
+  status?: InputMaybe<OrderByDirection>;
+  updatedAt?: InputMaybe<OrderByDirection>;
+  userHighId?: InputMaybe<OrderByDirection>;
+  userLowId?: InputMaybe<OrderByDirection>;
+};
+
+export type DirectConversationsUpdateInput = {
+  closedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  closedBy?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  lastMessageAt?: InputMaybe<Scalars['Datetime']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
+  userHighId?: InputMaybe<Scalars['UUID']['input']>;
+  userLowId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type DirectConversationsUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<DirectConversations>;
+};
+
+export type DirectMessages = Node & {
+  body: Scalars['String']['output'];
+  createdAt: Scalars['Datetime']['output'];
+  directConversation?: Maybe<DirectConversations>;
+  directConversationId: Scalars['UUID']['output'];
+  id: Scalars['UUID']['output'];
+  messageType: Scalars['String']['output'];
+  metadata: Scalars['JSON']['output'];
+  moderationStatus: Scalars['String']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  sender?: Maybe<Profiles>;
+  senderId: Scalars['UUID']['output'];
+};
+
+export type DirectMessagesConnection = {
+  edges: Array<DirectMessagesEdge>;
+  pageInfo: PageInfo;
+};
+
+export type DirectMessagesDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<DirectMessages>;
+};
+
+export type DirectMessagesEdge = {
+  cursor: Scalars['String']['output'];
+  node: DirectMessages;
+};
+
+export type DirectMessagesFilter = {
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<DirectMessagesFilter>>;
+  body?: InputMaybe<StringFilter>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  directConversationId?: InputMaybe<UuidFilter>;
+  id?: InputMaybe<UuidFilter>;
+  messageType?: InputMaybe<StringFilter>;
+  moderationStatus?: InputMaybe<StringFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<DirectMessagesFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<DirectMessagesFilter>>;
+  senderId?: InputMaybe<UuidFilter>;
+};
+
+export type DirectMessagesInsertInput = {
+  body?: InputMaybe<Scalars['String']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  directConversationId?: InputMaybe<Scalars['UUID']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  messageType?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  moderationStatus?: InputMaybe<Scalars['String']['input']>;
+  senderId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type DirectMessagesInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<DirectMessages>;
+};
+
+export type DirectMessagesOrderBy = {
+  body?: InputMaybe<OrderByDirection>;
+  createdAt?: InputMaybe<OrderByDirection>;
+  directConversationId?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  messageType?: InputMaybe<OrderByDirection>;
+  moderationStatus?: InputMaybe<OrderByDirection>;
+  senderId?: InputMaybe<OrderByDirection>;
+};
+
+export type DirectMessagesUpdateInput = {
+  body?: InputMaybe<Scalars['String']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  directConversationId?: InputMaybe<Scalars['UUID']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  messageType?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  moderationStatus?: InputMaybe<Scalars['String']['input']>;
+  senderId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type DirectMessagesUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<DirectMessages>;
+};
+
 export type EventInterests = Node & {
-  event: Events;
+  event?: Maybe<Events>;
   eventId: Scalars['UUID']['output'];
   id: Scalars['UUID']['output'];
   interest?: Maybe<Interests>;
@@ -2542,7 +2757,7 @@ export type FloatListFilter = {
 };
 
 export type GroupInviteEvents = Node & {
-  activityGroup: ActivityGroups;
+  activityGroup?: Maybe<ActivityGroups>;
   activityGroupId: Scalars['UUID']['output'];
   actor?: Maybe<Profiles>;
   actorId?: Maybe<Scalars['UUID']['output']>;
@@ -2635,7 +2850,7 @@ export type GroupInviteEventsUpdateResponse = {
 export type GroupInvites = Node & {
   acceptedAt?: Maybe<Scalars['Datetime']['output']>;
   acceptedBy?: Maybe<Scalars['UUID']['output']>;
-  activityGroup: ActivityGroups;
+  activityGroup?: Maybe<ActivityGroups>;
   activityGroupId: Scalars['UUID']['output'];
   activityPlan?: Maybe<ActivityPlans>;
   activityPlanId?: Maybe<Scalars['UUID']['output']>;
@@ -2772,7 +2987,7 @@ export type GroupInvitesUpdateResponse = {
 };
 
 export type GroupMessages = Node & {
-  activityGroup: ActivityGroups;
+  activityGroup?: Maybe<ActivityGroups>;
   activityGroupId: Scalars['UUID']['output'];
   body: Scalars['String']['output'];
   createdAt: Scalars['Datetime']['output'];
@@ -3322,7 +3537,7 @@ export type LandingPlanItemsUpdateResponse = {
 };
 
 export type LandingPlans = Node & {
-  city: Cities;
+  city?: Maybe<Cities>;
   cityId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   endsAt?: Maybe<Scalars['Datetime']['output']>;
@@ -3712,6 +3927,10 @@ export type Mutation = {
   deleteFromCitySettingsCollection: CitySettingsDeleteResponse;
   /** Deletes zero or more records from the `ConnectionRequests` collection */
   deleteFromConnectionRequestsCollection: ConnectionRequestsDeleteResponse;
+  /** Deletes zero or more records from the `DirectConversations` collection */
+  deleteFromDirectConversationsCollection: DirectConversationsDeleteResponse;
+  /** Deletes zero or more records from the `DirectMessages` collection */
+  deleteFromDirectMessagesCollection: DirectMessagesDeleteResponse;
   /** Deletes zero or more records from the `EventInterests` collection */
   deleteFromEventInterestsCollection: EventInterestsDeleteResponse;
   /** Deletes zero or more records from the `Events` collection */
@@ -3811,6 +4030,10 @@ export type Mutation = {
   insertIntoCitySettingsCollection?: Maybe<CitySettingsInsertResponse>;
   /** Adds one or more `ConnectionRequests` records to the collection */
   insertIntoConnectionRequestsCollection?: Maybe<ConnectionRequestsInsertResponse>;
+  /** Adds one or more `DirectConversations` records to the collection */
+  insertIntoDirectConversationsCollection?: Maybe<DirectConversationsInsertResponse>;
+  /** Adds one or more `DirectMessages` records to the collection */
+  insertIntoDirectMessagesCollection?: Maybe<DirectMessagesInsertResponse>;
   /** Adds one or more `EventInterests` records to the collection */
   insertIntoEventInterestsCollection?: Maybe<EventInterestsInsertResponse>;
   /** Adds one or more `Events` records to the collection */
@@ -3871,11 +4094,16 @@ export type Mutation = {
   insertIntoUserSuburbMatchesCollection?: Maybe<UserSuburbMatchesInsertResponse>;
   /** Adds one or more `UserVerifications` records to the collection */
   insertIntoUserVerificationsCollection?: Maybe<UserVerificationsInsertResponse>;
+  leaveDirectConversation?: Maybe<Scalars['JSON']['output']>;
   longtransactionsenabled?: Maybe<Scalars['Boolean']['output']>;
   postgisExtensionsUpgrade?: Maybe<Scalars['String']['output']>;
   postgisSelectivity?: Maybe<Scalars['Float']['output']>;
+  reportDirectConversation?: Maybe<Scalars['JSON']['output']>;
+  respondConnectionRequest?: Maybe<Scalars['JSON']['output']>;
   respondToActivationPing?: Maybe<Scalars['JSON']['output']>;
   sendConnectionRequest?: Maybe<Scalars['JSON']['output']>;
+  sendDirectMessage?: Maybe<Scalars['JSON']['output']>;
+  sendGroupMessage?: Maybe<Scalars['JSON']['output']>;
   stClusterkmeans?: Maybe<Scalars['Int']['output']>;
   stSymmetricdifference?: Maybe<Scalars['Opaque']['output']>;
   /** Updates zero or more records in the `ActivationPingEvents` collection */
@@ -3914,6 +4142,10 @@ export type Mutation = {
   updateCitySettingsCollection: CitySettingsUpdateResponse;
   /** Updates zero or more records in the `ConnectionRequests` collection */
   updateConnectionRequestsCollection: ConnectionRequestsUpdateResponse;
+  /** Updates zero or more records in the `DirectConversations` collection */
+  updateDirectConversationsCollection: DirectConversationsUpdateResponse;
+  /** Updates zero or more records in the `DirectMessages` collection */
+  updateDirectMessagesCollection: DirectMessagesUpdateResponse;
   /** Updates zero or more records in the `EventInterests` collection */
   updateEventInterestsCollection: EventInterestsUpdateResponse;
   /** Updates zero or more records in the `Events` collection */
@@ -4107,6 +4339,20 @@ export type MutationDeleteFromCitySettingsCollectionArgs = {
 export type MutationDeleteFromConnectionRequestsCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<ConnectionRequestsFilter>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromDirectConversationsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<DirectConversationsFilter>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationDeleteFromDirectMessagesCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<DirectMessagesFilter>;
 };
 
 
@@ -4429,6 +4675,18 @@ export type MutationInsertIntoConnectionRequestsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationInsertIntoDirectConversationsCollectionArgs = {
+  objects: Array<DirectConversationsInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationInsertIntoDirectMessagesCollectionArgs = {
+  objects: Array<DirectMessagesInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationInsertIntoEventInterestsCollectionArgs = {
   objects: Array<EventInterestsInsertInput>;
 };
@@ -4609,11 +4867,33 @@ export type MutationInsertIntoUserVerificationsCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationLeaveDirectConversationArgs = {
+  conversationId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationPostgisSelectivityArgs = {
   attName: Scalars['String']['input'];
   geom: Scalars['Opaque']['input'];
   mode?: InputMaybe<Scalars['String']['input']>;
   tbl: Scalars['Opaque']['input'];
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationReportDirectConversationArgs = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  conversationId: Scalars['UUID']['input'];
+  details?: InputMaybe<Scalars['String']['input']>;
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationRespondConnectionRequestArgs = {
+  requestId: Scalars['UUID']['input'];
+  response: Scalars['String']['input'];
 };
 
 
@@ -4628,6 +4908,21 @@ export type MutationRespondToActivationPingArgs = {
 export type MutationSendConnectionRequestArgs = {
   message?: InputMaybe<Scalars['String']['input']>;
   recipientId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationSendDirectMessageArgs = {
+  body: Scalars['String']['input'];
+  conversationId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationSendGroupMessageArgs = {
+  activityGroupId: Scalars['UUID']['input'];
+  body: Scalars['String']['input'];
+  moderationStatus?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -4787,6 +5082,22 @@ export type MutationUpdateConnectionRequestsCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<ConnectionRequestsFilter>;
   set: ConnectionRequestsUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateDirectConversationsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<DirectConversationsFilter>;
+  set: DirectConversationsUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateDirectMessagesCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<DirectMessagesFilter>;
+  set: DirectMessagesUpdateInput;
 };
 
 
@@ -5497,6 +5808,8 @@ export type Profiles = Node & {
   connectionRequestsCollection?: Maybe<ConnectionRequestsConnection>;
   createdAt: Scalars['Datetime']['output'];
   dateOfBirth?: Maybe<Scalars['Date']['output']>;
+  directConversationsCollection?: Maybe<DirectConversationsConnection>;
+  directMessagesCollection?: Maybe<DirectMessagesConnection>;
   displayName?: Maybe<Scalars['String']['output']>;
   firstName?: Maybe<Scalars['String']['output']>;
   groupInviteEventsCollection?: Maybe<GroupInviteEventsConnection>;
@@ -5636,6 +5949,28 @@ export type ProfilesConnectionRequestsCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<ConnectionRequestsOrderBy>>;
+};
+
+
+export type ProfilesDirectConversationsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<DirectConversationsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<DirectConversationsOrderBy>>;
+};
+
+
+export type ProfilesDirectMessagesCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<DirectMessagesFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<DirectMessagesOrderBy>>;
 };
 
 
@@ -5937,6 +6272,10 @@ export type Query = {
   citySettingsCollection?: Maybe<CitySettingsConnection>;
   /** A pagable collection of type `ConnectionRequests` */
   connectionRequestsCollection?: Maybe<ConnectionRequestsConnection>;
+  /** A pagable collection of type `DirectConversations` */
+  directConversationsCollection?: Maybe<DirectConversationsConnection>;
+  /** A pagable collection of type `DirectMessages` */
+  directMessagesCollection?: Maybe<DirectMessagesConnection>;
   equals?: Maybe<Scalars['Boolean']['output']>;
   /** A pagable collection of type `EventInterests` */
   eventInterestsCollection?: Maybe<EventInterestsConnection>;
@@ -5970,6 +6309,8 @@ export type Query = {
   geometryWithin?: Maybe<Scalars['Boolean']['output']>;
   getBuzzProfileQuizState?: Maybe<Scalars['JSON']['output']>;
   getChatSummaries?: Maybe<Scalars['JSON']['output']>;
+  getConnectionRequests?: Maybe<Scalars['JSON']['output']>;
+  getDirectMessages?: Maybe<Scalars['JSON']['output']>;
   getIncomingActivationPings?: Maybe<Scalars['JSON']['output']>;
   getOutgoingActivationSummary?: Maybe<Scalars['JSON']['output']>;
   getPeopleMatches?: Maybe<Scalars['JSON']['output']>;
@@ -5985,6 +6326,7 @@ export type Query = {
   interestActivationsCollection?: Maybe<InterestActivationsConnection>;
   /** A pagable collection of type `Interests` */
   interestsCollection?: Maybe<InterestsConnection>;
+  isActivityGroupMember?: Maybe<Scalars['Boolean']['output']>;
   /** A pagable collection of type `LandingPlanItems` */
   landingPlanItemsCollection?: Maybe<LandingPlanItemsConnection>;
   /** A pagable collection of type `LandingPlans` */
@@ -6357,6 +6699,30 @@ export type QueryConnectionRequestsCollectionArgs = {
 
 
 /** The root type for querying data */
+export type QueryDirectConversationsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<DirectConversationsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<DirectConversationsOrderBy>>;
+};
+
+
+/** The root type for querying data */
+export type QueryDirectMessagesCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<DirectMessagesFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<DirectMessagesOrderBy>>;
+};
+
+
+/** The root type for querying data */
 export type QueryEqualsArgs = {
   geom1: Scalars['Opaque']['input'];
   geom2: Scalars['Opaque']['input'];
@@ -6568,6 +6934,12 @@ export type QueryGeometryWithinArgs = {
 
 
 /** The root type for querying data */
+export type QueryGetDirectMessagesArgs = {
+  conversationId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for querying data */
 export type QueryGetPeopleMatchesArgs = {
   cityId?: InputMaybe<Scalars['UUID']['input']>;
   cityName?: InputMaybe<Scalars['String']['input']>;
@@ -6651,6 +7023,13 @@ export type QueryInterestsCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<InterestsOrderBy>>;
+};
+
+
+/** The root type for querying data */
+export type QueryIsActivityGroupMemberArgs = {
+  activityGroupId: Scalars['UUID']['input'];
+  profileId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
 
@@ -8083,7 +8462,7 @@ export type SuburbTags = Node & {
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
   reason?: Maybe<Scalars['String']['output']>;
-  suburb: Suburbs;
+  suburb?: Maybe<Suburbs>;
   suburbId: Scalars['UUID']['output'];
   tagKey: Scalars['String']['output'];
   weight: Scalars['BigFloat']['output'];
@@ -8164,7 +8543,7 @@ export type SuburbTagsUpdateResponse = {
 };
 
 export type Suburbs = Node & {
-  city: Cities;
+  city?: Maybe<Cities>;
   cityId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   defaultLatitude?: Maybe<Scalars['BigFloat']['output']>;
@@ -8720,7 +9099,7 @@ export type UserSocialPreferencesUpdateResponse = {
 };
 
 export type UserSuburbMatches = Node & {
-  city: Cities;
+  city?: Maybe<Cities>;
   cityId: Scalars['UUID']['output'];
   createdAt: Scalars['Datetime']['output'];
   id: Scalars['UUID']['output'];
@@ -8729,7 +9108,7 @@ export type UserSuburbMatches = Node & {
   reasonsJson: Scalars['JSON']['output'];
   score: Scalars['BigFloat']['output'];
   source: Scalars['String']['output'];
-  suburb: Suburbs;
+  suburb?: Maybe<Suburbs>;
   suburbId: Scalars['UUID']['output'];
   updatedAt: Scalars['Datetime']['output'];
   user?: Maybe<Profiles>;
@@ -8970,7 +9349,7 @@ export type GroupMessagesQueryVariables = Exact<{
 }>;
 
 
-export type GroupMessagesQuery = { groupMessagesCollection: { edges: Array<{ node: { id: string, activityGroupId: string, senderId: string, body: string, messageType: string, moderationStatus: string, createdAt: string } }> } | null };
+export type GroupMessagesQuery = { groupMessagesCollection: { edges: Array<{ node: { id: string, activityGroupId: string, senderId: string, body: string, messageType: string, moderationStatus: string, createdAt: string, sender: { id: string, firstName: string | null, displayName: string | null, profilePhotoUrl: string | null } | null } }> } | null };
 
 export type ActivityGroupSummaryQueryVariables = Exact<{
   groupId: string;
@@ -8978,16 +9357,6 @@ export type ActivityGroupSummaryQueryVariables = Exact<{
 
 
 export type ActivityGroupSummaryQuery = { activityGroupsCollection: { edges: Array<{ node: { id: string, title: string, status: string, city: { id: string, name: string } | null, interest: { id: string, name: string } | null, activityPlansCollection: { edges: Array<{ node: { id: string, title: string, description: string | null, startsAt: string | null, venueType: string, publicLocationName: string, capacityMin: number, capacityMax: number, safetyGuidance: string } }> } | null } }> } | null };
-
-export type SendGroupMessageMutationVariables = Exact<{
-  activityGroupId: string;
-  senderId: string;
-  body: string;
-  moderationStatus: string;
-}>;
-
-
-export type SendGroupMessageMutation = { insertIntoGroupMessagesCollection: { records: Array<{ id: string, activityGroupId: string, senderId: string, body: string, messageType: string, moderationStatus: string, createdAt: string }> } | null };
 
 
 export const BuzzHomeDocument = gql`
@@ -9279,6 +9648,12 @@ export const GroupMessagesDocument = gql`
         messageType
         moderationStatus
         createdAt
+        sender {
+          id
+          firstName
+          displayName
+          profilePhotoUrl
+        }
       }
     }
   }
@@ -9392,49 +9767,3 @@ export type ActivityGroupSummaryQueryHookResult = ReturnType<typeof useActivityG
 export type ActivityGroupSummaryLazyQueryHookResult = ReturnType<typeof useActivityGroupSummaryLazyQuery>;
 export type ActivityGroupSummarySuspenseQueryHookResult = ReturnType<typeof useActivityGroupSummarySuspenseQuery>;
 export type ActivityGroupSummaryQueryResult = ApolloReactCommon.QueryResult<ActivityGroupSummaryQuery, ActivityGroupSummaryQueryVariables>;
-export const SendGroupMessageDocument = gql`
-    mutation SendGroupMessage($activityGroupId: UUID!, $senderId: UUID!, $body: String!, $moderationStatus: String!) {
-  insertIntoGroupMessagesCollection(
-    objects: [{activityGroupId: $activityGroupId, senderId: $senderId, body: $body, messageType: "text", moderationStatus: $moderationStatus}]
-  ) {
-    records {
-      id
-      activityGroupId
-      senderId
-      body
-      messageType
-      moderationStatus
-      createdAt
-    }
-  }
-}
-    `;
-export type SendGroupMessageMutationFn = ApolloReactCommon.MutationFunction<SendGroupMessageMutation, SendGroupMessageMutationVariables>;
-
-/**
- * __useSendGroupMessageMutation__
- *
- * To run a mutation, you first call `useSendGroupMessageMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useSendGroupMessageMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [sendGroupMessageMutation, { data, loading, error }] = useSendGroupMessageMutation({
- *   variables: {
- *      activityGroupId: // value for 'activityGroupId'
- *      senderId: // value for 'senderId'
- *      body: // value for 'body'
- *      moderationStatus: // value for 'moderationStatus'
- *   },
- * });
- */
-export function useSendGroupMessageMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SendGroupMessageMutation, SendGroupMessageMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<SendGroupMessageMutation, SendGroupMessageMutationVariables>(SendGroupMessageDocument, options);
-      }
-export type SendGroupMessageMutationHookResult = ReturnType<typeof useSendGroupMessageMutation>;
-export type SendGroupMessageMutationResult = ApolloReactCommon.MutationResult<SendGroupMessageMutation>;
-export type SendGroupMessageMutationOptions = ApolloReactCommon.BaseMutationOptions<SendGroupMessageMutation, SendGroupMessageMutationVariables>;

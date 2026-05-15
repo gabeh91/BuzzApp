@@ -56,7 +56,7 @@ export const createBuzzApolloClient = (
         },
   );
   const link = options.getAccessToken
-    ? setContext(async (_, context) => {
+    ? setContext(async (_operation, context) => {
         const supabaseAccessToken = await options.getAccessToken?.();
 
         return {

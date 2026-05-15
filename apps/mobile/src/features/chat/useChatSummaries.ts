@@ -4,7 +4,11 @@ import { useChatSummariesQuery } from "@graphql/generated";
 import { buzzSupabase } from "@/lib/supabase";
 
 export type ChatSummary = {
-  activityGroupId: string;
+  id: string;
+  kind: "direct" | "group";
+  activityGroupId?: string | null;
+  directConversationId?: string | null;
+  otherUserId?: string | null;
   title: string;
   status: string;
   interestName?: string | null;
@@ -40,29 +44,58 @@ const readNumber = (source: Record<string, unknown>, key: string) => {
 const normalizeChatSummary = (value: unknown): ChatSummary | null => {
   if (!isRecord(value)) return null;
 
-  const activityGroupId = readString(value, "activityGroupId");
-  if (!activityGroupId) return null;
+  const rawKind = readString(value, "kind", "group");
+  const kind = rawKind === "direct" ? "direct" : "group";
+  const activityGroupId = readNullableString(value, "activityGroupId");
+  const directConversationId = readNullableString(value, "directConversationId");
+  const id =
+    readString(value, "id") ||
+    (kind === "direct" ? directConversationId : activityGroupId) ||
+    "";
+
+  if (!id) return null;
+  if (kind === "group" && !activityGroupId) return null;
+  if (kind === "direct" && !directConversationId) return null;
 
   return {
     activityGroupId,
+    directConversationId,
+    id,
     interestName: readNullableString(value, "interestName"),
+    kind,
     lastMessageAt: readNullableString(value, "lastMessageAt"),
     lastMessageBody: readNullableString(value, "lastMessageBody"),
     lastMessageType: readNullableString(value, "lastMessageType"),
     memberCount: readNumber(value, "memberCount"),
+    otherUserId: readNullableString(value, "otherUserId"),
     status: readString(value, "status", "forming"),
     title: readString(value, "title", "Activity group"),
     unreadCount: readNumber(value, "unreadCount"),
   };
 };
 
-const normalizeChatSummaries = (value: unknown): ChatSummary[] =>
-  Array.isArray(value)
-    ? value.flatMap((item) => {
+const normalizeChatSummaries = (value: unknown): ChatSummary[] => {
+  const parsedValue = parseJsonScalar(value);
+
+  return Array.isArray(parsedValue)
+    ? parsedValue.flatMap((item) => {
         const summary = normalizeChatSummary(item);
         return summary ? [summary] : [];
       })
     : [];
+};
+
+const parseJsonScalar = (value: unknown): unknown => {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
 
 type UseChatSummariesInput = {
   enabled: boolean;
@@ -70,7 +103,13 @@ type UseChatSummariesInput = {
 };
 
 export const useChatSummaries = ({ enabled, userId }: UseChatSummariesInput) => {
+  const channelInstanceId = useMemo(
+    () => Math.random().toString(36).slice(2),
+    [],
+  );
   const query = useChatSummariesQuery({
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-and-network",
     skip: !enabled || !userId,
   });
   const { data, loading, refetch } = query;
@@ -85,7 +124,7 @@ export const useChatSummaries = ({ enabled, userId }: UseChatSummariesInput) => 
     }
 
     const channel = buzzSupabase
-      .channel(`chat-summaries-${userId}`)
+      .channel(`chat-summaries-${userId}-${channelInstanceId}`)
       .on(
         "postgres_changes",
         {
@@ -97,12 +136,23 @@ export const useChatSummaries = ({ enabled, userId }: UseChatSummariesInput) => 
           void refetch();
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "direct_messages",
+        },
+        () => {
+          void refetch();
+        },
+      )
       .subscribe();
 
     return () => {
       void buzzSupabase.removeChannel(channel);
     };
-  }, [enabled, refetch, userId]);
+  }, [channelInstanceId, enabled, refetch, userId]);
 
   return {
     loading,

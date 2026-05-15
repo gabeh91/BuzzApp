@@ -230,9 +230,63 @@ Expose these through GraphQL views or explicit functions:
 
 Realtime should patch already-fetched state. Initial data must still come from normal queries on app launch and foreground.
 
+### MVP Technical Approach
+
+Use GraphQL for the source-of-truth reads and mutations:
+
+- `getIncomingActivationPings()` fetches pending pings for the signed-in recipient.
+- `getOutgoingActivationSummary()` fetches the sender's active activations and response counts.
+- `respondToActivationPing(pingId, response)` applies `yes`, `maybe`, or `no` and returns the next group context when relevant.
+- `getChatSummaries()` fetches group chat summaries after accepted pings form a group.
+
+Use Supabase Realtime only as a live patch signal. Realtime callbacks should refetch or patch state already backed by the GraphQL functions; they should not become the only source of truth. This keeps app reload, hard refresh, and background/foreground recovery reliable.
+
+Supabase GraphQL can return JSONB function results as stringified JSON scalars. Mobile hooks must accept both object/array values and stringified JSON, parse defensively, and normalize into typed feature models before rendering.
+
+The mobile app owns one global `ActivationPingInboxSingleton` under `AppProviders`. It creates one incoming-ping subscription per authenticated user session, exposes the pending backlog through context, and renders a single app-level nudge wherever the user currently is. Feature screens should consume that provider rather than creating independent ping subscriptions.
+
+High-volume behavior:
+
+- Do not show one modal/sheet per incoming ping.
+- Show at most one global nudge per user session/app launch.
+- Keep all pending pings available in `Chats > Requests`.
+- The global nudge can say that more pings are waiting and route to the backlog.
+- Dismissal suppresses further global nudges for that user session, but it must not delete or hide pending pings from the backlog.
+
+Future backend lifecycle fields should include `seen_at`, `dismissed_at`, and `last_prompted_at` so the server can coordinate prompt frequency across devices.
+
+### Expiry Semantics
+
+Activity pings are ephemeral current intent. MVP activity pings expire through `activation_pings.expires_at` and `getIncomingActivationPings()` must only return rows where `status = 'pending'` and `expires_at > now()`.
+
+Say Hi connection requests are longer-lived, but not permanent. MVP connection requests expire after 14 days through `connection_requests.expires_at`; `getConnectionRequests()` must only return rows where `status = 'pending'` and `expires_at > now()`.
+
+Foreground nudges are stricter than inbox visibility. The app should only interrupt for fresh items, currently those created within 48 hours. Older valid pending items can remain in `Chats > Requests` without opening the global nudge on app launch.
+
+### Future Priority Score
+
+Consider adding `priority_score numeric` to `activation_pings` or to a computed ping inbox read model. This is business-owned matching/ranking logic, so the backend should remain the source of truth and the client should only sort/display the normalized result.
+
+MVP can leave `priority_score` nullable. When added, inbox ordering should be:
+
+1. `priority_score desc nulls last`
+2. `created_at desc`
+
+Potential score inputs:
+
+- compatibility score from quiz traits,
+- suburb/city proximity and current location fit,
+- shared interest strength and activity rarity,
+- sender/recipient freshness and recent activity,
+- prior positive interactions,
+- safety/trust signals,
+- group capacity and whether a plan is already close to viable.
+
+Do not expose the raw score in UI. User-facing copy should explain concrete reasons, not ranking mechanics.
+
 ### Incoming Pings
 
-Hook: `useActivationPings`.
+Hook/provider: `ActivationPingInboxSingleton` using `useIncomingActivationPings`.
 
 Subscribe:
 
@@ -248,8 +302,8 @@ channel(`activation-pings-${userId}`)
 
 Use this to show:
 
-- an in-app ping sheet/card if the app is foregrounded,
-- a badge or pending section in Activities,
+- one app-level ping nudge if the app is foregrounded,
+- a pending backlog in `Chats > Requests`,
 - a deep-link target when opened from push.
 
 ### Outgoing Activation Responses
@@ -320,9 +374,9 @@ If the app is opened from a push notification, route to `/pings/[pingId]` and pr
 ### Chats Tab
 
 - `Groups` shows activity groups created from accepted pings.
-- `People` shows one-to-one conversations and connection requests.
+- `Requests` shows pending ping responses and direct connection requests.
 - Chat unread dots should only represent unread messages, not generic pending pings.
-- Pending pings should badge Activities or show inside Activities, because they are activity intent work rather than chat messages.
+- Pending pings should not generate unlimited global interruptions. They should remain actionable in the Requests backlog.
 
 ### Group Screen
 

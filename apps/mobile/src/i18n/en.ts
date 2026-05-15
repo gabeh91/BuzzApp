@@ -9,13 +9,13 @@ const en = {
     continue: "Continue",
     dismiss: "Dismiss",
     activateInterestFab: {
-      label: "Activate interest",
+      label: "Ping",
       chooseActivity: "Choose an activity",
       chooseActivityHint: "Pick something you would actually do soon.",
       clearSelection: "Clear selected activity",
       closeWheel: "Close activity picker",
-      hint: "Choose an interest, then press and hold to activate.",
-      holdToActivate: "Press and hold to activate",
+      hint: "Choose an interest, then press and hold to Ping.",
+      holdToActivate: "Press and hold to Ping nearby",
       keepHolding: "Keep holding",
       releaseToPing: "Release to ping nearby people",
       pickOnActivitiesTabFirst:
@@ -27,10 +27,8 @@ const en = {
     },
   },
   toast: {
-    dismissHintTop:
-      "Swipe up or double tap Dismiss to close this notice.",
-    dismissHintBottom:
-      "Swipe down or double tap Dismiss to close this notice.",
+    dismissHintTop: "Swipe up or double tap Dismiss to close this notice.",
+    dismissHintBottom: "Swipe down or double tap Dismiss to close this notice.",
   },
   authModal: {
     close: "Close sign-in",
@@ -147,11 +145,14 @@ const en = {
     eyebrow: "Your answers",
     title: "Pick up the quiz",
     body: "Answer the rest now, or close and return when you have a quiet moment.",
+    retakeIntro: {
+      title: "Update your quiz",
+      body: "Change any answers you like, then save. Who we suggest as a fit will follow your latest answers.",
+    },
     saving: "Saving...",
     saved: "Quiz saved.",
     failed: "We could not save your quiz yet. Try again.",
     actions: {
-      close: "Close",
       finish: "Finish quiz",
       next: "Next question",
     },
@@ -160,6 +161,7 @@ const en = {
     actions: {
       finishQuiz: "Finish quiz",
       nextQuestion: "Next question",
+      startQuizQuestions: "Start questions",
       useInterest: "Use this interest",
       activating: "Turning on...",
       signInToActivate: "Sign in to continue",
@@ -194,6 +196,21 @@ const en = {
       eyebrow: "First plan",
       suggestedNextStep: "Suggested next step",
     },
+    shortProfile: {
+      name: {
+        eyebrow: "Your profile",
+        title: "What should we call you?",
+        body: "First name or the name you like to go by in Buzz.",
+        fieldLabel: "Name",
+        placeholder: "Alex",
+      },
+      location: {
+        eyebrow: "Your profile",
+        title: "Where are you based?",
+        body: "Buzz matches people and plans in your city first. You can change this later in settings.",
+        cityHint: "Your Buzz city for now",
+      },
+    },
     steps: {
       welcome: {
         eyebrow: "Welcome to Buzz",
@@ -209,7 +226,12 @@ const en = {
       quizIntro: {
         eyebrow: "A few questions",
         title: "So suggestions feel less random.",
-        body: "We ask about energy, availability, how you plan, and what size group feels comfortable—nothing tricky.",
+        body: "First a name and city, then a short style quiz—energy, availability, how you plan, and what size group feels comfortable.",
+      },
+      shortProfile: {
+        eyebrow: "Your profile",
+        title: "Name and city",
+        body: "Then we move into the quick quiz.",
       },
       quiz: {
         eyebrow: "Your style",
@@ -342,8 +364,7 @@ const en = {
       confirmBody:
         "We will notify nearby people who have also selected {interest:string}.",
       confirm: "Ping people",
-      pingSentToast:
-        "Ping sent. We will let you know who responds.",
+      pingSentToast: "Ping sent. We will let you know who responds.",
       pingSentToastWithCount:
         "Ping sent. We reached {count:number} people also open to {interest:string}. We will let you know who responds.",
     },
@@ -360,10 +381,15 @@ const en = {
     pings: {
       title: "People are open now",
       body: "{name:string} is also open to {interest:string}.",
+      digestBody:
+        "{name:string} is open to {interest:string}, with {count:number} more waiting.",
       yes: "I'm interested",
       maybe: "Maybe",
       no: "Not this one",
+      notNow: "Not now",
+      pendingCount: "{count:number} pings waiting",
       responding: "Updating...",
+      viewAll: "View all",
     },
     outgoing: {
       title: "Your active pings",
@@ -382,9 +408,45 @@ const en = {
     eyebrow: "Chats",
     title: "Messages",
     subtitle: "Connection requests and group chats live in one place.",
+    nudge: {
+      eyebrow: "Inbox",
+      titleOne: "1 thing needs your reply",
+      titleMany: "{count:number} things need your reply",
+      body: "Messages and activity replies are waiting in one place.",
+      messageRow: "{name:string} said hi",
+      activityRow: "{name:string} is open to {interest:string}",
+      more: "+ {count:number} more",
+      viewRequests: "View requests",
+    },
+    activityAccept: {
+      eyebrow: "Activity reply",
+      title: "Join {name:string} for {interest:string}?",
+      body: "Buzz will open a small activity chat so you can settle the details together.",
+      confirm: "Join activity",
+      confirming: "Joining...",
+      joinedTitle: "You are in.",
+      joinedBody: "The activity chat is ready.",
+      openChat: "Open activity chat",
+      cancel: "Not yet",
+      failed: "We could not join that activity yet. Try again in a moment.",
+    },
     requests: {
       title: "Requests",
       empty: "Connection requests will appear here when someone says hi.",
+      loading: "Checking requests...",
+      connectionTitle: "{name:string} said hi",
+      connectionBody: "They sent a hello to start a conversation.",
+      connectionMessageFallback: "No message added yet.",
+      pendingCount: "{count:number} requests waiting",
+      pendingBody:
+        "Reply when you are interested in joining a low-pressure plan.",
+      existingChatPingBody:
+        "You already have a chat with them. This activity reply will not replace it.",
+      openExistingChat: "Open chat",
+      accept: "Accept",
+      decline: "Decline",
+      responding: "Updating...",
+      viewRequest: "View request",
     },
     groups: {
       title: "Group chats",
@@ -445,6 +507,11 @@ const en = {
       title: "{percent:number}% settled",
       complete: "Your first loop is complete.",
       nextStep: "Next: {step:string}",
+    },
+    matchingQuiz: {
+      title: "Personality quiz",
+      body: "Your answers shape suburb picks, activities, and who feels like a good match. Retake anytime if your rhythm shifts.",
+      retakeCta: "Update quiz answers",
     },
     settled: {
       title: "Matching availability",
@@ -540,6 +607,36 @@ const en = {
   chat: {
     empty: "No messages yet.",
     composerPlaceholder: "Message the group",
+    directTitleFallback: "Direct chat",
+    directSubtitle: "Keep the conversation practical and easy to reply to.",
+    directComposerPlaceholder: "Write a reply",
+    backToTop: "Back to top",
+    report: "Report",
+    reporting: "Reporting",
+    reportSubmitted: "Report sent for review.",
+    reportFailed: "We could not send that report yet. Try again in a moment.",
+    reportSheetEyebrow: "Report",
+    reportSheetTitle: "Tell us what happened",
+    reportSheetBody:
+      "Choose what fits and add anything that would help our team review it.",
+    reportCategoryUnsafe: "I felt unsafe",
+    reportCategoryHarassment: "Harassment",
+    reportCategorySpam: "Spam or scam",
+    reportCategoryNoShow: "No-show",
+    reportCategoryOther: "Something else",
+    reportDetailsLabel: "Details",
+    reportDetailsPlaceholder: "Add a few details",
+    reportSubmit: "Send for review",
+    reportCancel: "Cancel",
+    leave: "Leave chat",
+    leaving: "Leaving",
+    leaveConfirmEyebrow: "Leave chat",
+    leaveConfirmTitle: "Leave chat with {name:string}?",
+    leaveConfirmBody:
+      "This closes the connection and removes the chat from your inbox.",
+    leaveConfirmAction: "Leave chat",
+    leaveConfirmCancel: "Keep chatting",
+    leaveFailed: "We could not leave that chat yet. Try again in a moment.",
     send: "Send",
     sending: "Sending",
     blocked: "Keep it respectful so the plan stays easy to join.",

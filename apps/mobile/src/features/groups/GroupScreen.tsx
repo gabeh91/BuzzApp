@@ -5,7 +5,6 @@ import { Share, StyleSheet, View } from "react-native";
 import {
   useActivityGroupSummaryQuery,
   useGroupMessagesQuery,
-  useSendGroupMessageMutation,
 } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { ChatComposer } from "@/features/chat/ChatComposer";
@@ -37,10 +36,12 @@ import {
   runLeaveGroupAction,
   runReportAction,
 } from "@/lib/functions";
+import { buzzSupabase } from "@/lib/supabase";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import {
+  Avatar,
   Button,
   Header,
   List,
@@ -103,7 +104,7 @@ type GroupScreenRow =
   | { type: "attendance" }
   | { type: "chatHeader" }
   | { type: "chatEmpty" }
-  | { type: "chatMessage"; message: ChatMessage }
+  | { type: "chatMessage"; message: ChatMessage; showAvatar: boolean }
   | { type: "chatFooter" }
   | { type: "backHome" };
 
@@ -139,8 +140,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     variables: { groupId },
     skip: isLocalGroup,
   });
-  const [sendGroupMessage, { loading: sendingMessage }] =
-    useSendGroupMessageMutation();
+  const [sendingMessage, setSendingMessage] = useState(false);
   const remoteGroup =
     groupSummaryData?.activityGroupsCollection?.edges[0]?.node ?? null;
   const remotePlan =
@@ -197,25 +197,28 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
       }
     : defaultActivityPlan;
   const exactLocationVisible = canShowExactLocation(false);
-  const remoteMessages: ChatMessage[] = useMemo(
-    () => {
-      const edges = messagesData?.groupMessagesCollection?.edges ?? [];
-      const mappedMessages: ChatMessage[] = [];
+  const remoteMessages: ChatMessage[] = useMemo(() => {
+    const edges = messagesData?.groupMessagesCollection?.edges ?? [];
+    const mappedMessages: ChatMessage[] = [];
 
-      for (const { node } of edges) {
-        mappedMessages.push({
-          id: node.id,
-          body: node.body,
-          createdAt: node.createdAt,
-          isOwnMessage: node.senderId === user.id,
-          moderationStatus: node.moderationStatus,
-        });
-      }
+    for (const { node } of edges) {
+      mappedMessages.push({
+        id: node.id,
+        body: node.body,
+        createdAt: node.createdAt,
+        isOwnMessage: node.senderId === user.id,
+        moderationStatus: node.moderationStatus,
+        senderId: node.senderId,
+        senderName:
+          node.sender?.firstName ??
+          node.sender?.displayName ??
+          LL.chat.directTitleFallback(),
+        senderPhotoUrl: node.sender?.profilePhotoUrl ?? null,
+      });
+    }
 
-      return mappedMessages;
-    },
-    [messagesData?.groupMessagesCollection?.edges, user.id],
-  );
+    return mappedMessages;
+  }, [LL, messagesData?.groupMessagesCollection?.edges, user.id]);
   const realtimeMessages = useGroupMessages({
     currentUserId: user.id,
     enabled: !isLocalGroup,
@@ -228,7 +231,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     const draft = createChatDraft(body);
     if (!draft.canSend) return;
 
-    await requireAuth("chat", async (authUser) => {
+    await requireAuth("chat", async () => {
       if (isLocalGroup) {
         setLocalMessages((current) => [
           ...current,
@@ -243,14 +246,21 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
         return;
       }
 
-      await sendGroupMessage({
-        variables: {
+      setSendingMessage(true);
+
+      try {
+        const { error } = await buzzSupabase.rpc("sendGroupMessage", {
           activityGroupId: groupId,
           body: draft.body,
           moderationStatus: draft.moderationStatus,
-          senderId: authUser.id,
-        },
-      });
+        });
+
+        if (error) {
+          throw new Error(error.message ?? "Unable to send message");
+        }
+      } finally {
+        setSendingMessage(false);
+      }
     });
   };
 
@@ -531,8 +541,19 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     if (messages.length === 0) {
       rows.push({ type: "chatEmpty" });
     } else {
-      for (const message of messages) {
-        rows.push({ type: "chatMessage", message });
+      for (let index = 0; index < messages.length; index += 1) {
+        const message = messages[index];
+        const nextMessage = messages[index + 1];
+
+        if (!message) continue;
+
+        rows.push({
+          type: "chatMessage",
+          message,
+          showAvatar:
+            !message.isOwnMessage &&
+            (!nextMessage || nextMessage.senderId !== message.senderId),
+        });
       }
     }
 
@@ -645,9 +666,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
               <UiText style={styles.detailTitle}>
                 {LL.groups.planCard.title()}
               </UiText>
-              <UiText style={styles.planCardTitle}>
-                {activityPlan.title}
-              </UiText>
+              <UiText style={styles.planCardTitle}>{activityPlan.title}</UiText>
               <View style={styles.planMetaRow}>
                 <UiText style={styles.planMeta}>
                   {LL.groups.planCard.timing({
@@ -767,9 +786,7 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
                 </View>
               ) : null}
               {inviteFeedback ? (
-                <UiText style={styles.safetyFeedback}>
-                  {inviteFeedback}
-                </UiText>
+                <UiText style={styles.safetyFeedback}>{inviteFeedback}</UiText>
               ) : null}
             </View>
           );
@@ -828,7 +845,28 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
 
         case "chatMessage":
           return (
-            <View style={styles.chatMessageRow}>
+            <View
+              style={[
+                styles.chatMessageRow,
+                item.message.isOwnMessage ? styles.chatMessageOwnRow : null,
+              ]}
+            >
+              {!item.message.isOwnMessage ? (
+                <View style={styles.chatMessageAvatarSlot}>
+                  {item.showAvatar ? (
+                    <Avatar
+                      accessibilityLabel={
+                        item.message.senderName ?? LL.chat.directTitleFallback()
+                      }
+                      fallbackInitial={
+                        item.message.senderName ?? item.message.senderId
+                      }
+                      size={30}
+                      uri={item.message.senderPhotoUrl ?? undefined}
+                    />
+                  ) : null}
+                </View>
+              ) : null}
               <MessageBubble message={item.message} />
             </View>
           );
@@ -1014,9 +1052,19 @@ const createStyles = (theme: BuzzTheme) => {
       lineHeight: lineHeights.body,
     },
     chatMessageRow: {
+      alignItems: "flex-end",
       backgroundColor: colors.surfaceMuted,
+      flexDirection: "row",
+      gap: spacing[2],
       paddingHorizontal: spacing[5],
       paddingBottom: spacing[3],
+    },
+    chatMessageOwnRow: {
+      justifyContent: "flex-end",
+    },
+    chatMessageAvatarSlot: {
+      alignItems: "center",
+      width: 30,
     },
     chatPanelFooter: {
       backgroundColor: colors.surfaceMuted,

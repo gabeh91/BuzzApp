@@ -10,6 +10,9 @@ export type ChatMessage = {
   createdAt: string;
   isOwnMessage: boolean;
   moderationStatus: string;
+  senderId?: string | undefined;
+  senderName?: string | null | undefined;
+  senderPhotoUrl?: string | null | undefined;
 };
 
 export type MessageBubbleProps = {

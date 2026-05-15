@@ -5,7 +5,9 @@ import { useMemo, type ReactNode } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { BuzzAuthProvider } from "@/auth/AuthProvider";
+import { ConnectionRequestInboxSingleton } from "@/features/chat/ConnectionRequestInboxSingleton";
 import { ActivationGestureLockProvider } from "@/features/interests/ActivationGestureLockProvider";
+import { ActivationPingInboxSingleton } from "@/features/interests/ActivationPingInboxSingleton";
 import { InterestFlowProvider } from "@/features/interests/InterestFlowProvider";
 import { OnboardingProvider } from "@/features/onboarding/OnboardingProvider";
 import { SettlingProgressProvider } from "@/features/progress/SettlingProgressProvider";
@@ -57,7 +59,11 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
                       <InterestFlowProvider>
                         <ActivationGestureLockProvider>
                           <SettlingProgressProvider>
-                            {children}
+                            <ConnectionRequestInboxSingleton>
+                              <ActivationPingInboxSingleton>
+                                {children}
+                              </ActivationPingInboxSingleton>
+                            </ConnectionRequestInboxSingleton>
                           </SettlingProgressProvider>
                         </ActivationGestureLockProvider>
                       </InterestFlowProvider>

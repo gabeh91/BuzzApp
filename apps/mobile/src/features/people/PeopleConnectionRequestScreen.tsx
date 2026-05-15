@@ -1,13 +1,17 @@
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
-import type { BuzzTheme } from "@/theme/tokens";
-import { Avatar, Button, Header, Panel, Screen, Text as UiText } from "@/ui";
+import {
+  SCREEN_CONTENT_GUTTER_SPACING,
+  type BuzzTheme,
+} from "@/theme/tokens";
+import { Avatar, BackHeader, Button, Panel, Screen, Text as UiText } from "@/ui";
 
 import { sendConnectionRequestToSupabase } from "./peopleFeedClient";
 
@@ -102,7 +106,11 @@ export const PeopleConnectionRequestScreen = ({
   const { requireAuth } = useBuzzAuth();
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
-  const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(
+    () => createStyles(theme, insets.bottom),
+    [theme, insets.bottom],
+  );
   const profileId = getParam(params.profileId);
   const firstName = getParam(params.firstName) ?? LL.peopleConnect.fallbackName();
   const displayName = getParam(params.displayName) ?? firstName;
@@ -171,20 +179,24 @@ export const PeopleConnectionRequestScreen = ({
   };
 
   return (
-    <Screen contentStyle={styles.content} edges={["top"]}>
-      <Header
-        left={
-          <Button
-            label={LL.common.back()}
-            onPress={() => {
-              router.replace(routes.home);
-            }}
-            variant="plain"
-          />
-        }
-        right={<UiText variant="eyebrow">{LL.peopleConnect.eyebrow()}</UiText>}
-      />
+    <Screen
+      contentStyle={styles.content}
+      edges={["top"]}
+      stickyHeader={
+        <BackHeader
+          backLabel={LL.common.back()}
+          onBack={() => {
+            if (router.canGoBack()) {
+              router.back();
+              return;
+            }
 
+            router.replace(routes.home);
+          }}
+          right={<UiText variant="eyebrow">{LL.peopleConnect.eyebrow()}</UiText>}
+        />
+      }
+    >
       <Panel variant="surface" style={styles.profilePanel}>
         <View style={styles.profileHeader}>
           <Avatar
@@ -294,14 +306,16 @@ export const PeopleConnectionRequestScreen = ({
   );
 };
 
-const createStyles = (theme: BuzzTheme) => {
+const createStyles = (theme: BuzzTheme, bottomInset: number) => {
   const { colors, fontSizes, lineHeights, radii, spacing } = theme;
 
   return StyleSheet.create({
     content: {
       flexGrow: 1,
       gap: spacing[5],
-      padding: spacing[6],
+      paddingBottom: bottomInset + spacing[8],
+      paddingHorizontal: spacing[SCREEN_CONTENT_GUTTER_SPACING],
+      paddingTop: spacing[SCREEN_CONTENT_GUTTER_SPACING],
     },
     profilePanel: {
       gap: spacing[4],

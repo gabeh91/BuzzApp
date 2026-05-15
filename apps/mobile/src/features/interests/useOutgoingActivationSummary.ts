@@ -81,13 +81,28 @@ const normalizeOutgoingActivation = (
 
 const normalizeOutgoingActivations = (
   value: unknown,
-): OutgoingActivationSummary[] =>
-  Array.isArray(value)
-    ? value.flatMap((item) => {
+): OutgoingActivationSummary[] => {
+  const parsedValue = parseJsonScalar(value);
+
+  return Array.isArray(parsedValue)
+    ? parsedValue.flatMap((item) => {
         const activation = normalizeOutgoingActivation(item);
         return activation ? [activation] : [];
       })
     : [];
+};
+
+const parseJsonScalar = (value: unknown): unknown => {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
 
 type UseOutgoingActivationSummaryInput = {
   enabled: boolean;
@@ -98,7 +113,13 @@ export const useOutgoingActivationSummary = ({
   enabled,
   userId,
 }: UseOutgoingActivationSummaryInput) => {
+  const channelInstanceId = useMemo(
+    () => Math.random().toString(36).slice(2),
+    [],
+  );
   const query = useOutgoingActivationSummaryQuery({
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-and-network",
     skip: !enabled || !userId,
   });
   const { data, loading, refetch } = query;
@@ -113,7 +134,7 @@ export const useOutgoingActivationSummary = ({
     }
 
     const channel = buzzSupabase
-      .channel(`activation-responses-${userId}`)
+      .channel(`activation-responses-${userId}-${channelInstanceId}`)
       .on(
         "postgres_changes",
         {
@@ -131,7 +152,7 @@ export const useOutgoingActivationSummary = ({
     return () => {
       void buzzSupabase.removeChannel(channel);
     };
-  }, [enabled, refetch, userId]);
+  }, [channelInstanceId, enabled, refetch, userId]);
 
   return {
     activations,

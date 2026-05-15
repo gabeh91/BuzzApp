@@ -4,12 +4,17 @@ import test from "node:test";
 
 const hookPath = "src/features/chat/useGroupMessages.ts";
 
-test("useGroupMessages subscribes to group_messages inserts and cleans up the channel", () => {
-  assert.equal(existsSync(hookPath), true, "useGroupMessages hook should exist");
+test("useGroupMessages subscribes to group_messages inserts with the authenticated Supabase client and cleans up the channel", () => {
+  assert.equal(
+    existsSync(hookPath),
+    true,
+    "useGroupMessages hook should exist",
+  );
 
   const source = readFileSync(hookPath, "utf8");
 
-  assert.match(source, /createClient/);
+  assert.match(source, /buzzSupabase/);
+  assert.doesNotMatch(source, /createClient/);
   assert.match(source, /channel\(`group-messages-\$\{groupId\}`\)/);
   assert.match(source, /postgres_changes/);
   assert.match(source, /event:\s*"INSERT"/);

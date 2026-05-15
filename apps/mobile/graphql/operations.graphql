@@ -62,6 +62,12 @@ query GroupMessages($groupId: UUID!) {
         messageType
         moderationStatus
         createdAt
+        sender {
+          id
+          firstName
+          displayName
+          profilePhotoUrl
+        }
       }
     }
   }
@@ -101,35 +107,6 @@ query ActivityGroupSummary($groupId: UUID!) {
           }
         }
       }
-    }
-  }
-}
-
-mutation SendGroupMessage(
-  $activityGroupId: UUID!
-  $senderId: UUID!
-  $body: String!
-  $moderationStatus: String!
-) {
-  insertIntoGroupMessagesCollection(
-    objects: [
-      {
-        activityGroupId: $activityGroupId
-        senderId: $senderId
-        body: $body
-        messageType: "text"
-        moderationStatus: $moderationStatus
-      }
-    ]
-  ) {
-    records {
-      id
-      activityGroupId
-      senderId
-      body
-      messageType
-      moderationStatus
-      createdAt
     }
   }
 }
