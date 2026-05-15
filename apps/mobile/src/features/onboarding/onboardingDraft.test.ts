@@ -7,6 +7,9 @@ import {
   clearDraftInterest,
   isAnonymousOnboardingDraftReusable,
   mergeQuizAnswerIntoDraft,
+  mergeShortProfileLocationIntoDraft,
+  mergeShortProfileNameIntoDraft,
+  mergeShortProfileRetreatToName,
   markAnonymousOnboardingComplete,
   resetClaimedAnonymousOnboardingDraft,
   selectDraftInterest,
@@ -125,4 +128,36 @@ test("editing a claimed anonymous draft starts a reusable local draft", () => {
   assert.equal(retaken.status, "partial");
   assert.equal(retaken.answers.pace, "balanced");
   assert.equal(isAnonymousOnboardingDraftReusable(retaken), true);
+});
+
+test("anonymous onboarding draft stores short profile progress", () => {
+  const named = mergeShortProfileNameIntoDraft(
+    createAnonymousOnboardingDraft(),
+    "  River  ",
+  );
+
+  assert.equal(named.profileDisplayName, "River");
+  assert.equal(named.shortProfileSubIndex, 1);
+  assert.equal(named.shortProfileComplete, false);
+
+  const located = mergeShortProfileLocationIntoDraft(named, {
+    id: "city-1",
+    name: "Melbourne",
+  });
+
+  assert.equal(located.profileCityId, "city-1");
+  assert.equal(located.profileCityName, "Melbourne");
+  assert.equal(located.shortProfileComplete, true);
+  assert.equal(located.shortProfileSubIndex, 0);
+});
+
+test("anonymous onboarding draft can retreat from location to name", () => {
+  const located = mergeShortProfileLocationIntoDraft(
+    mergeShortProfileNameIntoDraft(createAnonymousOnboardingDraft(), "Sam"),
+    { id: "c", name: "Melbourne" },
+  );
+  const retreated = mergeShortProfileRetreatToName(located);
+
+  assert.equal(retreated.shortProfileSubIndex, 0);
+  assert.equal(retreated.profileDisplayName, "Sam");
 });

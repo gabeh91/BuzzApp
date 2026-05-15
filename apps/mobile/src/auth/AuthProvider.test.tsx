@@ -427,6 +427,54 @@ describe("Buzz auth modal flow", () => {
     });
   });
 
+  it("does not prompt or overwrite saved quiz answers when restoring an existing session", async () => {
+    mockAnonymousDraftLoad.mockResolvedValue({
+      activeQuestionIndex: 19,
+      answers: { pace: "low" },
+      selectedInterest: null,
+      status: "complete",
+    });
+    mockGetSession.mockResolvedValueOnce({
+      data: {
+        session: {
+          access_token: "access-token",
+          user: {
+            email: "sam@example.com",
+            id: "user-1",
+            user_metadata: {},
+          },
+        },
+      },
+    });
+    mockRpc.mockResolvedValue({
+      data: {
+        profileExists: true,
+        quizAnswers: { pace: "balanced" },
+        quizCompleted: true,
+        quizTraits: { quizCompleted: true },
+        userId: "user-1",
+      },
+      error: null,
+    });
+
+    renderWithProviders(
+      <>
+        <AuthSignOutButton />
+        <AuthConflictControls />
+      </>,
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Sign out user-1" }),
+    ).toBeTruthy();
+    expect(screen.getByText("No prompt")).toBeTruthy();
+    expect(mockRpc).not.toHaveBeenCalledWith(
+      "upsertBuzzProfile",
+      expect.anything(),
+    );
+    expect(mockAnonymousDraftUpdate).toHaveBeenCalledWith(expect.any(Function));
+  });
+
   it("persists a local anonymous quiz draft when signing into an account without saved answers", async () => {
     mockAnonymousDraftLoad.mockResolvedValue({
       activeQuestionIndex: 1,

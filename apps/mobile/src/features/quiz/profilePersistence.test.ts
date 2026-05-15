@@ -24,8 +24,16 @@ const profileQuizScreenSource = readFileSync(
   "src/features/quiz/ProfileQuizScreen.tsx",
   "utf8",
 );
+const profileQuizOverwritePromptSource = readFileSync(
+  "src/features/quiz/ProfileQuizOverwritePrompt.tsx",
+  "utf8",
+);
 const persistQuizProfileHookSource = readFileSync(
   "src/features/quiz/usePersistQuizProfile.ts",
+  "utf8",
+);
+const profilePersistenceClientSource = readFileSync(
+  "src/features/quiz/profilePersistenceClient.ts",
   "utf8",
 );
 
@@ -69,6 +77,24 @@ test("createBuzzProfilePersistenceInput serializes the replaceable auth user, qu
   );
 });
 
+test("createBuzzProfilePersistenceInput accepts optional display and city overrides", () => {
+  assert.deepEqual(
+    createBuzzProfilePersistenceInput({
+      user: demoUser,
+      answers,
+      traits,
+      overrides: { displayName: "River", cityId: "city-override" },
+    }),
+    {
+      userId: demoUser.id,
+      displayName: "River",
+      cityId: "city-override",
+      quizAnswers: answers,
+      quizTraits: traits,
+    },
+  );
+});
+
 test("shouldPersistProfileToSupabase only sends profile writes for Supabase-backed users", () => {
   assert.equal(shouldPersistProfileToSupabase(demoUser), false);
   assert.equal(
@@ -77,13 +103,35 @@ test("shouldPersistProfileToSupabase only sends profile writes for Supabase-back
   );
 });
 
-test("mobile GraphQL operations expose typed profile persistence hooks", () => {
+test("mobile GraphQL operations still expose profile persistence for generated schema coverage", () => {
   assert.match(operationsSource, /mutation UpsertBuzzProfile/);
   assert.match(operationsSource, /upsertBuzzProfile/);
   assert.match(
     generatedGraphqlSource,
     /export function useUpsertBuzzProfileMutation/,
   );
+});
+
+test("profile persistence uses Supabase RPC so quiz JSON is sent as jsonb", () => {
+  assert.match(
+    profilePersistenceClientSource,
+    /buzzSupabase\.rpc\("upsertBuzzProfile"/,
+  );
+  assert.match(profilePersistenceClientSource, /quizAnswers: input\.quizAnswers/);
+  assert.match(profilePersistenceClientSource, /quizTraits: input\.quizTraits/);
+  assert.match(persistQuizProfileHookSource, /persistBuzzProfileToSupabase/);
+  assert.doesNotMatch(
+    persistQuizProfileHookSource,
+    /useUpsertBuzzProfileMutation/,
+  );
+});
+
+test("profile quiz overwrite prompt does not expose raw persistence errors", () => {
+  assert.match(
+    profileQuizOverwritePromptSource,
+    /LL\.profileQuizOverwritePrompt\.failed\(\)/,
+  );
+  assert.doesNotMatch(profileQuizOverwritePromptSource, /caught\.message/);
 });
 
 test("quiz provider exposes optimistic profile persistence state", () => {
@@ -93,8 +141,8 @@ test("quiz provider exposes optimistic profile persistence state", () => {
   assert.match(quizProviderSource, /markProfilePersistenceFailed/);
 });
 
-test("onboarding persists quiz profile through the generated hook without blocking demo mode", () => {
-  assert.match(onboardingScreenSource, /useUpsertBuzzProfileMutation/);
+test("onboarding persists quiz profile through the shared RPC helper without blocking demo mode", () => {
+  assert.match(onboardingScreenSource, /persistBuzzProfileToSupabase/);
   assert.match(onboardingScreenSource, /createBuzzProfilePersistenceInput/);
   assert.match(onboardingScreenSource, /shouldPersistProfileToSupabase/);
   assert.match(onboardingScreenSource, /quiz\.markProfileSaving/);
@@ -105,9 +153,9 @@ test("onboarding persists quiz profile through the generated hook without blocki
 test("authenticated profile quiz is a cut-down route with exit and profile persistence", () => {
   assert.match(profileQuizScreenSource, /QuizQuestionPanel/);
   assert.match(profileQuizScreenSource, /closeQuiz/);
-  assert.match(profileQuizScreenSource, /rootNavigation\.canGoBack/);
+  assert.match(profileQuizScreenSource, /router\.canGoBack/);
   assert.match(profileQuizScreenSource, /router\.replace\(routes\.profile\)/);
   assert.match(profileQuizScreenSource, /usePersistQuizProfile/);
-  assert.match(persistQuizProfileHookSource, /useUpsertBuzzProfileMutation/);
+  assert.match(persistQuizProfileHookSource, /persistBuzzProfileToSupabase/);
   assert.match(quizProviderSource, /status === "anonymous"/);
 });

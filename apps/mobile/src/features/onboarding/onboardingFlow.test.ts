@@ -18,6 +18,7 @@ test("onboarding keeps a compact intro before the quiz starts", () => {
       "welcome",
       "howItWorks",
       "quizIntro",
+      "shortProfile",
       "quiz",
       "interests",
       "activation",
@@ -27,6 +28,10 @@ test("onboarding keeps a compact intro before the quiz starts", () => {
 
   assert.ok(
     onboardingSteps.findIndex((step) => step.id === "quizIntro") <
+      onboardingSteps.findIndex((step) => step.id === "shortProfile"),
+  );
+  assert.ok(
+    onboardingSteps.findIndex((step) => step.id === "shortProfile") <
       onboardingSteps.findIndex((step) => step.id === "quiz"),
   );
 });
@@ -35,10 +40,16 @@ test("onboarding state advances and retreats without leaking step indexes into s
   const initial = createInitialOnboardingState();
   const afterWelcome = goNext(initial);
   const afterHowItWorks = goNext(afterWelcome);
+  const afterQuizIntro = goNext(afterHowItWorks);
+  const afterShortProfile = goNext(afterQuizIntro);
 
   assert.equal(initial.step.id, "welcome");
   assert.equal(afterWelcome.step.id, "howItWorks");
   assert.equal(afterHowItWorks.step.id, "quizIntro");
+  assert.equal(afterQuizIntro.step.id, "shortProfile");
+  assert.equal(afterShortProfile.step.id, "quiz");
+  assert.equal(goBack(afterShortProfile).step.id, "shortProfile");
+  assert.equal(goBack(afterQuizIntro).step.id, "quizIntro");
   assert.equal(goBack(afterHowItWorks).step.id, "howItWorks");
   assert.equal(goBack(initial).step.id, "welcome");
 });
@@ -59,6 +70,28 @@ test("onboarding resumes at quiz when an anonymous quiz draft exists", () => {
   const resumed = createOnboardingStateForAnonymousDraft({
     answers: { pace: "low" },
     selectedInterest: null,
+    status: "partial",
+  });
+
+  assert.equal(resumed.step.id, "quiz");
+});
+
+test("onboarding resumes at short profile when a draft has profile fields but no quiz", () => {
+  const resumed = createOnboardingStateForAnonymousDraft({
+    answers: {},
+    profileDisplayName: "Sam",
+    selectedInterest: null,
+    status: "partial",
+  });
+
+  assert.equal(resumed.step.id, "shortProfile");
+});
+
+test("onboarding resumes at quiz when short profile is complete without quiz answers", () => {
+  const resumed = createOnboardingStateForAnonymousDraft({
+    answers: {},
+    selectedInterest: null,
+    shortProfileComplete: true,
     status: "partial",
   });
 

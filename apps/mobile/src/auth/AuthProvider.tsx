@@ -22,6 +22,7 @@ import {
   resetClaimedAnonymousOnboardingDraft,
 } from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
+import { persistBuzzProfileToSupabase } from "@/features/quiz/profilePersistenceClient";
 import { deriveProfileTraits } from "@/features/quiz/quizModel";
 import { routes } from "@/navigation/routes";
 import type { AuthInteractionIntent } from "./authGate";
@@ -147,17 +148,13 @@ const persistAnonymousDraftProfile = async (
     return;
   }
 
-  const { error } = await buzzSupabase.rpc("upsertBuzzProfile", {
-    cityId: user.cityId,
-    displayName: user.displayName,
+  await persistBuzzProfileToSupabase({
+    cityId: draft.profileCityId ?? user.cityId,
+    displayName: draft.profileDisplayName?.trim() || user.displayName,
     quizAnswers: draft.answers,
     quizTraits: deriveProfileTraits(draft.answers),
     userId: user.id,
   });
-
-  if (error) {
-    throw error;
-  }
 };
 
 const claimAnonymousDraftForUser = async (
@@ -208,62 +205,84 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
   const [profileQuizOverwritePrompt, setProfileQuizOverwritePrompt] =
     useState<BuzzAuthState["profileQuizOverwritePrompt"]>(null);
 
-  const completeSession = useCallback(async (nextSession: Session | null) => {
-    if (!nextSession) {
-      const anonymousUser = createAnonymousBuzzUser();
-      currentSessionRef.current = null;
-      currentUserRef.current = anonymousUser;
-      setSession(null);
-      setUser(anonymousUser);
-      setBiometricEnabled(false);
-      setProfileQuizOverwritePrompt(null);
-      setProfileQuizState(null);
-      setStatus("anonymous");
-      return;
-    }
+  const completeSession = useCallback(
+    async (
+      nextSession: Session | null,
+      options: {
+        allowProfileQuizOverwritePrompt?: boolean;
+        claimAnonymousDraft?: boolean;
+      } = {},
+    ) => {
+      const {
+        allowProfileQuizOverwritePrompt = true,
+        claimAnonymousDraft = true,
+      } = options;
 
-    const nextUser = createUserFromSession(nextSession);
-    const nextBiometricEnabled = await getBiometricPreference(nextUser.id);
-    const [nextProfileQuizState, anonymousDraft] = await Promise.all([
-      loadProfileQuizState(nextUser.id),
-      anonymousOnboardingDraftStore.load(),
-    ]);
-
-    if (
-      shouldPromptForProfileQuizOverwrite({
-        draft: anonymousDraft,
-        profileQuizState: nextProfileQuizState,
-      })
-    ) {
-      pendingProfileQuizOverwriteRef.current = {
-        session: nextSession,
-        user: nextUser,
-      };
-      setProfileQuizOverwritePrompt({ userId: nextUser.id });
-    } else {
-      pendingProfileQuizOverwriteRef.current = null;
-      setProfileQuizOverwritePrompt(null);
-
-      if (nextProfileQuizState) {
-        await claimAnonymousDraftForUser(nextUser);
+      if (!nextSession) {
+        const anonymousUser = createAnonymousBuzzUser();
+        currentSessionRef.current = null;
+        currentUserRef.current = anonymousUser;
+        setSession(null);
+        setUser(anonymousUser);
+        setBiometricEnabled(false);
+        setProfileQuizOverwritePrompt(null);
+        setProfileQuizState(null);
+        setStatus("anonymous");
+        return;
       }
-    }
 
-    currentSessionRef.current = nextSession;
-    currentUserRef.current = nextUser;
-    setSession(nextSession);
-    setUser(nextUser);
-    setBiometricEnabled(nextBiometricEnabled);
-    setProfileQuizState(nextProfileQuizState);
-    setStatus(
-      shouldLockStoredSession({
-        biometricEnabled: nextBiometricEnabled,
-        hasStoredSupabaseSession: true,
-      })
-        ? "locked"
-        : "authenticated",
-    );
-  }, []);
+      const nextUser = createUserFromSession(nextSession);
+      const nextBiometricEnabled = await getBiometricPreference(nextUser.id);
+      const [nextProfileQuizState, anonymousDraft] = await Promise.all([
+        loadProfileQuizState(nextUser.id),
+        anonymousOnboardingDraftStore.load(),
+      ]);
+      const hasProfileQuizOverwriteConflict = shouldPromptForProfileQuizOverwrite(
+        {
+          draft: anonymousDraft,
+          profileQuizState: nextProfileQuizState,
+        },
+      );
+
+      if (
+        allowProfileQuizOverwritePrompt &&
+        hasProfileQuizOverwriteConflict
+      ) {
+        pendingProfileQuizOverwriteRef.current = {
+          session: nextSession,
+          user: nextUser,
+        };
+        setProfileQuizOverwritePrompt({ userId: nextUser.id });
+      } else {
+        pendingProfileQuizOverwriteRef.current = null;
+        setProfileQuizOverwritePrompt(null);
+
+        if (!allowProfileQuizOverwritePrompt && hasProfileQuizOverwriteConflict) {
+          await anonymousOnboardingDraftStore.update(() =>
+            createAnonymousOnboardingDraft(),
+          );
+        } else if (claimAnonymousDraft && nextProfileQuizState) {
+          await claimAnonymousDraftForUser(nextUser);
+        }
+      }
+
+      currentSessionRef.current = nextSession;
+      currentUserRef.current = nextUser;
+      setSession(nextSession);
+      setUser(nextUser);
+      setBiometricEnabled(nextBiometricEnabled);
+      setProfileQuizState(nextProfileQuizState);
+      setStatus(
+        shouldLockStoredSession({
+          biometricEnabled: nextBiometricEnabled,
+          hasStoredSupabaseSession: true,
+        })
+          ? "locked"
+          : "authenticated",
+      );
+    },
+    [],
+  );
 
   const runPendingAction = useCallback(
     async (
@@ -291,16 +310,22 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       const { data } = await buzzSupabase.auth.getSession();
 
       if (active) {
-        void completeSession(data.session);
+        void completeSession(data.session, {
+          allowProfileQuizOverwritePrompt: false,
+          claimAnonymousDraft: false,
+        });
       }
     };
 
     void restoreStoredSession();
 
     const { data } = buzzSupabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
+      (event, nextSession) => {
         const handleAuthStateChange = async () => {
-          await completeSession(nextSession);
+          await completeSession(nextSession, {
+            allowProfileQuizOverwritePrompt: event !== "INITIAL_SESSION",
+            claimAnonymousDraft: event !== "INITIAL_SESSION",
+          });
         };
 
         void handleAuthStateChange();

@@ -49,7 +49,7 @@ const parseAnonymousOnboardingDraft = (
         ? parsed.status
         : "empty";
 
-    return {
+    const draft: AnonymousOnboardingDraft = {
       activeQuestionIndex:
         typeof parsed.activeQuestionIndex === "number"
           ? parsed.activeQuestionIndex
@@ -59,13 +59,34 @@ const parseAnonymousOnboardingDraft = (
         ? (parsed.selectedInterest as AnonymousOnboardingDraft["selectedInterest"])
         : null,
       status,
-      ...(typeof parsed.completedAt === "string"
-        ? { completedAt: parsed.completedAt }
-        : {}),
-      ...(typeof parsed.claimedUserId === "string"
-        ? { claimedUserId: parsed.claimedUserId }
-        : {}),
+      shortProfileSubIndex:
+        typeof parsed.shortProfileSubIndex === "number"
+          ? parsed.shortProfileSubIndex
+          : 0,
+      shortProfileComplete: parsed.shortProfileComplete === true,
     };
+
+    if (typeof parsed.profileDisplayName === "string") {
+      draft.profileDisplayName = parsed.profileDisplayName;
+    }
+
+    if (typeof parsed.profileCityId === "string") {
+      draft.profileCityId = parsed.profileCityId;
+    }
+
+    if (typeof parsed.profileCityName === "string") {
+      draft.profileCityName = parsed.profileCityName;
+    }
+
+    if (typeof parsed.completedAt === "string") {
+      draft.completedAt = parsed.completedAt;
+    }
+
+    if (typeof parsed.claimedUserId === "string") {
+      draft.claimedUserId = parsed.claimedUserId;
+    }
+
+    return draft;
   } catch {
     return createAnonymousOnboardingDraft();
   }

@@ -18,11 +18,13 @@ const onboardingStylesSource = readFileSync(
   "src/features/onboarding/OnboardingScreen.styles.ts",
   "utf8",
 );
+const quizProgressBarSource = readFileSync("src/ui/QuizProgressBar.tsx", "utf8");
 const onboardingSource = [
   onboardingScreenSource,
   onboardingChromeSource,
   onboardingStylesSource,
   onboardingStepContentSource,
+  quizProgressBarSource,
 ].join("\n");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
   dependencies?: Record<string, string>;
@@ -39,7 +41,7 @@ test("mobile config enables Reanimated for native transitions", () => {
 test("onboarding presentation drives visible animated transitions", () => {
   assert.match(onboardingSource, /react-native-reanimated/);
   assert.match(onboardingSource, /useContentSlideTransition/);
-  assert.match(onboardingSource, /useAnimatedProgress/);
+  assert.match(quizProgressBarSource, /progressFillStyle/);
   assert.match(onboardingSource, /useSharedValue/);
   assert.match(onboardingSource, /useAnimatedStyle/);
   assert.match(onboardingSource, /withTiming/);
@@ -47,10 +49,24 @@ test("onboarding presentation drives visible animated transitions", () => {
   assert.match(onboardingScreenSource, /transitionIndex/);
   assert.match(onboardingChromeSource, /previousIndex/);
   assert.match(onboardingChromeSource, /translateX/);
-  assert.match(onboardingChromeSource, /progressFillStyle/);
+  assert.match(quizProgressBarSource, /progressFillStyle/);
   assert.doesNotMatch(onboardingSource, /opacity: entrance\.value/);
   assert.doesNotMatch(onboardingSource, /scale: 0\.985/);
   assert.doesNotMatch(onboardingSource, /Animated\.timing/);
+});
+
+test("onboarding screen uses shared safe edges and gutter token for scroll inset", () => {
+  assert.match(onboardingScreenSource, /edges=\{\["top"\]\}/);
+  assert.match(onboardingStylesSource, /SCREEN_CONTENT_GUTTER_SPACING/);
+  assert.match(
+    onboardingStylesSource,
+    /paddingBottom:\s*bottomInset\s*\+\s*spacing\[10\]/,
+  );
+});
+
+test("onboarding branded header reuses shared AppBrandedCityHeader", () => {
+  assert.match(onboardingChromeSource, /AppBrandedCityHeader/);
+  assert.match(onboardingChromeSource, /cityName=\{cityName\}/);
 });
 
 test("onboarding keeps header and progress fixed above scrollable card content", () => {
@@ -60,9 +76,10 @@ test("onboarding keeps header and progress fixed above scrollable card content",
     onboardingScreenSource,
     /contentStyle=\{styles\.screenContent\}/,
   );
+  assert.match(onboardingScreenSource, /stickyHeader=\{\s*\n\s*<FixedOnboardingHeader/);
   assert.match(
     onboardingScreenSource,
-    /<(?:SafeAreaView|Screen)[\s\S]*?<FixedOnboardingHeader[\s\S]*?<Animated\.ScrollView[\s\S]*?<Animated\.View style=\{\[styles\.mainCard, transition\.cardStyle\]\}/,
+    /<View style=\{styles\.stage\}>[\s\S]*?<Animated\.ScrollView[\s\S]*?<Animated\.View style=\{\[styles\.mainCard, transition\.cardStyle\]\}/,
   );
   assert.match(onboardingScreenSource, /quizProgress/);
   assert.doesNotMatch(
@@ -74,7 +91,7 @@ test("onboarding keeps header and progress fixed above scrollable card content",
 test("ambient background is scoped below the fixed onboarding header", () => {
   assert.match(
     onboardingScreenSource,
-    /<FixedOnboardingHeader[\s\S]*?<View style=\{styles\.stage\}>[\s\S]*?<AmbientBackground[\s\S]*?<Animated\.ScrollView[\s\S]*?<View style=\{styles\.layout\}>/,
+    /stickyHeader=\{\s*\n\s*<FixedOnboardingHeader[\s\S]*?<View style=\{styles\.stage\}>[\s\S]*?<AmbientBackground[\s\S]*?<Animated\.ScrollView[\s\S]*?<View style=\{styles\.layout\}>/,
   );
   assert.doesNotMatch(
     onboardingScreenSource,
@@ -155,15 +172,13 @@ test("onboarding header crossfades progress bars when entering and leaving quiz"
   assert.match(onboardingChromeSource, /styles\.headerProgressSlot/);
   assert.match(onboardingChromeSource, /styles\.flowProgressLayer/);
   assert.match(onboardingChromeSource, /styles\.quizProgressLayer/);
+  assert.match(onboardingChromeSource, /QuizProgressBar/);
 });
 
 test("onboarding progress label noun is configurable per progress context", () => {
-  assert.match(onboardingChromeSource, /type ProgressBarProps =/);
-  assert.match(onboardingChromeSource, /label: string/);
-  assert.match(
-    onboardingChromeSource,
-    /<Text style=\{styles\.progressLabel\}>\{label\}<\/Text>/,
-  );
+  assert.match(quizProgressBarSource, /QuizProgressBarProps/);
+  assert.match(quizProgressBarSource, /label: string/);
+  assert.match(quizProgressBarSource, /styles\.progressLabel/);
   assert.match(onboardingChromeSource, /LL\.common\.progress\.step/);
   assert.match(onboardingChromeSource, /LL\.common\.progress\.question/);
   assert.doesNotMatch(onboardingSource, /LL\.onboarding\.progress/);

@@ -13,18 +13,20 @@ export type BuzzProfilePersistenceInput = {
 export const createBuzzProfilePersistenceInput = ({
   user,
   answers,
-  traits
+  traits,
+  overrides,
 }: {
   user: BuzzAuthUser;
   answers: QuizAnswers;
   traits: ProfileTraits;
+  overrides?: { displayName?: string; cityId?: string };
 }): BuzzProfilePersistenceInput => {
   return {
     userId: user.id,
-    displayName: user.displayName,
-    cityId: user.cityId,
+    displayName: overrides?.displayName ?? user.displayName,
+    cityId: overrides?.cityId ?? user.cityId,
     quizAnswers: answers,
-    quizTraits: traits
+    quizTraits: traits,
   };
 };
 

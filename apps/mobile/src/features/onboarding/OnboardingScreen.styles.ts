@@ -1,8 +1,11 @@
 import { StyleSheet } from "react-native";
 
-import type { BuzzTheme } from "@/theme/tokens";
+import {
+  SCREEN_CONTENT_GUTTER_SPACING,
+  type BuzzTheme,
+} from "@/theme/tokens";
 
-export const createOnboardingStyles = (theme: BuzzTheme) => {
+export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) => {
   const {
     colors,
     fontSizes,
@@ -25,11 +28,15 @@ export const createOnboardingStyles = (theme: BuzzTheme) => {
       gap: spacing[0],
       padding: spacing[0],
     },
+    scrollView: {
+      flex: 1,
+    },
     scrollContent: {
       flexGrow: 1,
-      paddingHorizontal: spacing[6],
-      paddingTop: spacing[5],
-      paddingBottom: spacing[6],
+      /** Match `ProfileQuizScreen` (`bottomInset + spacing[10]`) — onboarding uses `edges={["top"]}` so this is the sole bottom safe padding. */
+      paddingBottom: bottomInset + spacing[10],
+      paddingHorizontal: spacing[SCREEN_CONTENT_GUTTER_SPACING],
+      paddingTop: spacing[3],
     },
     stage: {
       flex: 1,
@@ -63,35 +70,9 @@ export const createOnboardingStyles = (theme: BuzzTheme) => {
       backgroundColor: colors.warningSoft,
     },
     fixedHeader: {
-      paddingHorizontal: spacing[6],
-      paddingTop: spacing[5],
-      paddingBottom: spacing[4],
-      gap: spacing[5],
-      backgroundColor: colors.background,
-      borderBottomWidth: borderWidths.hairline,
       borderBottomColor: colors.overlay,
-      zIndex: 1,
-    },
-    headerRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    logo: {
-      color: colors.text,
-      ...fontStyles.display,
-      fontSize: fontSizes["4xl"],
-      letterSpacing: 0,
-    },
-    envLabel: {
-      color: colors.textMuted,
-      fontSize: fontSizes.xs,
-      fontWeight: "800",
-      letterSpacing: 1.1,
-      textTransform: "uppercase",
-    },
-    progressGroup: {
-      gap: spacing[2],
+      borderBottomWidth: borderWidths.hairline,
+      gap: spacing[5],
     },
     headerProgressSlot: {
       height: spacing[10],
@@ -102,23 +83,6 @@ export const createOnboardingStyles = (theme: BuzzTheme) => {
     },
     quizProgressLayer: {
       ...StyleSheet.absoluteFillObject,
-    },
-    progressTrack: {
-      height: spacing[2],
-      borderRadius: radii.full,
-      backgroundColor: colors.overlay,
-      overflow: "hidden",
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: radii.full,
-      backgroundColor: colors.accent,
-    },
-    progressLabel: {
-      color: colors.textMuted,
-      fontSize: fontSizes.xs,
-      letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
     mainCard: {
       backgroundColor: colors.surface,
@@ -152,6 +116,46 @@ export const createOnboardingStyles = (theme: BuzzTheme) => {
     },
     contentStack: {
       gap: spacing[4],
+    },
+    shortProfileFieldLabel: {
+      color: colors.textMuted,
+      fontSize: fontSizes.xs,
+      fontWeight: "900",
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
+    },
+    shortProfileTextInput: {
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+      borderRadius: radii.lg,
+      color: colors.text,
+      fontSize: fontSizes.lg,
+      lineHeight: lineHeights.body,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+    },
+    shortProfileCityCard: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceMuted,
+      borderColor: colors.border,
+      borderRadius: radii.xl,
+      borderWidth: borderWidths.hairline,
+      gap: spacing[2],
+      paddingHorizontal: spacing[5],
+      paddingVertical: spacing[5],
+    },
+    shortProfileCityHint: {
+      color: colors.textMuted,
+      fontSize: fontSizes.sm,
+      fontWeight: "800",
+      letterSpacing: 0.6,
+      textTransform: "uppercase",
+    },
+    shortProfileCityName: {
+      color: colors.text,
+      fontSize: fontSizes["3xl"],
+      fontWeight: "900",
+      textAlign: "center",
     },
     bodyCopy: {
       color: colors.textMuted,

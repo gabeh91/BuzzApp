@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import {
@@ -17,15 +19,29 @@ import { createSettlingProgress } from "@/features/progress/settlingProgress";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { runSettledAction } from "@/lib/functions";
+import { routes } from "@/navigation/routes";
+import { tabBarTotalHeight } from "@/navigation/tabBarLayout";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button, Header, HeroPanel, Panel, Screen, Text as UiText } from "@/ui";
+import {
+  AppBrandedCityHeader,
+  Button,
+  HeroPanel,
+  Panel,
+  Screen,
+  Text as UiText,
+} from "@/ui";
 
 type SettledActionStatus = "idle" | "saving" | "error";
 
 export const ProfileScreen = () => {
+  const router = useRouter();
   const { theme } = useBuzzTheme();
-  const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(
+    () => createStyles(theme, insets.bottom),
+    [theme, insets.bottom],
+  );
   const { LL } = useI18n();
   const {
     biometricEnabled,
@@ -159,17 +175,32 @@ export const ProfileScreen = () => {
     showCityStartingPoint || showFullLandingPlan || settlingProgress.percent > 0;
 
   return (
-    <Screen contentStyle={styles.content} edges={["top"]}>
-      <Header
-        left={<UiText variant="logo">{LL.brand.name()}</UiText>}
-        right={<UiText variant="city">{cityContext.city.name}</UiText>}
-      />
-
+    <Screen
+      contentStyle={styles.content}
+      edges={["top"]}
+      stickyHeader={
+        <AppBrandedCityHeader cityName={cityContext.city.name} />
+      }
+    >
       <HeroPanel
         body={LL.profile.subtitle()}
         eyebrow={cityContext.city.name}
         title={LL.profile.title()}
       />
+
+      {isAuthenticated ? (
+        <Panel variant="surface" style={styles.groupPanel}>
+          <UiText variant="panelTitle">{LL.profile.matchingQuiz.title()}</UiText>
+          <UiText variant="panelBody">{LL.profile.matchingQuiz.body()}</UiText>
+          <Button
+            label={LL.profile.matchingQuiz.retakeCta()}
+            onPress={() => {
+              router.push(routes.profileQuiz);
+            }}
+            variant="secondary"
+          />
+        </Panel>
+      ) : null}
 
       <Panel variant="surface" style={styles.groupPanel}>
         <UiText variant="panelTitle">
@@ -377,14 +408,15 @@ export const ProfileScreen = () => {
   );
 };
 
-const createStyles = (theme: BuzzTheme) => {
+const createStyles = (theme: BuzzTheme, bottomInset: number) => {
   const { colors, fontSizes, lineHeights, spacing, radii, borderWidths } = theme;
 
   return StyleSheet.create({
     content: {
       flexGrow: 1,
       gap: spacing[5],
-      padding: spacing[6],
+      paddingBottom: tabBarTotalHeight(theme, bottomInset) + spacing[4],
+      paddingTop: spacing[5],
     },
     groupPanel: {
       gap: spacing[4],

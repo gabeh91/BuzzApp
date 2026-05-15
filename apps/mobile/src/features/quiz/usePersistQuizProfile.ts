@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 
-import { useUpsertBuzzProfileMutation } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import type { BuzzAuthUser } from "@/auth/auth.types";
 
@@ -8,12 +7,12 @@ import {
   createBuzzProfilePersistenceInput,
   shouldPersistProfileToSupabase,
 } from "./profilePersistence";
+import { persistBuzzProfileToSupabase } from "./profilePersistenceClient";
 import { useQuiz } from "./QuizProvider";
 
 export const usePersistQuizProfile = () => {
   const { user } = useBuzzAuth();
   const quiz = useQuiz();
-  const [upsertBuzzProfile] = useUpsertBuzzProfileMutation();
 
   return useCallback(
     async (profileUser: BuzzAuthUser = user) => {
@@ -31,9 +30,7 @@ export const usePersistQuizProfile = () => {
       }
 
       try {
-        await upsertBuzzProfile({
-          variables: input,
-        });
+        await persistBuzzProfileToSupabase(input);
         quiz.markProfilePersisted(input);
       } catch (caught) {
         quiz.markProfilePersistenceFailed(
@@ -43,6 +40,6 @@ export const usePersistQuizProfile = () => {
         throw caught;
       }
     },
-    [quiz, upsertBuzzProfile, user],
+    [quiz, user],
   );
 };

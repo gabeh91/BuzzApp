@@ -1,5 +1,7 @@
 import { useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
@@ -8,7 +10,6 @@ import Animated, {
 import {
   useActivateInterestMutation,
   useBuzzHomeQuery,
-  useUpsertBuzzProfileMutation,
 } from "@graphql/generated";
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import type { BuzzAuthUser } from "@/auth/auth.types";
@@ -24,13 +25,22 @@ import {
   createBuzzProfilePersistenceInput,
   shouldPersistProfileToSupabase,
 } from "@/features/quiz/profilePersistence";
+import { persistBuzzProfileToSupabase } from "@/features/quiz/profilePersistenceClient";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import { Button, Screen } from "@/ui";
 import { useOnboarding } from "@/features/onboarding/OnboardingProvider";
-import { canBrowseFromOnboardingStep } from "@/features/onboarding/onboardingFlow";
-import { markAnonymousOnboardingComplete } from "@/features/onboarding/onboardingDraft";
+import {
+  canBrowseFromOnboardingStep,
+  ONBOARDING_QUIZ_SECTION_PROFILE_STEPS,
+} from "@/features/onboarding/onboardingFlow";
+import {
+  markAnonymousOnboardingComplete,
+  mergeShortProfileLocationIntoDraft,
+  mergeShortProfileNameIntoDraft,
+  mergeShortProfileRetreatToName,
+} from "@/features/onboarding/onboardingDraft";
 import { anonymousOnboardingDraftStore } from "@/features/onboarding/onboardingDraftStorage";
 import {
   AmbientBackground,
@@ -60,12 +70,20 @@ const OnboardingExperience = () => {
   const { data, loading, error } = useBuzzHomeQuery();
   const [activateInterest, { loading: activating }] =
     useActivateInterestMutation();
-  const [upsertBuzzProfile] = useUpsertBuzzProfileMutation();
   const interests = getInterestsFromGraphql(data);
   const selectedInterest = interestFlow.state.selectedInterest;
+  const [shortProfilePhase, setShortProfilePhase] = useState(0);
+  const [shortProfileName, setShortProfileName] = useState("");
+  const quizSectionSpan =
+    ONBOARDING_QUIZ_SECTION_PROFILE_STEPS + quiz.progress.total;
+  const innerQuizSectionOffset =
+    onboarding.state.step.id === "shortProfile"
+      ? shortProfilePhase
+      : onboarding.state.step.id === "quiz"
+        ? ONBOARDING_QUIZ_SECTION_PROFILE_STEPS + quiz.activeQuestionIndex
+        : 0;
   const transitionIndex =
-    onboarding.state.index * (quiz.progress.total + 1) +
-    (onboarding.state.step.id === "quiz" ? quiz.activeQuestionIndex : 0);
+    onboarding.state.index * (quizSectionSpan + 1) + innerQuizSectionOffset;
   const transition = useContentSlideTransition(transitionIndex);
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -74,8 +92,50 @@ const OnboardingExperience = () => {
     },
   });
   const stepCopy = LL.onboarding.steps[onboarding.state.step.id];
-  const quizProgress =
-    onboarding.state.step.id === "quiz" ? quiz.progress : undefined;
+  const shortProfileCopy =
+    onboarding.state.step.id === "shortProfile"
+      ? shortProfilePhase === 0
+        ? LL.onboarding.shortProfile.name
+        : LL.onboarding.shortProfile.location
+      : null;
+  const quizSectionProgress =
+    onboarding.state.step.id === "shortProfile" ||
+    onboarding.state.step.id === "quiz"
+      ? {
+          current:
+            onboarding.state.step.id === "shortProfile"
+              ? shortProfilePhase + 1
+              : ONBOARDING_QUIZ_SECTION_PROFILE_STEPS +
+                quiz.activeQuestionIndex +
+                1,
+          total: quizSectionSpan,
+        }
+      : undefined;
+
+  useEffect(() => {
+    if (onboarding.state.step.id !== "shortProfile") {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadDraft = async () => {
+      const draft = await anonymousOnboardingDraftStore.load();
+
+      if (cancelled) {
+        return;
+      }
+
+      setShortProfilePhase(draft.shortProfileSubIndex ?? 0);
+      setShortProfileName(draft.profileDisplayName?.trim() ?? "");
+    };
+
+    void loadDraft();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onboarding.state.step.id]);
   const canBrowseFromCurrentStep = canBrowseFromOnboardingStep(
     onboarding.state,
   );
@@ -86,10 +146,21 @@ const OnboardingExperience = () => {
   const showBackAction = !onboarding.isFirstStep;
 
   const persistQuizProfile = async (profileUser: BuzzAuthUser = user) => {
+    const draft = await anonymousOnboardingDraftStore.load();
+    const trimmedName = draft.profileDisplayName?.trim();
+    const hasProfileOverrides = Boolean(trimmedName || draft.profileCityId);
     const input = createBuzzProfilePersistenceInput({
       user: profileUser,
       answers: quiz.answers,
       traits: quiz.traits,
+      ...(hasProfileOverrides
+        ? {
+            overrides: {
+              displayName: trimmedName || profileUser.displayName,
+              cityId: draft.profileCityId ?? profileUser.cityId,
+            },
+          }
+        : {}),
     });
 
     quiz.markProfileSaving(input);
@@ -100,9 +171,7 @@ const OnboardingExperience = () => {
     }
 
     try {
-      await upsertBuzzProfile({
-        variables: input,
-      });
+      await persistBuzzProfileToSupabase(input);
       quiz.markProfilePersisted(input);
     } catch (caught) {
       quiz.markProfilePersistenceFailed(
@@ -195,7 +264,11 @@ const OnboardingExperience = () => {
       ? quiz.isLastQuestion
         ? LL.onboarding.actions.finishQuiz()
         : LL.onboarding.actions.nextQuestion()
-      : onboarding.state.step.id === "interests"
+      : onboarding.state.step.id === "shortProfile"
+        ? shortProfilePhase === 0
+          ? LL.common.continue()
+          : LL.onboarding.actions.startQuizQuestions()
+        : onboarding.state.step.id === "interests"
         ? LL.onboarding.actions.useInterest()
         : onboarding.state.step.id === "activation"
           ? activating || interestFlow.state.activation.status === "activating"
@@ -208,6 +281,9 @@ const OnboardingExperience = () => {
             : LL.common.continue();
 
   const primaryDisabled =
+    (onboarding.state.step.id === "shortProfile" &&
+      shortProfilePhase === 0 &&
+      !shortProfileName.trim()) ||
     (onboarding.state.step.id === "quiz" && !quiz.hasAnsweredActiveQuestion) ||
     (onboarding.state.step.id === "interests" && !selectedInterest) ||
     (onboarding.state.step.id === "activation" &&
@@ -235,6 +311,31 @@ const OnboardingExperience = () => {
       return;
     }
 
+    if (onboarding.state.step.id === "shortProfile") {
+      if (shortProfilePhase === 0) {
+        const trimmed = shortProfileName.trim();
+
+        if (!trimmed) {
+          return;
+        }
+
+        void anonymousOnboardingDraftStore.update((draft) =>
+          mergeShortProfileNameIntoDraft(draft, trimmed),
+        );
+        setShortProfilePhase(1);
+        return;
+      }
+
+      void anonymousOnboardingDraftStore.update((draft) =>
+        mergeShortProfileLocationIntoDraft(draft, {
+          id: cityContext.city.id,
+          name: cityContext.city.name,
+        }),
+      );
+      onboarding.next();
+      return;
+    }
+
     if (onboarding.state.step.id === "activation") {
       void activateSelectedInterest();
       return;
@@ -244,6 +345,19 @@ const OnboardingExperience = () => {
   };
 
   const handleBack = () => {
+    if (onboarding.state.step.id === "shortProfile") {
+      if (shortProfilePhase > 0) {
+        void anonymousOnboardingDraftStore.update((draft) =>
+          mergeShortProfileRetreatToName(draft),
+        );
+        setShortProfilePhase(0);
+        return;
+      }
+
+      onboarding.back();
+      return;
+    }
+
     if (onboarding.state.step.id === "quiz" && quiz.activeQuestionIndex > 0) {
       quiz.previousQuestion();
       return;
@@ -257,31 +371,57 @@ const OnboardingExperience = () => {
       contentStyle={styles.screenContent}
       edges={["top"]}
       scroll={false}
+      stickyHeader={
+        <FixedOnboardingHeader
+          cityName={cityContext.city.name}
+          flowProgress={onboarding.state.progress}
+          quizProgress={quizSectionProgress}
+        />
+      }
       style={styles.screen}
     >
-      <FixedOnboardingHeader
-        cityName={cityContext.city.name}
-        flowProgress={onboarding.state.progress}
-        quizProgress={quizProgress}
-      />
       <View style={styles.stage}>
         <AmbientBackground scrollY={scrollY} />
         <Animated.ScrollView
+          contentContainerStyle={styles.scrollContent}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
-          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          style={styles.scrollView}
         >
           <View style={styles.layout}>
             <View style={styles.cardRail}>
               <Animated.View style={[styles.mainCard, transition.cardStyle]}>
                 <View style={styles.titleStack}>
-                  <Text style={styles.eyebrow}>{stepCopy.eyebrow()}</Text>
-                  <Text style={styles.title}>{stepCopy.title()}</Text>
+                  <Text style={styles.eyebrow}>
+                    {shortProfileCopy
+                      ? shortProfileCopy.eyebrow()
+                      : stepCopy.eyebrow()}
+                  </Text>
+                  <Text style={styles.title}>
+                    {shortProfileCopy
+                      ? shortProfileCopy.title()
+                      : stepCopy.title()}
+                  </Text>
+                  {shortProfileCopy ? (
+                    <Text style={styles.bodyCopy}>{shortProfileCopy.body()}</Text>
+                  ) : null}
                 </View>
                 <StepContent
                   interests={interests}
                   loading={loading}
                   error={error}
+                  shortProfile={
+                    onboarding.state.step.id === "shortProfile"
+                      ? {
+                          phase: shortProfilePhase,
+                          nameValue: shortProfileName,
+                          onNameChange: setShortProfileName,
+                          cityName: cityContext.city.name,
+                          cityHint: LL.onboarding.shortProfile.location.cityHint(),
+                        }
+                      : undefined
+                  }
                 />
               </Animated.View>
             </View>
@@ -333,7 +473,11 @@ const OnboardingExperience = () => {
 
 export const OnboardingScreen = () => {
   const { theme } = useBuzzTheme();
-  const styles = createOnboardingStyles(theme);
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(
+    () => createOnboardingStyles(theme, insets.bottom),
+    [theme, insets.bottom],
+  );
 
   return (
     <OnboardingThemeProvider value={{ colors: theme.colors, styles }}>

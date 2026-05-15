@@ -2,10 +2,14 @@ export type OnboardingStepId =
   | "welcome"
   | "howItWorks"
   | "quizIntro"
+  | "shortProfile"
   | "quiz"
   | "interests"
   | "activation"
   | "matchPreview";
+
+/** Sub-steps (name, then city) grouped with the quiz in progress UI. */
+export const ONBOARDING_QUIZ_SECTION_PROFILE_STEPS = 2;
 
 export type OnboardingStep = {
   id: OnboardingStepId;
@@ -24,6 +28,7 @@ export const onboardingStepIds: OnboardingStepId[] = [
   "welcome",
   "howItWorks",
   "quizIntro",
+  "shortProfile",
   "quiz",
   "interests",
   "activation",
@@ -38,6 +43,9 @@ type AnonymousDraftResumeState = {
   answers: Record<string, string>;
   selectedInterest: { id: string } | null;
   status: "empty" | "partial" | "complete";
+  profileDisplayName?: string;
+  shortProfileSubIndex?: number;
+  shortProfileComplete?: boolean;
 };
 
 const createState = (index: number): OnboardingState => {
@@ -75,6 +83,18 @@ export const createOnboardingStateForAnonymousDraft = (
 
   if (Object.keys(draft.answers).length > 0) {
     return createState(onboardingStepIds.indexOf("quiz"));
+  }
+
+  if (draft.shortProfileComplete) {
+    return createState(onboardingStepIds.indexOf("quiz"));
+  }
+
+  if (
+    draft.status === "partial" &&
+    ((draft.profileDisplayName?.trim().length ?? 0) > 0 ||
+      (draft.shortProfileSubIndex ?? 0) > 0)
+  ) {
+    return createState(onboardingStepIds.indexOf("shortProfile"));
   }
 
   return createInitialOnboardingState();

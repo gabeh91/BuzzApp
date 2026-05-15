@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import Animated, {
   Easing,
   type SharedValue,
@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useI18n } from "@/i18n/I18nProvider";
+import { AppBrandedCityHeader, QuizProgressBar } from "@/ui";
 
 import { useOnboardingTheme } from "./OnboardingTheme";
 
@@ -99,27 +100,6 @@ export const useContentSlideTransition = (transitionIndex: number) => {
   };
 };
 
-const useAnimatedProgress = (current: number, total: number) => {
-  const progress = useSharedValue(total > 0 ? current / total : 0);
-
-  useEffect(() => {
-    progress.value = withTiming(total > 0 ? current / total : 0, {
-      duration: 260,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [current, progress, total]);
-
-  const progressFillStyle = useAnimatedStyle(() => {
-    return {
-      width: `${Math.min(Math.max(progress.value, 0), 1) * 100}%`,
-    };
-  });
-
-  return {
-    progressFillStyle,
-  };
-};
-
 const useHeaderProgressTransition = (isQuizStep: boolean) => {
   const quizMode = useSharedValue(isQuizStep ? 1 : 0);
 
@@ -156,26 +136,6 @@ const useHeaderProgressTransition = (isQuizStep: boolean) => {
     flowProgressStyle,
     quizProgressStyle,
   };
-};
-
-type ProgressBarProps = {
-  current: number;
-  total: number;
-  label: string;
-};
-
-const ProgressBar = ({ current, total, label }: ProgressBarProps) => {
-  const { styles } = useOnboardingTheme();
-  const { progressFillStyle } = useAnimatedProgress(current, total);
-
-  return (
-    <View style={styles.progressGroup}>
-      <View style={styles.progressTrack}>
-        <Animated.View style={[styles.progressFill, progressFillStyle]} />
-      </View>
-      <Text style={styles.progressLabel}>{label}</Text>
-    </View>
-  );
 };
 
 export const AmbientBackground = ({
@@ -230,16 +190,13 @@ export const FixedOnboardingHeader = ({
 
   return (
     <View style={styles.fixedHeader}>
-      <View style={styles.headerRow}>
-        <Text style={styles.logo}>{LL.brand.name()}</Text>
-        <Text style={styles.envLabel}>{cityName}</Text>
-      </View>
+      <AppBrandedCityHeader cityName={cityName} />
       <View style={styles.headerProgressSlot}>
         <Animated.View style={[styles.flowProgressLayer, flowProgressStyle]}>
-          <ProgressBar
+          <QuizProgressBar
             current={flowProgress.current}
-            total={flowProgress.total}
             label={flowProgressLabel}
+            total={flowProgress.total}
           />
         </Animated.View>
         {visibleQuizProgress ? (
@@ -247,10 +204,10 @@ export const FixedOnboardingHeader = ({
             pointerEvents="none"
             style={[styles.quizProgressLayer, quizProgressStyle]}
           >
-            <ProgressBar
+            <QuizProgressBar
               current={visibleQuizProgress.current}
-              total={visibleQuizProgress.total}
               label={quizProgressLabel ?? ""}
+              total={visibleQuizProgress.total}
             />
           </Animated.View>
         ) : null}

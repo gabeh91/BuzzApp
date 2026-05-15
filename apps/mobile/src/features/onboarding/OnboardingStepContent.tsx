@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import type {
@@ -10,6 +10,51 @@ import { useI18n } from "@/i18n/I18nProvider";
 
 import { useOnboarding } from "./OnboardingProvider";
 import { useOnboardingTheme } from "./OnboardingTheme";
+
+const ShortProfileContent = ({
+  phase,
+  nameValue,
+  onNameChange,
+  cityName,
+  cityHint,
+}: {
+  phase: number;
+  nameValue: string;
+  onNameChange: (value: string) => void;
+  cityName: string;
+  cityHint: string;
+}) => {
+  const { colors, styles } = useOnboardingTheme();
+  const { LL } = useI18n();
+
+  if (phase === 0) {
+    return (
+      <View style={styles.contentStack}>
+        <Text style={styles.shortProfileFieldLabel}>
+          {LL.onboarding.shortProfile.name.fieldLabel()}
+        </Text>
+        <TextInput
+          autoCapitalize="words"
+          autoCorrect={false}
+          onChangeText={onNameChange}
+          placeholder={LL.onboarding.shortProfile.name.placeholder()}
+          placeholderTextColor={colors.textMuted}
+          style={styles.shortProfileTextInput}
+          value={nameValue}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.contentStack}>
+      <View style={styles.shortProfileCityCard}>
+        <Text style={styles.shortProfileCityHint}>{cityHint}</Text>
+        <Text style={styles.shortProfileCityName}>{cityName}</Text>
+      </View>
+    </View>
+  );
+};
 
 const IntroContent = () => {
   const { styles } = useOnboardingTheme();
@@ -281,12 +326,26 @@ export const StepContent = ({
   interests,
   loading,
   error,
+  shortProfile,
 }: {
   interests: BuzzInterest[];
   loading: boolean;
   error: Error | undefined;
+  shortProfile?:
+    | {
+        phase: number;
+        nameValue: string;
+        onNameChange: (value: string) => void;
+        cityName: string;
+        cityHint: string;
+      }
+    | undefined;
 }) => {
   const { state } = useOnboarding();
+
+  if (state.step.id === "shortProfile" && shortProfile) {
+    return <ShortProfileContent {...shortProfile} />;
+  }
 
   if (state.step.id === "quiz") {
     return <QuizContent />;

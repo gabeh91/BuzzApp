@@ -38,12 +38,8 @@ export const ProfileQuizOverwritePrompt = () => {
       }
 
       await resolveProfileQuizOverwrite("keep_existing");
-    } catch (caught) {
-      setErrorMessage(
-        caught instanceof Error
-          ? caught.message
-          : LL.profileQuizOverwritePrompt.failed(),
-      );
+    } catch {
+      setErrorMessage(LL.profileQuizOverwritePrompt.failed());
     } finally {
       setBusyAction(null);
     }
@@ -56,12 +52,8 @@ export const ProfileQuizOverwritePrompt = () => {
     try {
       await persistQuizProfile(user);
       await resolveProfileQuizOverwrite("overwrite");
-    } catch (caught) {
-      setErrorMessage(
-        caught instanceof Error
-          ? caught.message
-          : LL.profileQuizOverwritePrompt.failed(),
-      );
+    } catch {
+      setErrorMessage(LL.profileQuizOverwritePrompt.failed());
     } finally {
       setBusyAction(null);
     }

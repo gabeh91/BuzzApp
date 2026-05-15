@@ -8,6 +8,13 @@ export type AnonymousOnboardingDraft = {
   answers: QuizAnswers;
   activeQuestionIndex: number;
   selectedInterest: BuzzInterest | null;
+  /** Display name collected before the lifestyle quiz (anonymous draft). */
+  profileDisplayName?: string;
+  profileCityId?: string;
+  profileCityName?: string;
+  /** 0 = name, 1 = location while on the short profile step. */
+  shortProfileSubIndex: number;
+  shortProfileComplete: boolean;
   completedAt?: string;
   claimedUserId?: string;
 };
@@ -27,7 +34,38 @@ export const createAnonymousOnboardingDraft = (): AnonymousOnboardingDraft => ({
   activeQuestionIndex: 0,
   answers: {},
   selectedInterest: null,
+  shortProfileSubIndex: 0,
+  shortProfileComplete: false,
   status: "empty",
+});
+
+export const mergeShortProfileNameIntoDraft = (
+  draft: AnonymousOnboardingDraft,
+  profileDisplayName: string,
+): AnonymousOnboardingDraft => ({
+  ...resetClaimMetadata(draft),
+  profileDisplayName: profileDisplayName.trim(),
+  shortProfileSubIndex: 1,
+  status: "partial",
+});
+
+export const mergeShortProfileLocationIntoDraft = (
+  draft: AnonymousOnboardingDraft,
+  city: { id: string; name: string },
+): AnonymousOnboardingDraft => ({
+  ...resetClaimMetadata(draft),
+  profileCityId: city.id,
+  profileCityName: city.name,
+  shortProfileComplete: true,
+  shortProfileSubIndex: 0,
+  status: "partial",
+});
+
+export const mergeShortProfileRetreatToName = (
+  draft: AnonymousOnboardingDraft,
+): AnonymousOnboardingDraft => ({
+  ...draft,
+  shortProfileSubIndex: 0,
 });
 
 export const mergeQuizAnswerIntoDraft = (

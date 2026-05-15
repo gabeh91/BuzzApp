@@ -110,6 +110,8 @@ test("profile quiz overwrite prompt appears only when local answers conflict wit
     activeQuestionIndex: 4,
     answers: { pace: "low" },
     selectedInterest: null,
+    shortProfileComplete: false,
+    shortProfileSubIndex: 0,
     status: "partial" as const,
   };
   const completedProfile = {

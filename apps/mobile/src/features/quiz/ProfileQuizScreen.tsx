@@ -1,5 +1,7 @@
-import { Redirect, useNavigation, useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
+import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
 import { createCityContextFallback } from "@/features/city/cityContext";
@@ -7,24 +9,22 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button, Header, HeroPanel, Panel, Screen, Text as UiText } from "@/ui";
+import { BackHeader, Button, HeroPanel, Panel, QuizProgressBar, Screen, Text as UiText } from "@/ui";
 
 import { QuizQuestionPanel } from "./QuizQuestionPanel";
 import { useQuiz } from "./QuizProvider";
 import { usePersistQuizProfile } from "./usePersistQuizProfile";
 
-type RootNavigation = {
-  canGoBack: () => boolean;
-  goBack: () => void;
-};
-
 export const ProfileQuizScreen = () => {
   const router = useRouter();
-  const rootNavigation = useNavigation<RootNavigation>("/");
+  const insets = useSafeAreaInsets();
   const { isAuthenticated, user } = useBuzzAuth();
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(
+    () => createStyles(theme, insets.bottom),
+    [theme, insets.bottom],
+  );
   const quiz = useQuiz();
   const persistQuizProfile = usePersistQuizProfile();
   const cityContext = createCityContextFallback({
@@ -38,8 +38,8 @@ export const ProfileQuizScreen = () => {
   }
 
   const closeQuiz = () => {
-    if (rootNavigation.canGoBack()) {
-      rootNavigation.goBack();
+    if (router.canGoBack()) {
+      router.back();
       return;
     }
 
@@ -60,46 +60,49 @@ export const ProfileQuizScreen = () => {
     }
   };
 
+  const progressLabel = LL.common.progress.question({
+    current: quiz.progress.current,
+    total: quiz.progress.total,
+  });
+
   return (
-    <Screen contentStyle={styles.content} edges={["top"]}>
-      <Header
-        left={<UiText variant="logo">{LL.brand.name()}</UiText>}
-        right={
-          <Button
-            label={LL.profileQuiz.actions.close()}
-            onPress={closeQuiz}
-            style={styles.closeAction}
-            variant="plain"
+    <Screen
+      contentStyle={styles.content}
+      edges={["top"]}
+      stickyHeader={
+        <View style={styles.stickyChrome}>
+          <BackHeader
+            backLabel={LL.common.back()}
+            onBack={closeQuiz}
+            right={<UiText variant="city">{cityContext.city.name}</UiText>}
           />
+          <QuizProgressBar
+            current={quiz.progress.current}
+            label={progressLabel}
+            total={quiz.progress.total}
+          />
+        </View>
+      }
+    >
+      <HeroPanel
+        body={
+          quiz.traits.quizCompleted
+            ? LL.profileQuiz.retakeIntro.body()
+            : LL.profileQuiz.body()
+        }
+        eyebrow={cityContext.city.name}
+        title={
+          quiz.traits.quizCompleted
+            ? LL.profileQuiz.retakeIntro.title()
+            : LL.profileQuiz.title()
         }
       />
 
-      <HeroPanel
-        body={LL.profileQuiz.body()}
-        eyebrow={cityContext.city.name}
-        title={LL.profileQuiz.title()}
-      />
-
       <Panel style={styles.panel}>
-        <UiText variant="eyebrow">
-          {LL.common.progress.question({
-            current: quiz.progress.current,
-            total: quiz.progress.total,
-          })}
-        </UiText>
         <QuizQuestionPanel />
       </Panel>
 
-      <View style={styles.actionRow}>
-        {quiz.activeQuestionIndex > 0 ? (
-          <Button
-            disabled={saving}
-            label={LL.common.back()}
-            onPress={quiz.previousQuestion}
-            style={styles.action}
-            variant="plain"
-          />
-        ) : null}
+      <View style={styles.buttonStack}>
         <Button
           disabled={!quiz.hasAnsweredActiveQuestion || saving}
           label={
@@ -112,8 +115,18 @@ export const ProfileQuizScreen = () => {
           onPress={() => {
             void handleNext();
           }}
-          style={styles.action}
+          style={styles.primaryNav}
         />
+        {quiz.activeQuestionIndex > 0 ? (
+          <Button
+            disabled={saving}
+            label={LL.common.back()}
+            onPress={quiz.previousQuestion}
+            style={styles.secondaryNav}
+            textStyle={styles.backNavText}
+            variant="plain"
+          />
+        ) : null}
       </View>
 
       {quiz.profilePersistence.status === "failed" ? (
@@ -123,29 +136,38 @@ export const ProfileQuizScreen = () => {
   );
 };
 
-const createStyles = (theme: BuzzTheme) => {
-  const { spacing } = theme;
+const createStyles = (theme: BuzzTheme, bottomInset: number) => {
+  const { fontSizes, radii, spacing } = theme;
 
   return StyleSheet.create({
-    action: {
-      flex: 1,
+    backNavText: {
+      fontSize: fontSizes.base,
+      fontWeight: "700",
     },
-    actionRow: {
-      flexDirection: "row",
-      gap: spacing[3],
-    },
-    closeAction: {
-      minHeight: 42,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[2],
+    buttonStack: {
+      gap: spacing[1],
+      width: "100%",
     },
     content: {
       flexGrow: 1,
       gap: spacing[5],
-      padding: spacing[6],
+      paddingBottom: bottomInset + spacing[10],
+      paddingTop: spacing[5],
     },
     panel: {
       gap: spacing[4],
+    },
+    primaryNav: {
+      borderRadius: radii.lg,
+    },
+    secondaryNav: {
+      borderRadius: radii.lg,
+      marginTop: spacing[2],
+    },
+    stickyChrome: {
+      gap: spacing[4],
+      paddingBottom: spacing[3],
+      width: "100%",
     },
   });
 };
