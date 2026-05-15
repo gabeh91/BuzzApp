@@ -1,39 +1,63 @@
 "use client";
 
-import { ApolloClient, ApolloProvider, HttpLink, InMemoryCache } from "@apollo/client";
-import { useMemo, type ReactElement } from "react";
+import { useCallback, useEffect, useState, type ReactElement } from "react";
 
-import type { AdminDashboardQuery } from "../graphql/generated";
-import { useAdminDashboardQuery } from "../graphql/generated";
-
-type Interest = NonNullable<NonNullable<AdminDashboardQuery["interestsCollection"]>["edges"][number]["node"]>;
-type Business = NonNullable<NonNullable<AdminDashboardQuery["businessesCollection"]>["edges"][number]["node"]>;
-type Event = NonNullable<NonNullable<AdminDashboardQuery["eventsCollection"]>["edges"][number]["node"]>;
-type CitySetting = NonNullable<NonNullable<AdminDashboardQuery["citySettingsCollection"]>["edges"][number]["node"]>;
-type Report = NonNullable<NonNullable<AdminDashboardQuery["reportsCollection"]>["edges"][number]["node"]>;
-type ActivityGroup = NonNullable<
-  NonNullable<AdminDashboardQuery["activityGroupsCollection"]>["edges"][number]["node"]
->;
-type Reliability = NonNullable<NonNullable<AdminDashboardQuery["userReliabilityCollection"]>["edges"][number]["node"]>;
-type StarterPlan = NonNullable<NonNullable<AdminDashboardQuery["starterPlansCollection"]>["edges"][number]["node"]>;
+import type {
+  ActivityGroup,
+  AdminDashboardData,
+  Business,
+  CitySetting,
+  Event,
+  Interest,
+  Reliability,
+  Report,
+  StarterPlan,
+} from "./adminDashboardTypes";
 
 const fallbackInterests: Interest[] = [
-  { id: "interest-surfing", name: "Surfing", slug: "surfing", category: "sport" },
+  {
+    id: "interest-surfing",
+    name: "Surfing",
+    slug: "surfing",
+    category: "sport",
+  },
   { id: "interest-tennis", name: "Tennis", slug: "tennis", category: "sport" },
-  { id: "interest-singing", name: "Singing", slug: "singing", category: "music" },
-  { id: "interest-running", name: "Running", slug: "running", category: "fitness" }
+  {
+    id: "interest-singing",
+    name: "Singing",
+    slug: "singing",
+    category: "music",
+  },
+  {
+    id: "interest-running",
+    name: "Running",
+    slug: "running",
+    category: "fitness",
+  },
 ];
 
 const fallbackBusinesses: Business[] = [
-  { id: "business-ocean-club", name: "Ocean Club", description: "Local partner placeholder" },
-  { id: "business-northside-tennis", name: "Northside Tennis", description: "Local partner placeholder" },
-  { id: "business-laneway-coffee", name: "Laneway Coffee", description: "Local partner placeholder" }
+  {
+    id: "business-ocean-club",
+    name: "Ocean Club",
+    description: "Local partner placeholder",
+  },
+  {
+    id: "business-northside-tennis",
+    name: "Northside Tennis",
+    description: "Local partner placeholder",
+  },
+  {
+    id: "business-laneway-coffee",
+    name: "Laneway Coffee",
+    description: "Local partner placeholder",
+  },
 ];
 
 const fallbackEvents: Event[] = [
   { id: "event-welcome-picnic", title: "Welcome Picnic" },
   { id: "event-climbing-night", title: "Climbing Night" },
-  { id: "event-board-game-social", title: "Board Game Social" }
+  { id: "event-board-game-social", title: "Board Game Social" },
 ];
 const fallbackCitySettings: CitySetting[] = [];
 const fallbackReports: Report[] = [];
@@ -42,38 +66,112 @@ const fallbackReliability: Reliability[] = [];
 const fallbackStarterPlans: StarterPlan[] = [];
 
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV ?? "local";
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-const graphqlUrl = supabaseUrl.replace(/\/$/, "") + "/graphql/v1";
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 
-function createBuzzApolloClient() {
-  return new ApolloClient({
-    link: new HttpLink({
-      uri: graphqlUrl,
-      headers: {
-        apikey: supabaseAnonKey,
-        authorization: supabaseAnonKey ? `Bearer ${supabaseAnonKey}` : ""
-      }
-    }),
-    cache: new InMemoryCache()
-  });
-}
+const fallbackDashboardData: AdminDashboardData = {
+  activityGroups: [],
+  businesses: fallbackBusinesses,
+  citySettings: [],
+  events: fallbackEvents,
+  interests: fallbackInterests,
+  reliability: [],
+  reports: [],
+  starterPlans: [],
+};
 
 function AdminDashboard(): ReactElement {
-  const { data, loading, error } = useAdminDashboardQuery();
-  const interests = data?.interestsCollection?.edges.map((edge) => edge.node) ?? fallbackInterests;
-  const businesses = data?.businessesCollection?.edges.map((edge) => edge.node) ?? fallbackBusinesses;
-  const events = data?.eventsCollection?.edges.map((edge) => edge.node) ?? fallbackEvents;
-  const citySettings = data?.citySettingsCollection?.edges.map((edge) => edge.node) ?? fallbackCitySettings;
-  const reports = data?.reportsCollection?.edges.map((edge) => edge.node) ?? fallbackReports;
-  const activityGroups = data?.activityGroupsCollection?.edges.map((edge) => edge.node) ?? fallbackActivityGroups;
-  const reliability = data?.userReliabilityCollection?.edges.map((edge) => edge.node) ?? fallbackReliability;
-  const starterPlans = data?.starterPlansCollection?.edges.map((edge) => edge.node) ?? fallbackStarterPlans;
+  const [data, setData] = useState<AdminDashboardData>(fallbackDashboardData);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [reviewingReportId, setReviewingReportId] = useState<string | null>(
+    null,
+  );
+  const [reviewNotice, setReviewNotice] = useState<string | null>(null);
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/admin-dashboard", {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(body.error ?? "Unable to load admin dashboard");
+      }
+
+      const nextData = (await response.json()) as AdminDashboardData;
+      setData(nextData);
+      setError(null);
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Unable to load admin dashboard",
+      );
+      setData(fallbackDashboardData);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  const interests = data.interests ?? fallbackInterests;
+  const businesses = data.businesses ?? fallbackBusinesses;
+  const events = data.events ?? fallbackEvents;
+  const citySettings = data.citySettings ?? fallbackCitySettings;
+  const reports = data.reports ?? fallbackReports;
+  const activityGroups = data.activityGroups ?? fallbackActivityGroups;
+  const reliability = data.reliability ?? fallbackReliability;
+  const starterPlans = data.starterPlans ?? fallbackStarterPlans;
   const connectionStatus = loading
     ? "Loading city data"
     : error
       ? "Showing starter city data while local services start"
       : "Connected to city data";
+
+  const reviewSafetyReport = async (
+    reportId: string,
+    action: "approve_block" | "dismiss",
+  ) => {
+    setReviewingReportId(reportId);
+    setReviewNotice(null);
+
+    try {
+      const response = await fetch(`/api/safety-reports/${reportId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(body.error ?? "Unable to review report");
+      }
+
+      setReviewNotice(
+        action === "approve_block" ? "Block approved." : "Report dismissed.",
+      );
+      await loadDashboard();
+    } catch (reviewError) {
+      setReviewNotice(
+        reviewError instanceof Error
+          ? reviewError.message
+          : "Unable to review report.",
+      );
+    } finally {
+      setReviewingReportId(null);
+    }
+  };
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
 
   return (
     <main style={{ padding: 32 }}>
@@ -86,7 +184,8 @@ function AdminDashboard(): ReactElement {
         <ul>
           {interests.map((interest) => (
             <li key={interest.id}>
-              {interest.name} <span style={{ color: "#667" }}>({interest.category})</span>
+              {interest.name}{" "}
+              <span style={{ color: "#667" }}>({interest.category})</span>
             </li>
           ))}
         </ul>
@@ -97,7 +196,9 @@ function AdminDashboard(): ReactElement {
           {businesses.map((business) => (
             <li key={business.id}>
               {business.name}
-              {business.description ? <span style={{ color: "#667" }}> - {business.description}</span> : null}
+              {business.description ? (
+                <span style={{ color: "#667" }}> - {business.description}</span>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -116,25 +217,71 @@ function AdminDashboard(): ReactElement {
           <ul>
             {citySettings.map((setting) => (
               <li key={setting.cityId}>
-                {String(setting.matchingRadiusKm)} km radius, groups {setting.defaultGroupSizeMin}-
-                {setting.defaultGroupSizeMax}, {setting.activationExpiryHours}h activation expiry
+                {String(setting.matchingRadiusKm)} km radius, groups{" "}
+                {setting.defaultGroupSizeMin}-{setting.defaultGroupSizeMax},{" "}
+                {setting.activationExpiryHours}h activation expiry
               </li>
             ))}
           </ul>
         ) : (
-          <p>City settings will appear after the local city config seed is available.</p>
+          <p>
+            City settings will appear after the local city config seed is
+            available.
+          </p>
         )}
       </section>
       <section>
         <h2>Reports</h2>
+        {reviewNotice ? <p>{reviewNotice}</p> : null}
         {reports.length > 0 ? (
-          <ul>
+          <ul
+            style={{ display: "grid", gap: 12, listStyle: "none", padding: 0 }}
+          >
             {reports.map((report) => (
-              <li key={report.id}>
-                {report.reason}{" "}
-                <span style={{ color: "#667" }}>
-                  ({report.category}, {report.status}, {report.createdAt})
-                </span>
+              <li
+                key={report.id}
+                style={{
+                  background: "#fffaf0",
+                  border: "1px solid rgba(21, 37, 31, 0.14)",
+                  borderRadius: 16,
+                  padding: 16,
+                }}
+              >
+                <strong>{report.reason}</strong>
+                <p style={{ color: "#667", marginBottom: 8 }}>
+                  {report.category} · {report.status} · {report.createdAt}
+                </p>
+                {report.details ? (
+                  <p>{report.details}</p>
+                ) : (
+                  <p>No extra details added.</p>
+                )}
+                <p style={{ color: "#667", fontSize: 13 }}>
+                  Source: {report.source ?? "user_report"}
+                </p>
+                {report.status === "needs_review" ||
+                report.status === "reviewing" ? (
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <button
+                      disabled={reviewingReportId === report.id}
+                      onClick={() => {
+                        void reviewSafetyReport(report.id, "approve_block");
+                      }}
+                      type="button"
+                    >
+                      Approve block
+                    </button>
+                    <button
+                      disabled={reviewingReportId === report.id}
+                      onClick={() => {
+                        void reviewSafetyReport(report.id, "dismiss");
+                      }}
+                      type="button"
+                    >
+                      Dismiss report
+                    </button>
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -148,7 +295,8 @@ function AdminDashboard(): ReactElement {
           <ul>
             {activityGroups.map((group) => (
               <li key={group.id}>
-                {group.title} <span style={{ color: "#667" }}>({group.status})</span>
+                {group.title}{" "}
+                <span style={{ color: "#667" }}>({group.status})</span>
               </li>
             ))}
           </ul>
@@ -162,8 +310,12 @@ function AdminDashboard(): ReactElement {
           <ul>
             {reliability.map((record) => (
               <li key={record.userId}>
-                {record.attendedCount} attended, {record.noShowCount} no-shows, {record.feedbackCount} feedback
-                <span style={{ color: "#667" }}> ({String(record.reliabilityScore)} score)</span>
+                {record.attendedCount} attended, {record.noShowCount} no-shows,{" "}
+                {record.feedbackCount} feedback
+                <span style={{ color: "#667" }}>
+                  {" "}
+                  ({String(record.reliabilityScore)} score)
+                </span>
               </li>
             ))}
           </ul>
@@ -177,7 +329,8 @@ function AdminDashboard(): ReactElement {
           <ul>
             {starterPlans.map((plan) => (
               <li key={plan.id}>
-                {plan.title} <span style={{ color: "#667" }}>({plan.status})</span>
+                {plan.title}{" "}
+                <span style={{ color: "#667" }}>({plan.status})</span>
               </li>
             ))}
           </ul>
@@ -190,11 +343,5 @@ function AdminDashboard(): ReactElement {
 }
 
 export default function HomePage(): ReactElement {
-  const client = useMemo(() => createBuzzApolloClient(), []);
-
-  return (
-    <ApolloProvider client={client}>
-      <AdminDashboard />
-    </ApolloProvider>
-  );
+  return <AdminDashboard />;
 }

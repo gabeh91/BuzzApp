@@ -16,6 +16,44 @@ const interestSlugMigrationPath =
 const interestSlugMigrationSource = existsSync(interestSlugMigrationPath)
   ? readFileSync(interestSlugMigrationPath, "utf8")
   : "";
+const connectionRequestInboxMigrationPath =
+  "../../supabase/migrations/000029_connection_requests_inbox.sql";
+const connectionRequestInboxMigrationSource = existsSync(
+  connectionRequestInboxMigrationPath,
+)
+  ? readFileSync(connectionRequestInboxMigrationPath, "utf8")
+  : "";
+const connectionRequestResponseMigrationPath =
+  "../../supabase/migrations/000030_connection_request_response.sql";
+const connectionRequestResponseMigrationSource = existsSync(
+  connectionRequestResponseMigrationPath,
+)
+  ? readFileSync(connectionRequestResponseMigrationPath, "utf8")
+  : "";
+const requestExpiryMigrationPath =
+  "../../supabase/migrations/000031_request_expiry.sql";
+const requestExpiryMigrationSource = existsSync(requestExpiryMigrationPath)
+  ? readFileSync(requestExpiryMigrationPath, "utf8")
+  : "";
+const directChatMigrationPath =
+  "../../supabase/migrations/000032_direct_chats.sql";
+const directChatMigrationSource = existsSync(directChatMigrationPath)
+  ? readFileSync(directChatMigrationPath, "utf8")
+  : "";
+const directChatSafetyMigrationPath =
+  "../../supabase/migrations/000033_direct_chat_safety.sql";
+const directReportReviewMigrationPath =
+  "../../supabase/migrations/000035_direct_report_review_flow.sql";
+const directChatSafetyMigrationSource = existsSync(
+  directChatSafetyMigrationPath,
+)
+  ? readFileSync(directChatSafetyMigrationPath, "utf8")
+  : "";
+const directReportReviewMigrationSource = existsSync(
+  directReportReviewMigrationPath,
+)
+  ? readFileSync(directReportReviewMigrationPath, "utf8")
+  : "";
 
 test("people feed backend exposes anonymous-safe profile cards", () => {
   assert.equal(existsSync(migrationPath), true, "people feed migration exists");
@@ -69,6 +107,193 @@ test("say-hi backend is authenticated and stores connection requests safely", ()
   assert.match(migrationSource, /raise exception 'Cannot message yourself'/);
   assert.match(migrationSource, /revoke execute on function public\."sendConnectionRequest"\(uuid, text\) from anon/);
   assert.match(migrationSource, /grant execute on function public\."sendConnectionRequest"\(uuid, text\) to authenticated/);
+});
+
+test("say-hi requests are readable by the recipient inbox", () => {
+  assert.equal(
+    existsSync(connectionRequestInboxMigrationPath),
+    true,
+    "connection request inbox migration exists",
+  );
+  assert.match(
+    connectionRequestInboxMigrationSource,
+    /alter publication supabase_realtime add table public\.connection_requests/,
+  );
+  assert.match(
+    connectionRequestInboxMigrationSource,
+    /create or replace function public\."getConnectionRequests"/,
+  );
+  assert.match(connectionRequestInboxMigrationSource, /recipient_id = auth\.uid\(\)/);
+  assert.match(connectionRequestInboxMigrationSource, /'otherName'/);
+  assert.match(connectionRequestInboxMigrationSource, /'message'/);
+  assert.match(
+    connectionRequestInboxMigrationSource,
+    /grant execute on function public\."getConnectionRequests"\(\) to authenticated/,
+  );
+});
+
+test("say-hi requests can be durably accepted or declined by the recipient", () => {
+  assert.equal(
+    existsSync(connectionRequestResponseMigrationPath),
+    true,
+    "connection request response migration exists",
+  );
+  assert.match(
+    connectionRequestResponseMigrationSource,
+    /create or replace function public\."respondConnectionRequest"/,
+  );
+  assert.match(
+    connectionRequestResponseMigrationSource,
+    /normalized_response not in \('accepted', 'declined'\)/,
+  );
+  assert.match(connectionRequestResponseMigrationSource, /recipient_id = current_user_id/);
+  assert.match(connectionRequestResponseMigrationSource, /status = 'pending'/);
+  assert.match(connectionRequestResponseMigrationSource, /responded_at = now\(\)/);
+  assert.match(
+    connectionRequestResponseMigrationSource,
+    /grant execute on function public\."respondConnectionRequest"\(uuid, text\) to authenticated/,
+  );
+});
+
+test("say-hi requests expire from the pending inbox", () => {
+  assert.equal(
+    existsSync(requestExpiryMigrationPath),
+    true,
+    "request expiry migration exists",
+  );
+  assert.match(requestExpiryMigrationSource, /add column if not exists expires_at/);
+  assert.match(requestExpiryMigrationSource, /interval '14 days'/);
+  assert.match(requestExpiryMigrationSource, /expires_at > now\(\)/);
+  assert.match(requestExpiryMigrationSource, /connection_requests_recipient_pending_expiry_idx/);
+  assert.match(
+    requestExpiryMigrationSource,
+    /create or replace function public\."getConnectionRequests"/,
+  );
+  assert.match(
+    requestExpiryMigrationSource,
+    /create or replace function public\."respondConnectionRequest"/,
+  );
+});
+
+test("accepted say-hi requests create a direct chat conversation", () => {
+  assert.equal(
+    existsSync(directChatMigrationPath),
+    true,
+    "direct chat migration exists",
+  );
+  assert.match(
+    directChatMigrationSource,
+    /create table if not exists public\.direct_conversations/,
+  );
+  assert.match(
+    directChatMigrationSource,
+    /create table if not exists public\.direct_messages/,
+  );
+  assert.match(directChatMigrationSource, /least\(/);
+  assert.match(directChatMigrationSource, /greatest\(/);
+  assert.match(directChatMigrationSource, /direct_conversations_pair_unique_idx/);
+  assert.match(
+    directChatMigrationSource,
+    /alter publication supabase_realtime add table public\.direct_messages/,
+  );
+  assert.match(
+    directChatMigrationSource,
+    /create or replace function public\."respondConnectionRequest"/,
+  );
+  assert.match(directChatMigrationSource, /directConversationId/);
+  assert.match(directChatMigrationSource, /insert into public\.direct_messages/);
+  assert.match(
+    directChatMigrationSource,
+    /create or replace function public\."getDirectMessages"/,
+  );
+  assert.match(
+    directChatMigrationSource,
+    /create or replace function public\."sendDirectMessage"/,
+  );
+  assert.match(
+    directChatMigrationSource,
+    /create or replace function public\."getChatSummaries"/,
+  );
+  assert.match(directChatMigrationSource, /'kind', 'direct'/);
+  assert.match(
+    directChatMigrationSource,
+    /grant execute on function public\."getDirectMessages"\(uuid\) to authenticated/,
+  );
+  assert.match(
+    directChatMigrationSource,
+    /grant execute on function public\."sendDirectMessage"\(uuid, text\) to authenticated/,
+  );
+});
+
+test("direct chats can be reported or closed by participants", () => {
+  assert.equal(
+    existsSync(directChatSafetyMigrationPath),
+    true,
+    "direct chat safety migration exists",
+  );
+  assert.match(
+    directChatSafetyMigrationSource,
+    /alter table public\.direct_conversations/,
+  );
+  assert.match(directChatSafetyMigrationSource, /add column if not exists status/);
+  assert.match(directChatSafetyMigrationSource, /closed_by uuid/);
+  assert.match(directChatSafetyMigrationSource, /closed_at timestamptz/);
+  assert.match(
+    directChatSafetyMigrationSource,
+    /check \(status in \('active', 'closed'\)\)/,
+  );
+  assert.match(
+    directChatSafetyMigrationSource,
+    /create or replace function public\."leaveDirectConversation"/,
+  );
+  assert.match(directChatSafetyMigrationSource, /status = 'closed'/);
+  assert.match(
+    directChatSafetyMigrationSource,
+    /create or replace function public\."reportDirectConversation"/,
+  );
+  assert.match(directChatSafetyMigrationSource, /insert into public\.reports/);
+  assert.match(directChatSafetyMigrationSource, /target_user_id/);
+  assert.match(directChatSafetyMigrationSource, /directConversationId/);
+  assert.match(
+    directChatSafetyMigrationSource,
+    /where id = "conversationId"\s+and status = 'active'/,
+  );
+  assert.match(
+    directChatSafetyMigrationSource,
+    /where direct_conversations\.status = 'active'/,
+  );
+  assert.match(
+    directChatSafetyMigrationSource,
+    /grant execute on function public\."leaveDirectConversation"\(uuid\) to authenticated/,
+  );
+  assert.match(
+    directChatSafetyMigrationSource,
+    /grant execute on function public\."reportDirectConversation"\(uuid, text, text\) to authenticated/,
+  );
+});
+
+test("direct chat reports collect review context before admin-approved enforcement", () => {
+  assert.equal(
+    existsSync(directReportReviewMigrationPath),
+    true,
+    "direct report review migration exists",
+  );
+  assert.match(directReportReviewMigrationSource, /needs_review/);
+  assert.match(directReportReviewMigrationSource, /drop function if exists public\."reportDirectConversation"\(uuid, text, text\)/);
+  assert.match(
+    directReportReviewMigrationSource,
+    /create or replace function public\."reportDirectConversation"\(\s+"conversationId" uuid,\s+"reason" text[^,]*,\s+"category" text[^,]*,\s+"details" text/s,
+  );
+  assert.match(directReportReviewMigrationSource, /saved_report\.status/);
+  assert.match(directReportReviewMigrationSource, /'needs_review'/);
+  assert.match(directReportReviewMigrationSource, /left\(normalized_details, 2000\)/);
+  assert.match(directReportReviewMigrationSource, /'requestedAction', 'admin_review_for_block'/);
+  assert.match(directReportReviewMigrationSource, /create or replace view public\.admin_safety_reports/);
+  assert.match(directReportReviewMigrationSource, /metadata_json/);
+  assert.match(
+    directReportReviewMigrationSource,
+    /grant execute on function public\."reportDirectConversation"\(uuid, text, text, text\) to authenticated/,
+  );
 });
 
 test("profile detail backend returns public-safe people profile data", () => {

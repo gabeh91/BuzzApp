@@ -100,11 +100,11 @@ test("mobile and admin surfaces expose attendance progress and admin visibility"
     "utf8",
   );
   const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
-  const adminOperationsSource = readFileSync(
-    "../../apps/admin/graphql/operations.graphql",
+  const adminPageSource = readFileSync("../../apps/admin/app/page.tsx", "utf8");
+  const adminDashboardRouteSource = readFileSync(
+    "../../apps/admin/app/api/admin-dashboard/route.ts",
     "utf8",
   );
-  const adminPageSource = readFileSync("../../apps/admin/app/page.tsx", "utf8");
 
   assert.match(groupSource, /confirmAttendance/);
   assert.match(groupSource, /postPlanSafety/);
@@ -112,11 +112,11 @@ test("mobile and admin surfaces expose attendance progress and admin visibility"
   assert.match(profileSource, /createSettlingProgress/);
   assert.match(profileSource, /LL\.profile\.settlingProgress/);
   assert.match(translationsSource, /settlingProgress:/);
-  assert.match(adminOperationsSource, /citySettingsCollection/);
-  assert.match(adminOperationsSource, /reportsCollection/);
-  assert.match(adminOperationsSource, /activityGroupsCollection/);
-  assert.match(adminOperationsSource, /userReliabilityCollection/);
-  assert.match(adminOperationsSource, /starterPlansCollection/);
+  assert.match(adminDashboardRouteSource, /"city_settings"/);
+  assert.match(adminDashboardRouteSource, /"reports"/);
+  assert.match(adminDashboardRouteSource, /"activity_groups"/);
+  assert.match(adminDashboardRouteSource, /"user_reliability"/);
+  assert.match(adminDashboardRouteSource, /"starter_plans"/);
   assert.match(adminPageSource, /City config/);
   assert.match(adminPageSource, /Reports/);
   assert.match(adminPageSource, /Attendance/);

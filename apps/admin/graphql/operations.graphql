@@ -46,7 +46,11 @@ query AdminDashboard {
         category
         status
         reason
+        details
+        source
+        metadataJson
         activityGroupId
+        targetUserId
         createdAt
       }
     }
