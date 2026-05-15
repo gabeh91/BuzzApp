@@ -57,7 +57,7 @@ describe("ActivateInterestFab", () => {
 
     renderFab(
       <ActivateInterestFab
-        accessibilityLabel="Activate interest"
+        accessibilityLabel="Ping nearby"
         bottomInset={0}
         interests={interests}
         onActivitiesEmptyActivationPress={onActivitiesEmpty}
@@ -69,7 +69,7 @@ describe("ActivateInterestFab", () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole("button", { name: "Activate interest" }));
+    fireEvent.press(screen.getByRole("button", { name: "Ping nearby" }));
 
     expect(onActivitiesEmpty).toHaveBeenCalledTimes(1);
   });
@@ -79,7 +79,7 @@ describe("ActivateInterestFab", () => {
 
     renderFab(
       <ActivateInterestFab
-        accessibilityLabel="Activate interest"
+        accessibilityLabel="Ping nearby"
         bottomInset={0}
         interests={interests}
         onActivateSelectedInterest={jest.fn()}
@@ -89,7 +89,7 @@ describe("ActivateInterestFab", () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole("button", { name: "Activate interest" }));
+    fireEvent.press(screen.getByRole("button", { name: "Ping nearby" }));
     fireEvent.press(screen.getByRole("button", { name: "Golf" }));
 
     expect(onSelectInterest).toHaveBeenCalledWith(interests[0]);
@@ -105,7 +105,7 @@ describe("ActivateInterestFab", () => {
 
     renderFab(
       <ActivateInterestFab
-        accessibilityLabel="Activate interest"
+        accessibilityLabel="Ping nearby"
         bottomInset={0}
         interests={interests}
         onActivateSelectedInterest={onActivateSelectedInterest}
@@ -115,7 +115,7 @@ describe("ActivateInterestFab", () => {
       />,
     );
 
-    const button = screen.getByRole("button", { name: "Activate interest" });
+    const button = screen.getByRole("button", { name: "Ping nearby" });
 
     fireEvent(button, "pressIn");
     fireEvent(button, "pressOut");
@@ -147,7 +147,7 @@ describe("ActivateInterestFab", () => {
 
     renderFab(
       <ActivateInterestFab
-        accessibilityLabel="Activate interest"
+        accessibilityLabel="Ping nearby"
         bottomInset={0}
         interests={manyInterests}
         onActivateSelectedInterest={jest.fn()}
@@ -157,7 +157,7 @@ describe("ActivateInterestFab", () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole("button", { name: "Activate interest" }));
+    fireEvent.press(screen.getByRole("button", { name: "Ping nearby" }));
 
     expect(screen.getByText("Activity 10")).toBeTruthy();
     expect(screen.getByText("Activity 11")).toBeTruthy();
@@ -181,7 +181,7 @@ describe("ActivateInterestFab", () => {
 
     renderFab(
       <ActivateInterestFab
-        accessibilityLabel="Activate interest"
+        accessibilityLabel="Ping nearby"
         bottomInset={0}
         interests={overlayInterests}
         onActivateSelectedInterest={jest.fn()}
@@ -191,7 +191,7 @@ describe("ActivateInterestFab", () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole("button", { name: "Activate interest" }));
+    fireEvent.press(screen.getByRole("button", { name: "Ping nearby" }));
 
     const resolveStyle = (style: unknown) =>
       typeof style === "function" ? style({ pressed: false }) : style;
@@ -222,7 +222,7 @@ describe("ActivateInterestFab", () => {
 
     renderFab(
       <ActivateInterestFab
-        accessibilityLabel="Activate interest"
+        accessibilityLabel="Ping nearby"
         bottomInset={0}
         interests={interests}
         onActivateSelectedInterest={jest.fn()}

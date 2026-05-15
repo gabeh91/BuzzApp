@@ -321,9 +321,9 @@ export const ActivateInterestFabWheel = ({
       {shouldRenderWheel ? (
         <LinearGradient
           colors={[
-            "rgba(13, 39, 31, 0.56)",
-            "rgba(13, 39, 31, 0.28)",
-            "rgba(13, 39, 31, 0)",
+            theme.fabWheel.gradientDeep,
+            theme.fabWheel.gradientMid,
+            theme.fabWheel.gradientClear,
           ]}
           end={{ x: 0.5, y: 1 }}
           locations={[0, 0.6, 1]}

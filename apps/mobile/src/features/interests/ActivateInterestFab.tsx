@@ -4,7 +4,6 @@ import { ActivateInterestFabDock } from "./activateFab/ActivateInterestFabDock";
 import { ActivateInterestFabRipples } from "./activateFab/ActivateInterestFabRipples";
 import { ActivateInterestFabWheel } from "./activateFab/ActivateInterestFabWheel";
 import type {
-  ActivateFabMode,
   ActivateInterestFabProps,
 } from "./activateFab/ActivateInterestFab.types";
 import { useActivateInterestFabController } from "./activateFab/useActivateInterestFabController";

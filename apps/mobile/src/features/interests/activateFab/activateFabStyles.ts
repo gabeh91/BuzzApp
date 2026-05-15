@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 import type { BuzzTheme } from "@/theme/tokens";
 
@@ -80,13 +80,11 @@ export const createActivateFabStyles = (
   screenWidth: number,
   screenHeight: number,
   topInset: number,
-  wheelHeaderHeight: number,
 ) => {
-  const { borderWidths, colors, fontSizes, radii, shadows, spacing } = theme;
+  const { borderWidths, colors, fabWheel: fw, fontSizes, radii, spacing } =
+    theme;
   const { columnGap, horizontalPadding, tileWidth } =
     getActivityTileMetrics(screenWidth);
-  const effectiveWheelHeaderHeight =
-    wheelHeaderHeight > 0 ? wheelHeaderHeight : 108;
 
   return StyleSheet.create({
     root: {
@@ -99,7 +97,7 @@ export const createActivateFabStyles = (
     },
     dismissLayer: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(13, 39, 31, 0.74)",
+      backgroundColor: fw.dismissScrim,
     },
     energyField: {
       ...StyleSheet.absoluteFillObject,
@@ -133,12 +131,12 @@ export const createActivateFabStyles = (
       paddingBottom: spacing[5],
     },
     wheelSectionTitle: {
-      color: "rgba(255, 252, 245, 0.92)",
+      color: fw.heroTextMuted,
       fontSize: fontSizes.sm,
       fontWeight: "900",
       letterSpacing: 0.7,
       lineHeight: 18,
-      textShadowColor: "rgba(13, 39, 31, 0.72)",
+      textShadowColor: fw.textShadow,
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 10,
       textTransform: "uppercase",
@@ -150,8 +148,8 @@ export const createActivateFabStyles = (
       gap: columnGap,
     },
     energyRingLarge: {
-      backgroundColor: "rgba(214, 170, 67, 0.07)",
-      borderColor: "rgba(214, 170, 67, 0.16)",
+      backgroundColor: fw.energyRingGoldFill,
+      borderColor: fw.energyRingGoldBorder,
       borderRadius: 999,
       borderWidth: borderWidths.hairline,
       bottom:
@@ -162,7 +160,7 @@ export const createActivateFabStyles = (
       width: screenWidth * 1.18,
     },
     energyRingMedium: {
-      backgroundColor: "rgba(204, 232, 235, 0.10)",
+      backgroundColor: fw.energyRingSky,
       borderRadius: 999,
       bottom:
         compactBottomOffset + FAB_DIAMETER / 2 - (screenWidth * 0.78) / 2,
@@ -172,7 +170,7 @@ export const createActivateFabStyles = (
       width: screenWidth * 0.78,
     },
     energyRingSmall: {
-      backgroundColor: "rgba(214, 170, 67, 0.10)",
+      backgroundColor: fw.energyRingGoldInner,
       borderRadius: 999,
       bottom:
         compactBottomOffset + FAB_DIAMETER / 2 - (screenWidth * 0.38) / 2,
@@ -211,12 +209,12 @@ export const createActivateFabStyles = (
       fontWeight: "900",
       lineHeight: 30,
       maxWidth: 250,
-      textShadowColor: "rgba(13, 39, 31, 0.72)",
+      textShadowColor: fw.textShadow,
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 10,
     },
     wheelSubtitle: {
-      color: "rgba(255, 252, 245, 0.92)",
+      color: fw.heroTextMuted,
       fontSize: fontSizes.sm,
       fontWeight: "700",
       lineHeight: 19,
@@ -224,8 +222,8 @@ export const createActivateFabStyles = (
     },
     closeButton: {
       alignItems: "center",
-      backgroundColor: "rgba(255, 252, 245, 0.16)",
-      borderColor: "rgba(255, 252, 245, 0.24)",
+      backgroundColor: fw.closeButtonFill,
+      borderColor: fw.closeButtonBorder,
       borderRadius: radii.full,
       borderWidth: borderWidths.hairline,
       height: 42,
@@ -238,7 +236,7 @@ export const createActivateFabStyles = (
     },
     anchor: {
       alignItems: "center",
-      elevation: 16,
+      elevation: Platform.OS === "android" ? 0 : 16,
       left: 0,
       position: "absolute",
       right: 0,
@@ -269,7 +267,7 @@ export const createActivateFabStyles = (
     },
     fabLiveBorder: {
       alignSelf: "stretch",
-      backgroundColor: "rgba(215, 168, 75, 0.78)",
+      backgroundColor: fw.fabLiveBorder,
       borderRadius: radii.full,
       height: 3,
       left: 0,
@@ -285,6 +283,7 @@ export const createActivateFabStyles = (
       backgroundColor: colors.warning,
       borderColor: colors.warning,
       borderRadius: radii.full,
+      borderTopColor: colors.border,
       borderWidth: borderWidths.hairline,
       flexDirection: "column",
       gap: 2,
@@ -294,10 +293,11 @@ export const createActivateFabStyles = (
       paddingHorizontal: spacing[1],
       paddingVertical: spacing[1],
       width: FAB_DIAMETER,
-      ...shadows.card,
+      elevation: 0,
+      shadowOpacity: 0,
     },
     fabExpanded: {
-      borderColor: "transparent",
+      borderColor: colors.clear,
       borderWidth: 0,
       elevation: 0,
       paddingHorizontal: spacing[6],
@@ -312,7 +312,7 @@ export const createActivateFabStyles = (
     },
     chargeFill: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(255, 252, 245, 0.36)",
+      backgroundColor: fw.chargeFill,
       opacity: 0,
     },
     contentViewport: {
@@ -320,9 +320,10 @@ export const createActivateFabStyles = (
       overflow: "hidden",
       zIndex: 2,
     },
-    contentTrack: {
-      flexDirection: "row",
-      height: "100%",
+    contentMorphLayer: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: "center",
+      justifyContent: "center",
     },
     contentPanel: {
       alignItems: "center",
@@ -352,8 +353,8 @@ export const createActivateFabStyles = (
     },
     clearSelectionButton: {
       alignItems: "center",
-      backgroundColor: "rgba(255, 252, 245, 0.34)",
-      borderColor: "rgba(13, 39, 31, 0.12)",
+      backgroundColor: fw.clearSelectionFill,
+      borderColor: fw.clearSelectionBorder,
       borderRadius: radii.full,
       borderWidth: borderWidths.hairline,
       height: 34,
@@ -379,6 +380,7 @@ export const createActivateFabStyles = (
       lineHeight: 10,
       maxWidth: FAB_DIAMETER - spacing[1] * 2 - 4,
       textAlign: "center",
+      marginTop: spacing[1],
     },
     expandedLabel: {
       fontSize: fontSizes.md,
@@ -395,40 +397,25 @@ export const createActivateFabStyles = (
       opacity: 0.82,
       textAlign: "center",
     },
-    ripple: {
-      backgroundColor: "rgba(214, 170, 67, 0.46)",
-      borderColor: "rgba(255, 244, 205, 0.9)",
-      borderRadius: 72,
-      borderTopWidth: 8,
-      bottom: expandedBottomOffset + EXPANDED_PANEL_HEIGHT - 94,
-      height: 188,
-      left: -screenWidth * 0.225,
-      position: "absolute",
-      width: screenWidth * 1.45,
-      zIndex: 12,
-    },
-    rippleEcho: {
-      backgroundColor: "rgba(255, 225, 153, 0.32)",
-      borderColor: "rgba(255, 252, 245, 0.76)",
-      borderRadius: 52,
-      borderTopWidth: 4,
-      bottom: expandedBottomOffset + EXPANDED_PANEL_HEIGHT - 62,
-      height: 124,
-      left: -screenWidth * 0.15,
-      position: "absolute",
-      width: screenWidth * 1.3,
-      zIndex: 11,
-    },
-    rippleWash: {
-      backgroundColor: "rgba(214, 170, 67, 0.4)",
-      borderTopLeftRadius: 80,
-      borderTopRightRadius: 80,
-      bottom: expandedBottomOffset + EXPANDED_PANEL_HEIGHT - 34,
-      height: screenHeight * 0.64,
+    /** Short burst: no rounded clip (avoids hard mask edges); feather is gradient-only. */
+    energyWaveBurst: {
+      bottom: expandedBottomOffset + EXPANDED_PANEL_HEIGHT - 66,
+      height: 248,
       left: 0,
+      overflow: "visible",
       position: "absolute",
       width: screenWidth,
-      zIndex: 10,
+      zIndex: 13,
+    },
+    /** Tall tail wash: same — soft edges from alpha, not border clipping. */
+    energyWaveTail: {
+      bottom: expandedBottomOffset + EXPANDED_PANEL_HEIGHT - 78,
+      height: 460,
+      left: 0,
+      overflow: "visible",
+      position: "absolute",
+      width: screenWidth,
+      zIndex: 11,
     },
     wheelItem: {
       position: "absolute",
@@ -441,7 +428,7 @@ export const createActivateFabStyles = (
       alignItems: "stretch",
       alignSelf: "stretch",
       backgroundColor: colors.surface,
-      borderColor: "rgba(255, 252, 245, 0.86)",
+      borderColor: fw.wheelButtonBorder,
       borderRadius: 24,
       borderWidth: borderWidths.hairline,
       flex: 1,
@@ -452,7 +439,6 @@ export const createActivateFabStyles = (
       paddingHorizontal: spacing[3],
       paddingVertical: spacing[3],
       width: tileWidth,
-      ...shadows.card,
     },
     wheelButtonPressed: {
       transform: [{ scale: 0.97 }],
@@ -484,8 +470,8 @@ export const createActivateFabStyles = (
     },
     expandedIconBadge: {
       alignItems: "center",
-      backgroundColor: "rgba(255, 252, 245, 0.34)",
-      borderColor: "rgba(13, 39, 31, 0.12)",
+      backgroundColor: fw.expandedIconBadgeFill,
+      borderColor: fw.expandedIconBadgeBorder,
       borderRadius: radii.full,
       borderWidth: borderWidths.hairline,
       height: 32,

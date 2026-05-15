@@ -5,6 +5,7 @@ import Animated from "react-native-reanimated";
 
 import { Text } from "@/ui";
 
+import { activityIconForInterest } from "./activateFabActivityIcon";
 import type { ActivateFabStyles } from "./activateFabStyles";
 import type { BuzzInterest } from "../interestFlow";
 
@@ -20,11 +21,11 @@ export type ActivateInterestFabDockProps = {
   clearSelectionFadeStyle: AnimatedViewStyle;
   clearSelectionLabel: string;
   colors: { text: string };
+  compactContentMorphStyle: AnimatedViewStyle;
   compactLabel: string;
-  contentPanelSlotStyle: AnimatedViewStyle;
-  contentTrackStyle: AnimatedViewStyle;
   disabled: boolean | undefined;
   displaySelectedInterest: BuzzInterest | null;
+  expandedContentMorphStyle: AnimatedViewStyle;
   fabAnimatedStyle: AnimatedViewStyle;
   fabColorStyle: AnimatedViewStyle;
   glowStyle: AnimatedViewStyle;
@@ -48,11 +49,11 @@ export const ActivateInterestFabDock = ({
   clearSelectionFadeStyle,
   clearSelectionLabel,
   colors,
+  compactContentMorphStyle,
   compactLabel,
-  contentPanelSlotStyle,
-  contentTrackStyle,
   disabled,
   displaySelectedInterest,
+  expandedContentMorphStyle,
   fabAnimatedStyle,
   fabColorStyle,
   glowStyle,
@@ -113,34 +114,48 @@ export const ActivateInterestFabDock = ({
         <Animated.View style={[styles.chargeFill, chargeFillStyle]} />
         {showContentTrack ? (
           <Animated.View style={styles.contentViewport}>
-            <Animated.View style={[styles.contentTrack, contentTrackStyle]}>
-              <Animated.View
-                pointerEvents="none"
-                style={[styles.contentPanel, contentPanelSlotStyle]}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.contentMorphLayer,
+                styles.contentPanel,
+                compactContentMorphStyle,
+              ]}
+            >
+              <Ionicons color={colors.text} name="flash" size={28} />
+              <Text numberOfLines={2} style={styles.label} variant="button">
+                {compactLabel}
+              </Text>
+            </Animated.View>
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.contentMorphLayer,
+                styles.expandedPanel,
+                expandedContentMorphStyle,
+              ]}
+            >
+              <View style={styles.expandedIconBadge}>
+                <Ionicons
+                  color={colors.text}
+                  name={
+                    displaySelectedInterest
+                      ? activityIconForInterest(displaySelectedInterest)
+                      : "flash"
+                  }
+                  size={18}
+                />
+              </View>
+              <Text
+                numberOfLines={1}
+                style={[styles.label, styles.expandedLabel]}
+                variant="button"
               >
-                <Ionicons color={colors.text} name="flash" size={28} />
-                <Text numberOfLines={2} style={styles.label} variant="button">
-                  {compactLabel}
-                </Text>
-              </Animated.View>
-              <Animated.View
-                pointerEvents="none"
-                style={[styles.expandedPanel, contentPanelSlotStyle]}
-              >
-                <View style={styles.expandedIconBadge}>
-                  <Ionicons color={colors.text} name="flash" size={18} />
-                </View>
-                <Text
-                  numberOfLines={1}
-                  style={[styles.label, styles.expandedLabel]}
-                  variant="button"
-                >
-                  {displaySelectedInterest?.name}
-                </Text>
-                <Text numberOfLines={2} style={styles.prompt}>
-                  {prompt}
-                </Text>
-              </Animated.View>
+                {displaySelectedInterest?.name}
+              </Text>
+              <Text numberOfLines={2} style={styles.prompt}>
+                {prompt}
+              </Text>
             </Animated.View>
           </Animated.View>
         ) : (

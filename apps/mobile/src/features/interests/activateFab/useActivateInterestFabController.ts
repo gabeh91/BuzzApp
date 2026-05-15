@@ -15,11 +15,15 @@ import {
 } from "react-native-reanimated";
 
 import { useI18n } from "@/i18n/I18nProvider";
+import { tabBarTotalHeight } from "@/navigation/tabBarLayout";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 
 import { useActivationGestureLock } from "../ActivationGestureLockProvider";
 import type { ActivateInterestFabDockProps } from "./ActivateInterestFabDock";
-import type { ActivateInterestFabRipplesProps } from "./ActivateInterestFabRipples";
+import type {
+  ActivateFabEnergyWaveGradient,
+  ActivateInterestFabRipplesProps,
+} from "./ActivateInterestFabRipples";
 import type { ActivateInterestFabWheelProps } from "./ActivateInterestFabWheel";
 import type {
   ActivateFabMode,
@@ -29,7 +33,7 @@ import { fireActivateFabHaptic } from "./activateFabFireHaptic";
 import {
   COLLAPSE_DURATION_MS,
   EXPANDED_PANEL_TAB_GAP,
-  FAB_TAB_DOCK_BOTTOM,
+  FAB_DIAMETER,
   HOLD_TO_ACTIVATE_MS,
   IDLE_PULSE_DURATION_MS,
   LIVE_BORDER_PULSE_DURATION_MS,
@@ -86,7 +90,8 @@ export const useActivateInterestFabController = ({
   const [wheelHeaderHeight, setWheelHeaderHeight] = useState(0);
   const [wheelItemYs, setWheelItemYs] = useState<Record<string, number>>({});
   const wheelContentRef = useRef<View>(null);
-  const compactBottomOffset = bottomInset + FAB_TAB_DOCK_BOTTOM;
+  const compactBottomOffset =
+    tabBarTotalHeight(theme, bottomInset) - FAB_DIAMETER / 2;
   const expandedBottomOffset =
     Math.max(bottomInset, theme.spacing[2]) +
     TAB_BAR_BASE_HEIGHT +
@@ -101,7 +106,6 @@ export const useActivateInterestFabController = ({
         windowDimensions.width,
         windowDimensions.height,
         insets.top,
-        wheelHeaderHeight,
       ),
     [
       theme,
@@ -109,7 +113,6 @@ export const useActivateInterestFabController = ({
       compactBottomOffset,
       expandedBottomOffset,
       insets.top,
-      wheelHeaderHeight,
       windowDimensions.height,
       windowDimensions.width,
     ],
@@ -134,8 +137,7 @@ export const useActivateInterestFabController = ({
   const wheelScrollY = useSharedValue(0);
   const morphProgress = useSharedValue(0);
   const tabBarDockClearSink = useSharedValue(0);
-  const tabBarDockClearOut =
-    tabBarDockClearProgress ?? tabBarDockClearSink;
+  const tabBarDockClearOut = tabBarDockClearProgress ?? tabBarDockClearSink;
   useAnimatedReaction(
     () => morphProgress.value,
     (m) => {
@@ -230,13 +232,7 @@ export const useActivateInterestFabController = ({
       -1,
       false,
     );
-  }, [
-    activationBusy,
-    disabled,
-    idleColorPulse,
-    mode,
-    selectedInterest,
-  ]);
+  }, [activationBusy, disabled, idleColorPulse, mode, selectedInterest]);
 
   useEffect(() => {
     const shouldPulse =
@@ -268,12 +264,7 @@ export const useActivateInterestFabController = ({
       -1,
       false,
     );
-  }, [
-    activationBusy,
-    liveBorderPulse,
-    mode,
-    selectedInterest,
-  ]);
+  }, [activationBusy, liveBorderPulse, mode, selectedInterest]);
 
   useEffect(() => {
     clearWheelVisibilityTimer();
@@ -499,7 +490,8 @@ export const useActivateInterestFabController = ({
     rippleProgress.value = 0;
     rippleProgress.value = withTiming(1, {
       duration: RIPPLE_DURATION_MS,
-      easing: Easing.out(Easing.quad),
+      /** Linear so `p` tracks wall-clock time; tail length is driven by opacity / translate keyframes. */
+      easing: Easing.linear,
     });
 
     try {
@@ -525,15 +517,36 @@ export const useActivateInterestFabController = ({
   const { energyFieldStyle, wheelListStyle, wheelOverlayStyle } =
     useActivateFabWheelChromeStyles(wheelProgress);
 
-  const { rippleEchoStyle, rippleStyle, rippleWashStyle } =
-    useActivateFabRippleStyles(rippleProgress, windowDimensions.height);
+  const { waveBurstStyle, waveTailStyle } = useActivateFabRippleStyles(
+    rippleProgress,
+    windowDimensions.height,
+  );
+
+  const energyReleaseGradients = useMemo(() => {
+    const fw = theme.fabWheel;
+
+    return {
+      burst: [
+        fw.energyReleasePrimaryG0,
+        fw.energyReleasePrimaryG1,
+        fw.energyReleasePrimaryG2,
+        fw.energyReleasePrimaryG3,
+      ] satisfies ActivateFabEnergyWaveGradient,
+      tail: [
+        fw.energyReleaseSecondaryG0,
+        fw.energyReleaseSecondaryG1,
+        fw.energyReleaseSecondaryG2,
+        fw.energyReleaseSecondaryG3,
+      ] satisfies ActivateFabEnergyWaveGradient,
+    };
+  }, [theme.fabWheel]);
 
   const {
     anchorAnimatedStyle,
     chargeFillStyle,
     clearSelectionFadeStyle,
-    contentPanelSlotStyle,
-    contentTrackStyle,
+    compactContentMorphStyle,
+    expandedContentMorphStyle,
     fabAnimatedStyle,
     fabColorStyle,
     glowStyle,
@@ -541,6 +554,10 @@ export const useActivateInterestFabController = ({
   } = useActivateFabDockShellStyles({
     chargeProgress,
     colors,
+    fabIdlePulse: {
+      fillEnd: theme.fabWheel.idlePulseFillEnd,
+      borderEnd: theme.fabWheel.idlePulseBorderEnd,
+    },
     compactBottomOffset,
     hairlineW,
     idleColorPulse,
@@ -572,12 +589,14 @@ export const useActivateInterestFabController = ({
   })();
 
   const isExpanded =
-    Boolean(displaySelectedInterest) && mode !== "idle" && mode !== "wheel_open";
+    Boolean(displaySelectedInterest) &&
+    mode !== "idle" &&
+    mode !== "wheel_open";
   const isWheelOpen = mode === "wheel_open";
   const showContentTrack =
-    Boolean(displaySelectedInterest) &&
-    (isExpanded || mode === "collapsing");
-  const effectiveWheelHeaderHeight = wheelHeaderHeight > 0 ? wheelHeaderHeight : 108;
+    Boolean(displaySelectedInterest) && (isExpanded || mode === "collapsing");
+  const effectiveWheelHeaderHeight =
+    wheelHeaderHeight > 0 ? wheelHeaderHeight : 108;
   const wheelFadeHeight =
     wheelHeaderHeight > 0
       ? insets.top + theme.spacing[4] + wheelHeaderHeight + theme.spacing[2]
@@ -654,12 +673,13 @@ export const useActivateInterestFabController = ({
 
   const ripples: ActivateInterestFabRipplesProps = useMemo(
     () => ({
-      rippleEchoStyle,
-      rippleStyle,
-      rippleWashStyle,
+      energyReleaseBurstGradient: energyReleaseGradients.burst,
+      energyReleaseTailGradient: energyReleaseGradients.tail,
       styles,
+      waveBurstStyle,
+      waveTailStyle,
     }),
-    [rippleEchoStyle, rippleStyle, rippleWashStyle, styles],
+    [energyReleaseGradients, styles, waveBurstStyle, waveTailStyle],
   );
 
   const dock: ActivateInterestFabDockProps = useMemo(
@@ -671,11 +691,11 @@ export const useActivateInterestFabController = ({
       clearSelectionFadeStyle,
       clearSelectionLabel: LL.common.activateInterestFab.clearSelection(),
       colors,
+      compactContentMorphStyle,
       compactLabel: LL.common.activateInterestFab.label(),
-      contentPanelSlotStyle,
-      contentTrackStyle,
       disabled,
       displaySelectedInterest,
+      expandedContentMorphStyle,
       fabAnimatedStyle,
       fabColorStyle,
       glowStyle,
@@ -697,10 +717,10 @@ export const useActivateInterestFabController = ({
       chargeFillStyle,
       clearSelectionFadeStyle,
       colors,
-      contentPanelSlotStyle,
-      contentTrackStyle,
+      compactContentMorphStyle,
       disabled,
       displaySelectedInterest,
+      expandedContentMorphStyle,
       fabAnimatedStyle,
       fabColorStyle,
       glowStyle,

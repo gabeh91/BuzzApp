@@ -301,7 +301,7 @@ Suggested strings:
 
 - `Activate`
 - `Choose an activity`
-- `Press and hold to activate`
+- `Press and hold to Pink`
 - `Release to ping nearby people`
 - `Keep holding`
 - `Pinged {count} people`

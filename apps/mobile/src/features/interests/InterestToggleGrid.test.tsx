@@ -47,7 +47,7 @@ describe("InterestToggleGrid", () => {
     expect(longNameCard.props.onLayout).toBeUndefined();
     expect(shortCard.props.onLayout).toBeUndefined();
     expect(shortCardStyle.minHeight).toBe(longNameCardStyle.minHeight);
-    expect(shortCardStyle.minHeight).toBeGreaterThan(112);
+    expect(shortCardStyle.minHeight).toBeGreaterThanOrEqual(109);
     expect(screen.getByText("Language Exchange").props.numberOfLines).toBe(
       undefined,
     );

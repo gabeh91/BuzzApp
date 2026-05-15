@@ -22,6 +22,7 @@ const expectedInterestSlugs = [
   "knitting",
   "chess",
   "walking",
+  "running",
   "hackathons",
   "book-clubs",
   "wine-clubs",
@@ -48,17 +49,20 @@ test("starter interest catalog is seeded in Supabase and available as mobile fal
   }
 });
 
-test("expanded starter interest catalog is applied through an idempotent migration", () => {
-  const interestCatalogMigration = migrationSources.find((source) =>
-    expectedInterestSlugs.every((slug) => source.includes(`'${slug}'`)),
+test("expanded starter interest catalog is applied through idempotent migrations", () => {
+  const combinedMigrations = migrationSources.join("\n");
+
+  for (const slug of expectedInterestSlugs) {
+    assert.match(combinedMigrations, new RegExp(`'${slug}'`));
+  }
+
+  const hasInterestsInsert = migrationSources.some(
+    (source) =>
+      /insert into public\.interests \(name, slug, category\)/.test(source) &&
+      /on conflict \(slug\) do nothing/.test(source),
   );
 
-  assert.ok(interestCatalogMigration);
-  assert.match(
-    interestCatalogMigration,
-    /insert into public\.interests \(name, slug, category\)/,
-  );
-  assert.match(interestCatalogMigration, /on conflict \(slug\) do nothing/);
+  assert.ok(hasInterestsInsert);
 });
 
 test("mobile GraphQL query requests enough interests for the expanded starter catalog", () => {

@@ -1,5 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 
+import { activityIconForInterest } from "@/features/interests/activateFab/activateFabActivityIcon";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import { Avatar, Button, Panel, Text as UiText } from "@/ui";
@@ -61,9 +63,22 @@ export const PeopleMatchCard = ({
       {match.sharedInterests.length > 0 ? (
         <View style={styles.interestRow}>
           {match.sharedInterests.slice(0, 3).map((interest) => (
-            <UiText key={interest.id} style={styles.interestPill}>
-              {interest.name}
-            </UiText>
+            <View
+              key={interest.id}
+              accessibilityLabel={interest.name}
+              accessibilityRole="none"
+              accessible
+              style={styles.interestPill}
+            >
+              <Ionicons
+                color={theme.colors.brand}
+                name={activityIconForInterest(interest)}
+                size={15}
+              />
+              <UiText numberOfLines={1} style={styles.interestPillLabel}>
+                {interest.name}
+              </UiText>
+            </View>
           ))}
         </View>
       ) : null}
@@ -98,7 +113,7 @@ export const PeopleMatchCard = ({
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, fontSizes, lineHeights, radii, spacing } = theme;
+  const { borderWidths, colors, fontSizes, lineHeights, radii, spacing } = theme;
 
   return StyleSheet.create({
     card: {
@@ -114,20 +129,37 @@ const createStyles = (theme: BuzzTheme) => {
       gap: spacing[1],
     },
     interestRow: {
+      alignContent: "flex-start",
+      alignItems: "center",
+      alignSelf: "stretch",
       flexDirection: "row",
       flexWrap: "wrap",
       gap: spacing[2],
+      width: "100%",
     },
     interestPill: {
-      backgroundColor: colors.surfaceMuted,
+      alignItems: "center",
+      alignSelf: "flex-start",
+      backgroundColor: colors.background,
+      borderColor: colors.border,
       borderRadius: radii.full,
-      color: colors.brand,
-      fontSize: fontSizes.xs,
-      fontWeight: "900",
-      lineHeight: lineHeights.tight,
-      overflow: "hidden",
-      paddingHorizontal: spacing[3],
+      borderWidth: borderWidths.hairline,
+      flexDirection: "row",
+      flexGrow: 0,
+      gap: spacing[1],
+      maxWidth: "100%",
+      paddingLeft: spacing[2],
+      paddingRight: spacing[3],
       paddingVertical: spacing[1],
+    },
+    interestPillLabel: {
+      color: colors.text,
+      flexShrink: 1,
+      fontSize: fontSizes.sm,
+      fontWeight: "700",
+      letterSpacing: 0.15,
+      lineHeight: lineHeights.tight,
+      minWidth: 0,
     },
     highlightStack: {
       gap: spacing[2],

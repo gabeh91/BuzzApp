@@ -7,6 +7,7 @@ import {
 } from "react-native-reanimated";
 
 import {
+  COMPACT_FAB_VISUAL_SCALE,
   EXPANDED_PANEL_HEIGHT,
   FAB_DIAMETER,
 } from "./activateFabConstants";
@@ -16,6 +17,7 @@ import { MORPH_LIFT_END } from "./activateFabMorphConfig";
 export type ActivateFabDockShellStyleArgs = {
   chargeProgress: SharedValue<number>;
   colors: { warning: string };
+  fabIdlePulse: { fillEnd: string; borderEnd: string };
   compactBottomOffset: number;
   hairlineW: number;
   idleColorPulse: SharedValue<number>;
@@ -29,6 +31,7 @@ export type ActivateFabDockShellStyleArgs = {
 export const useActivateFabDockShellStyles = ({
   chargeProgress,
   colors,
+  fabIdlePulse,
   compactBottomOffset,
   hairlineW,
   idleColorPulse,
@@ -64,6 +67,12 @@ export const useActivateFabDockShellStyles = ({
     const blob = Math.sin(mc * Math.PI);
     const liqScaleX = 1 + 0.024 * blob;
     const liqScaleY = 1 - 0.015 * blob;
+    const compactVisualScale = interpolate(
+      mc,
+      [0, 0.22, 1],
+      [COMPACT_FAB_VISUAL_SCALE, 1, 1],
+      Extrapolate.CLAMP,
+    );
     const padH = interpolate(spreadBlend, [0, 0.38, 1], [4, 24, 24]);
     const padV = interpolate(spreadBlend, [0, 0.38, 1], [4, 12, 12]);
     const borderW = interpolate(
@@ -80,8 +89,8 @@ export const useActivateFabDockShellStyles = ({
       paddingHorizontal: padH,
       paddingVertical: padV,
       transform: [
-        { scaleX: chargeScale * liqScaleX },
-        { scaleY: chargeScale * liqScaleY },
+        { scaleX: chargeScale * liqScaleX * compactVisualScale },
+        { scaleY: chargeScale * liqScaleY * compactVisualScale },
       ],
       width,
     };
@@ -108,15 +117,15 @@ export const useActivateFabDockShellStyles = ({
       backgroundColor: interpolateColor(
         idleColorPulse.value,
         [0, 1],
-        [colors.warning, "#e7bd62"],
+        [colors.warning, fabIdlePulse.fillEnd],
       ),
       borderColor: interpolateColor(
         idleColorPulse.value,
         [0, 1],
-        [colors.warning, "#efcd7e"],
+        [colors.warning, fabIdlePulse.borderEnd],
       ),
     };
-  }, [colors.warning, idleColorPulse]);
+  }, [colors.warning, fabIdlePulse.borderEnd, fabIdlePulse.fillEnd, idleColorPulse]);
 
   const chargeFillStyle = useAnimatedStyle(() => {
     const m = morphProgress.value;
@@ -176,42 +185,40 @@ export const useActivateFabDockShellStyles = ({
     };
   }, [morphProgress]);
 
-  const contentTrackStyle = useAnimatedStyle(() => {
-    const m = morphProgress.value;
-    const mc = Math.min(1, Math.max(0, m));
+  const compactContentMorphStyle = useAnimatedStyle(() => {
+    const mc = Math.min(1, Math.max(0, morphProgress.value));
     const spreadBlend = morphSpreadBlend(mc);
-    const W = interpolate(
-      spreadBlend,
-      [0, 1],
-      [FAB_DIAMETER, windowWidth],
-    );
 
     return {
-      flexDirection: "row",
-      transform: [{ translateX: -interpolate(spreadBlend, [0, 1], [0, W]) }],
-      width: W * 2,
+      opacity: interpolate(
+        spreadBlend,
+        [0, 0.32, 0.52],
+        [1, 0.45, 0],
+        Extrapolate.CLAMP,
+      ),
     };
-  }, [morphProgress, windowWidth]);
+  }, [morphProgress]);
 
-  const contentPanelSlotStyle = useAnimatedStyle(() => {
-    const m = morphProgress.value;
-    const mc = Math.min(1, Math.max(0, m));
+  const expandedContentMorphStyle = useAnimatedStyle(() => {
+    const mc = Math.min(1, Math.max(0, morphProgress.value));
     const spreadBlend = morphSpreadBlend(mc);
-    const W = interpolate(
-      spreadBlend,
-      [0, 1],
-      [FAB_DIAMETER, windowWidth],
-    );
 
-    return { width: W };
-  }, [morphProgress, windowWidth]);
+    return {
+      opacity: interpolate(
+        spreadBlend,
+        [0, 0.52, 0.72, 0.88, 1],
+        [0, 0, 0.15, 0.75, 1],
+        Extrapolate.CLAMP,
+      ),
+    };
+  }, [morphProgress]);
 
   return {
     anchorAnimatedStyle,
     chargeFillStyle,
     clearSelectionFadeStyle,
-    contentPanelSlotStyle,
-    contentTrackStyle,
+    compactContentMorphStyle,
+    expandedContentMorphStyle,
     fabAnimatedStyle,
     fabColorStyle,
     glowStyle,

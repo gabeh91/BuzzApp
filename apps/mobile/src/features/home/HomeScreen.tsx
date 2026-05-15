@@ -13,17 +13,24 @@ import { loadPeopleMatchesFromSupabase } from "@/features/people/peopleFeedClien
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
+import { tabBarTotalHeight } from "@/navigation/tabBarLayout";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
-import { spacing, type BuzzTheme } from "@/theme/tokens";
 import {
-  Header,
+  SCREEN_CONTENT_GUTTER_SPACING,
+  spacing,
+  type BuzzTheme,
+} from "@/theme/tokens";
+import {
+  AppBrandedCityHeader,
   HeroPanel,
   List,
   Panel,
   Screen,
   Text as UiText,
+  useToast,
   type ListRenderItem,
 } from "@/ui";
+import Animated, { FadeInUp } from "react-native-reanimated";
 
 type PeopleFeedStatus = "loading" | "ready" | "refreshing" | "error";
 type ConnectionRequestStatus = "idle" | "sending" | "sent" | "error";
@@ -73,6 +80,7 @@ export const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme, insets.bottom), [theme, insets.bottom]);
   const { LL } = useI18n();
+  const { showToast } = useToast();
   const { requireAuth, user } = useBuzzAuth();
   const { isActivationGestureLocked } = useActivationGestureLock();
   const { selectedInterest } = useActivateInterestActions();
@@ -182,7 +190,27 @@ export const HomeScreen = () => {
       ...current,
       [connectionSentProfileId]: "sent",
     }));
-  }, [connectionSentProfileId]);
+
+    if (!connectionSentName) {
+      return;
+    }
+
+    const name = connectionSentName;
+
+    showToast({
+      message: LL.peopleConnect.sentToast({ name }),
+      placement: "top",
+      variant: "success",
+    });
+
+    router.replace(routes.home);
+  }, [
+    LL,
+    connectionSentName,
+    connectionSentProfileId,
+    router,
+    showToast,
+  ]);
 
   const refreshPeopleMatches = useCallback(async () => {
     setPeopleFeedStatus("refreshing");
@@ -208,20 +236,25 @@ export const HomeScreen = () => {
   const getPersonKey = useCallback((person: PeopleMatch) => person.id, []);
 
   const renderPeopleMatch = useCallback<ListRenderItem<PeopleMatch>>(
-    ({ item: person }) => (
-      <PeopleMatchCard
-        connectionFailedLabel={LL.home.people.failed()}
-        connectionStatus={connectionStatuses[person.profileId] ?? "idle"}
-        match={person}
-        onSayHi={() => {
-          void handleSayHi(person);
-        }}
-        sayHiLabel={LL.home.people.sayHi()}
-        sendingLabel={LL.home.people.sending()}
-        sentLabel={LL.home.people.sent()}
-      />
+    ({ item: person, index }) => (
+      <Animated.View
+        entering={FadeInUp.delay(index * 100)}
+        style={styles.peopleMatchItem}
+      >
+        <PeopleMatchCard
+          connectionFailedLabel={LL.home.people.failed()}
+          connectionStatus={connectionStatuses[person.profileId] ?? "idle"}
+          match={person}
+          onSayHi={() => {
+            void handleSayHi(person);
+          }}
+          sayHiLabel={LL.home.people.sayHi()}
+          sendingLabel={LL.home.people.sending()}
+          sentLabel={LL.home.people.sent()}
+        />
+      </Animated.View>
     ),
-    [connectionStatuses, handleSayHi, LL],
+    [connectionStatuses, handleSayHi, LL, styles.peopleMatchItem],
   );
 
   const renderPeopleEmpty = useCallback(() => {
@@ -252,39 +285,27 @@ export const HomeScreen = () => {
   const listHeader = useMemo(
     () => (
       <View style={styles.headerStack}>
-        <Header
-          left={<UiText variant="logo">{LL.brand.name()}</UiText>}
-          right={<UiText variant="city">{cityContext.city.name}</UiText>}
-        />
-
         <HeroPanel
           body={LL.home.people.body()}
           eyebrow={LL.home.people.eyebrow()}
           title={LL.home.people.title({ city: cityContext.city.name })}
         />
-
-        {connectionSentName ? (
-          <Panel variant="muted" style={styles.panel}>
-            <UiText variant="panelBody">
-              {LL.peopleConnect.sentToast({ name: connectionSentName })}
-            </UiText>
-          </Panel>
-        ) : null}
       </View>
     ),
-    [
-      LL,
-      cityContext.city.name,
-      connectionSentName,
-      styles.headerStack,
-      styles.panel,
-    ],
+    [LL, cityContext.city.name, styles.headerStack],
   );
 
   const discoverPeople = peopleFeedStatus === "error" ? [] : peopleMatches;
 
   return (
-    <Screen contentStyle={styles.screenContent} edges={["top"]} scroll={false}>
+    <Screen
+      contentStyle={styles.screenContent}
+      edges={["top"]}
+      scroll={false}
+      stickyHeader={
+        <AppBrandedCityHeader cityName={cityContext.city.name} />
+      }
+    >
       <List
         contentContainerStyle={styles.listContent}
         data={discoverPeople}
@@ -320,18 +341,26 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
       flex: 1,
       flexGrow: 1,
       gap: 0,
-      padding: 0,
+      paddingHorizontal: 0,
+      paddingTop: 0,
     },
     list: {
       flex: 1,
     },
     listContent: {
-      padding: spacing[6],
-      paddingBottom: spacing[8] + fabClearance + bottomInset,
+      paddingBottom: Math.max(
+        spacing[8] + fabClearance + bottomInset,
+        tabBarTotalHeight(theme, bottomInset) + spacing[4],
+      ),
+      paddingHorizontal: spacing[SCREEN_CONTENT_GUTTER_SPACING],
+      paddingTop: spacing[5],
     },
     headerStack: {
       gap: spacing[5],
       marginBottom: spacing[4],
+    },
+    peopleMatchItem: {
+      width: "100%",
     },
     panel: {
       gap: spacing[3],

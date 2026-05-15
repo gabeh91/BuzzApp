@@ -1,13 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
 import { useMemo } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 
+import { activityIconForInterest } from "@/features/interests/activateFab/activateFabActivityIcon";
+import type { BuzzInterest } from "@/features/interests/interestFlow";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import { Text } from "@/ui";
-
-import type { BuzzInterest } from "@/features/interests/interestFlow";
 
 type InterestToggleGridProps = {
   interests: BuzzInterest[];
@@ -16,7 +15,7 @@ type InterestToggleGridProps = {
   selectedInterestId: string;
 };
 
-const ACTIVITY_CARD_MIN_HEIGHT = 112;
+const ACTIVITY_CARD_MIN_HEIGHT = 90;
 const ACTIVITY_CARD_LINE_HEIGHT = 19;
 const ACTIVITY_CARD_ESTIMATED_CHARS_PER_LINE = 11;
 
@@ -24,24 +23,6 @@ const titleCaseCategory = (category: string) =>
   category
     ? category.charAt(0).toUpperCase() + category.slice(1).replaceAll("_", " ")
     : "";
-
-const activityIconForInterest = (
-  interest: BuzzInterest,
-): ComponentProps<typeof Ionicons>["name"] => {
-  const key = `${interest.slug} ${interest.name}`.toLowerCase();
-
-  if (key.includes("coffee")) return "cafe";
-  if (key.includes("golf")) return "golf";
-  if (key.includes("run")) return "walk";
-  if (key.includes("tennis")) return "tennisball";
-  if (key.includes("surf")) return "water";
-  if (key.includes("cook")) return "restaurant";
-  if (key.includes("music") || key.includes("guitar")) return "musical-notes";
-  if (key.includes("climb")) return "trending-up";
-  if (key.includes("hack")) return "code-slash";
-
-  return "sparkles";
-};
 
 const estimateCardLineCount = (interest: BuzzInterest) => {
   const longestWordLength = interest.name
@@ -165,7 +146,7 @@ export const InterestToggleGrid = ({
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { borderWidths, colors, fontSizes, radii, shadows, spacing } = theme;
+  const { borderWidths, colors, fontSizes, radii, spacing } = theme;
 
   return StyleSheet.create({
     sections: {
@@ -202,7 +183,6 @@ const createStyles = (theme: BuzzTheme) => {
       minHeight: ACTIVITY_CARD_MIN_HEIGHT,
       minWidth: 104,
       padding: spacing[3],
-      ...shadows.card,
     },
     cardSelected: {
       backgroundColor: colors.surfaceInverse,
@@ -223,7 +203,7 @@ const createStyles = (theme: BuzzTheme) => {
       width: 34,
     },
     iconBadgeSelected: {
-      backgroundColor: "rgba(255, 252, 245, 0.22)",
+      backgroundColor: colors.badgeSelectedTint,
     },
     cardLabelWrap: {
       flexGrow: 0,
