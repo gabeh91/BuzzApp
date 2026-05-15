@@ -29,7 +29,7 @@ export const HeroPanel = ({
   const styles = createStyles(theme);
 
   return (
-    <Panel {...viewProps} style={[styles.base, style]}>
+    <Panel {...viewProps} variant="surface" style={[styles.hero, style]}>
       <Text variant="eyebrow">{eyebrow}</Text>
       <Text variant="title">{title}</Text>
       <Text variant="body">{body}</Text>
@@ -38,16 +38,12 @@ export const HeroPanel = ({
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, radii, spacing, borderWidths, shadows } = theme;
+  const { radii, shadows, spacing } = theme;
 
   return StyleSheet.create({
-    base: {
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
+    hero: {
       borderRadius: radii["2xl"],
-      borderWidth: borderWidths.hairline,
       gap: spacing[3],
-      padding: spacing[6],
       ...shadows.card,
     },
   });

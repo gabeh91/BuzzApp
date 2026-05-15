@@ -58,6 +58,7 @@ test("mobile app exposes Expo Router layout, onboarding, tabbed roots, and group
   assert.equal(existsSync("app/auth/index.tsx"), true);
   assert.equal(existsSync("app/auth/code.tsx"), true);
   assert.equal(existsSync("app/people/[profileId]/connect.tsx"), true);
+  assert.equal(existsSync("app/chats/direct/[id].tsx"), true);
   assert.equal(existsSync("app/home.tsx"), false);
   assert.equal(existsSync("app/profile.tsx"), false);
   assert.equal(existsSync("app/groups/[id].tsx"), true);
@@ -92,6 +93,10 @@ test("mobile app exposes Expo Router layout, onboarding, tabbed roots, and group
   assert.match(
     readFileSync("app/people/[profileId]/connect.tsx", "utf8"),
     /PeopleConnectionRequestScreen/,
+  );
+  assert.match(
+    readFileSync("app/chats/direct/[id].tsx", "utf8"),
+    /DirectChatScreen/,
   );
   assert.match(readFileSync("app/groups/[id].tsx", "utf8"), /GroupScreen/);
   assert.match(

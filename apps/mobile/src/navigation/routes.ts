@@ -9,6 +9,7 @@ export const routes = {
   auth: "/auth",
   authCode: "/auth/code",
   group: (id: string) => `/groups/${id}` as const,
+  directChat: (id: string) => `/chats/direct/${id}` as const,
   peopleConnect: (profileId: string) => `/people/${profileId}/connect` as const,
 } as const;
 
@@ -23,6 +24,7 @@ export type BuzzRoute =
   | typeof routes.auth
   | typeof routes.authCode
   | ReturnType<typeof routes.group>
+  | ReturnType<typeof routes.directChat>
   | ReturnType<typeof routes.peopleConnect>;
 
 export const isOnboardingRoute = (route: BuzzRoute): boolean => {

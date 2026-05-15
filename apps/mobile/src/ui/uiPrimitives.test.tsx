@@ -2,13 +2,35 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { readFileSync } from "node:fs";
 import type { ReactElement } from "react";
 
+import { I18nProvider } from "@/i18n/I18nProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
-import { Button, Header, HeroPanel, List, Panel, Screen, Text } from "@/ui";
+import {
+  AppBrandedCityHeader,
+  BackHeader,
+  Button,
+  Header,
+  HeroPanel,
+  List,
+  Panel,
+  Screen,
+  Text,
+} from "@/ui";
 
 const renderWithTheme = (ui: ReactElement) =>
-  render(<ThemeProvider>{ui}</ThemeProvider>);
+  render(
+    <ThemeProvider>
+      <I18nProvider>{ui}</I18nProvider>
+    </ThemeProvider>,
+  );
 
 describe("UI primitives", () => {
+  it("renders AppBrandedCityHeader with brand and city", () => {
+    renderWithTheme(<AppBrandedCityHeader cityName="Melbourne" />);
+
+    expect(screen.getByText("Buzz")).toBeTruthy();
+    expect(screen.getByText("Melbourne")).toBeTruthy();
+  });
+
   it("renders shared screen chrome and text variants", () => {
     renderWithTheme(
       <Screen>
@@ -31,6 +53,23 @@ describe("UI primitives", () => {
     expect(
       screen.getByText("Feature screens compose the same primitives."),
     ).toBeTruthy();
+  });
+
+  it("renders BackHeader with caret and dispatches onBack", () => {
+    const onBack = jest.fn();
+
+    renderWithTheme(
+      <BackHeader
+        backLabel="Back"
+        onBack={onBack}
+        right={<Text variant="city">Context</Text>}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole("button", { name: "Back" }));
+
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Context")).toBeTruthy();
   });
 
   it("renders accessible buttons and dispatches presses through props", () => {

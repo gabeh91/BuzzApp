@@ -48,6 +48,9 @@ export const spacing = {
   16: 64
 } as const;
 
+/** Default horizontal + top inset for `Screen`; bottom is left to scroll/list insets. */
+export const SCREEN_CONTENT_GUTTER_SPACING: keyof typeof spacing = 6;
+
 export const radii = {
   sm: 12,
   md: 18,
@@ -99,7 +102,17 @@ const lightPalette = {
   sky: "#d8e9ea",
   line: "rgba(21, 37, 31, 0.14)",
   disabled: "rgba(21, 37, 31, 0.26)",
-  overlay: "rgba(21, 37, 31, 0.12)"
+  overlay: "rgba(21, 37, 31, 0.12)",
+  danger: "#a82e24",
+  toastBannerSuccess: "#31483f",
+  toastBannerInfo: "#4f7268",
+  toastBannerWarning: "#c96f45",
+  toastBannerDanger: "#a82e24",
+  toastChromeForeground: "rgba(255, 250, 240, 0.96)",
+  toastChromeBarTrack: "rgba(255, 250, 240, 0.22)",
+  toastChromeBarFill: "rgba(255, 250, 240, 0.72)",
+  toastChromeDismissPressed: "rgba(255, 250, 240, 0.16)",
+  badgeSelectedTint: "rgba(255, 250, 240, 0.22)"
 } as const;
 
 const darkPalette = {
@@ -117,32 +130,59 @@ const darkPalette = {
   sky: "#263d40",
   line: "rgba(248, 236, 216, 0.16)",
   disabled: "rgba(248, 236, 216, 0.24)",
-  overlay: "rgba(248, 236, 216, 0.12)"
+  overlay: "rgba(248, 236, 216, 0.12)",
+  danger: "#c44740",
+  toastBannerSuccess: "#1e3330",
+  toastBannerInfo: "#2a3d36",
+  toastBannerWarning: "#6b3d1f",
+  toastBannerDanger: "#5c1f1f",
+  toastChromeForeground: "rgba(248, 236, 216, 0.96)",
+  toastChromeBarTrack: "rgba(248, 236, 216, 0.22)",
+  toastChromeBarFill: "rgba(248, 236, 216, 0.72)",
+  toastChromeDismissPressed: "rgba(248, 236, 216, 0.16)",
+  badgeSelectedTint: "rgba(248, 236, 216, 0.2)"
 } as const;
 
-const lightShadows = {
-  card: {
-    shadowColor: "#15251f",
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 14 },
-    elevation: 5
-  }
+const fabWheel = {
+  dismissScrim: "rgba(21, 37, 31, 0.74)",
+  gradientDeep: "rgba(21, 37, 31, 0.56)",
+  gradientMid: "rgba(21, 37, 31, 0.28)",
+  gradientClear: "rgba(21, 37, 31, 0)",
+  heroTextMuted: "rgba(255, 250, 240, 0.92)",
+  textShadow: "rgba(21, 37, 31, 0.72)",
+  energyRingGoldFill: "rgba(215, 168, 75, 0.07)",
+  energyRingGoldBorder: "rgba(215, 168, 75, 0.16)",
+  energyRingSky: "rgba(216, 233, 234, 0.1)",
+  energyRingGoldInner: "rgba(215, 168, 75, 0.1)",
+  closeButtonFill: "rgba(255, 250, 240, 0.16)",
+  closeButtonBorder: "rgba(255, 250, 240, 0.24)",
+  fabLiveBorder: "rgba(215, 168, 75, 0.78)",
+  chargeFill: "rgba(255, 250, 240, 0.36)",
+  clearSelectionFill: "rgba(255, 250, 240, 0.34)",
+  clearSelectionBorder: "rgba(21, 37, 31, 0.12)",
+  /** FAB release burst: transparent stops use paper hue so gradients don’t muddy to grey. */
+  energyReleasePrimaryG0: "rgba(255, 250, 240, 0)",
+  energyReleasePrimaryG1: "rgba(255, 228, 168, 0.44)",
+  energyReleasePrimaryG2: "rgba(232, 188, 88, 0.88)",
+  energyReleasePrimaryG3: "rgba(255, 250, 240, 0)",
+  /** FAB release tail: same — warm transparent ends. */
+  energyReleaseSecondaryG0: "rgba(255, 250, 240, 0)",
+  energyReleaseSecondaryG1: "rgba(255, 232, 200, 0.2)",
+  energyReleaseSecondaryG2: "rgba(215, 168, 75, 0.36)",
+  energyReleaseSecondaryG3: "rgba(255, 250, 240, 0)",
+  wheelButtonBorder: "rgba(255, 250, 240, 0.86)",
+  expandedIconBadgeFill: "rgba(255, 250, 240, 0.34)",
+  expandedIconBadgeBorder: "rgba(21, 37, 31, 0.12)",
+  idlePulseFillEnd: "#e7bd62",
+  idlePulseBorderEnd: "#efcd7e",
 } as const;
 
-const darkShadows = {
-  card: {
-    shadowColor: "#000000",
-    shadowOpacity: 0.28,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 16 },
-    elevation: 6
-  }
-} as const;
+export type FabWheelTheme = typeof fabWheel;
 
 const createSemanticColors = (palette: typeof lightPalette | typeof darkPalette) => {
   return {
     ...palette,
+    clear: "rgba(0, 0, 0, 0)",
     background: palette.cream,
     surface: palette.paper,
     surfaceMuted: palette.sky,
@@ -164,12 +204,29 @@ const createSemanticColors = (palette: typeof lightPalette | typeof darkPalette)
 const createTheme = <Mode extends BuzzThemeMode>(
   mode: Mode,
   palette: typeof lightPalette | typeof darkPalette,
-  shadows: typeof lightShadows | typeof darkShadows
 ) => {
+  const cardShadow =
+    mode === "dark"
+      ? {
+          shadowColor: "#000000",
+          shadowOpacity: 0.28,
+          shadowRadius: 28,
+          shadowOffset: { width: 0, height: 16 },
+          elevation: 6,
+        }
+      : {
+          shadowColor: palette.ink,
+          shadowOpacity: 0.12,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 14 },
+          elevation: 5,
+        };
+
   return {
     mode,
     palette,
     colors: createSemanticColors(palette),
+    fabWheel,
     fontFamilies,
     fontStyles,
     fontSizes,
@@ -177,13 +234,15 @@ const createTheme = <Mode extends BuzzThemeMode>(
     spacing,
     radii,
     borderWidths,
-    shadows
+    shadows: {
+      card: cardShadow,
+    },
   };
 };
 
 export const themes = {
-  light: createTheme("light", lightPalette, lightShadows),
-  dark: createTheme("dark", darkPalette, darkShadows)
+  light: createTheme("light", lightPalette),
+  dark: createTheme("dark", darkPalette),
 } as const;
 
 export type BuzzTheme = (typeof themes)[BuzzThemeMode];

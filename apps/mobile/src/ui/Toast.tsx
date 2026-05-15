@@ -40,11 +40,6 @@ const ENTER_OPACITY_MS = 200;
 const EXIT_SLIDE_MS = 240;
 const EXIT_OPACITY_MS = 180;
 
-const TOAST_FOREGROUND = "rgba(255, 255, 255, 0.96)";
-const TOAST_BAR_TRACK = "rgba(255, 255, 255, 0.22)";
-const TOAST_BAR_FILL = "rgba(255, 255, 255, 0.72)";
-const TOAST_DISMISS_PRESSED = "rgba(255, 255, 255, 0.16)";
-
 export type ToastVariant = "success" | "info" | "warning" | "error" | "neutral";
 export type ToastPlacement = "top" | "bottom";
 
@@ -79,34 +74,19 @@ const resolveSemantic = (variant: ToastVariant): ToastSemantic =>
   variant === "neutral" ? "info" : variant;
 
 const getToastPaint = (theme: BuzzTheme, semantic: ToastSemantic): ToastPaint => {
-  const isDark = theme.mode === "dark";
-
-  if (isDark) {
-    switch (semantic) {
-      case "success":
-        return { background: "#1e3330" };
-      case "info":
-        return { background: "#1a4a6e" };
-      case "warning":
-        return { background: "#6b3d1f" };
-      case "error":
-        return { background: "#5c1f1f" };
-      default:
-        return { background: "#1a4a6e" };
-    }
-  }
+  const { colors } = theme;
 
   switch (semantic) {
     case "success":
-      return { background: theme.palette.moss };
+      return { background: colors.toastBannerSuccess };
     case "info":
-      return { background: "#1a6fa8" };
+      return { background: colors.toastBannerInfo };
     case "warning":
-      return { background: theme.palette.clay };
+      return { background: colors.toastBannerWarning };
     case "error":
-      return { background: "#b42318" };
+      return { background: colors.toastBannerDanger };
     default:
-      return { background: "#1a6fa8" };
+      return { background: colors.toastBannerInfo };
   }
 };
 
@@ -429,7 +409,7 @@ function ToastBanner({
           <View style={bannerStyles.lead}>
             <Ionicons
               accessibilityElementsHidden
-              color={TOAST_FOREGROUND}
+              color={theme.colors.toastChromeForeground}
               importantForAccessibility="no-hide-descendants"
               name={iconName}
               size={24}
@@ -456,7 +436,7 @@ function ToastBanner({
               pressed ? bannerStyles.dismissPressablePressed : null,
             ]}
           >
-            <Ionicons color={TOAST_FOREGROUND} name="close" size={22} />
+            <Ionicons color={theme.colors.toastChromeForeground} name="close" size={22} />
           </Pressable>
         </View>
 
@@ -470,13 +450,9 @@ function ToastBanner({
               : `toast-timeout-indicator-${toastId}`
           }
         >
-          <View style={[bannerStyles.timeoutTrack, { backgroundColor: TOAST_BAR_TRACK }]} />
+          <View style={bannerStyles.timeoutTrack} />
           <Animated.View
-            style={[
-              bannerStyles.timeoutFill,
-              { backgroundColor: TOAST_BAR_FILL },
-              scaleStyle,
-            ]}
+            style={[bannerStyles.timeoutFill, scaleStyle]}
           />
         </View>
       </View>
@@ -510,7 +486,7 @@ const createStackRootStyles = (
 };
 
 const createToastBannerStyles = (theme: BuzzTheme) => {
-  const { radii, shadows, spacing } = theme;
+  const { colors, fontSizes, lineHeights, radii, shadows, spacing } = theme;
 
   return StyleSheet.create({
     animShell: {
@@ -545,10 +521,10 @@ const createToastBannerStyles = (theme: BuzzTheme) => {
       minWidth: 0,
     },
     message: {
-      color: TOAST_FOREGROUND,
-      fontSize: theme.fontSizes.md,
+      color: colors.toastChromeForeground,
+      fontSize: fontSizes.md,
       fontWeight: "600",
-      lineHeight: theme.lineHeights.body,
+      lineHeight: lineHeights.body,
       textAlign: "left",
     },
     dismissPressable: {
@@ -559,7 +535,7 @@ const createToastBannerStyles = (theme: BuzzTheme) => {
       width: 44,
     },
     dismissPressablePressed: {
-      backgroundColor: TOAST_DISMISS_PRESSED,
+      backgroundColor: colors.toastChromeDismissPressed,
     },
     timeoutShell: {
       height: 4,
@@ -569,8 +545,10 @@ const createToastBannerStyles = (theme: BuzzTheme) => {
     },
     timeoutTrack: {
       ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.toastChromeBarTrack,
     },
     timeoutFill: {
+      backgroundColor: colors.toastChromeBarFill,
       bottom: 0,
       left: 0,
       position: "absolute",

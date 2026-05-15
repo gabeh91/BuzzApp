@@ -13,6 +13,7 @@ type TabBarIconProps = {
   color: string;
   focused: boolean;
   size: number;
+  unreadCount?: number;
 };
 
 export const RootTabs = () => {
@@ -65,8 +66,13 @@ export const RootTabs = () => {
           options={{
             title: LL.navigation.tabs.chats(),
             tabBarAccessibilityLabel: LL.navigation.tabs.chatsAccessibility(),
-            tabBarIcon: ({ color, focused }: TabBarIconProps) => (
-              <BottomTabIcon color={color} focused={focused} name="chats" />
+            tabBarIcon: ({ color, focused, unreadCount }: TabBarIconProps) => (
+              <BottomTabIcon
+                color={color}
+                focused={focused}
+                name="chats"
+                {...(typeof unreadCount === "number" ? { unreadCount } : {})}
+              />
             ),
             tabBarLabel: LL.navigation.tabs.chats(),
           }}

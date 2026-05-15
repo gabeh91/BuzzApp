@@ -38,6 +38,7 @@ function ListInner<TItem>(
     ItemSeparatorComponent,
     showsHorizontalScrollIndicator,
     showsVerticalScrollIndicator,
+    style,
     ...props
   }: ListProps<TItem>,
   ref: ForwardedRef<ElementRef<typeof FlashList<TItem>>> | null,
@@ -66,6 +67,7 @@ function ListInner<TItem>(
       ItemSeparatorComponent={GapSeparatorComponent}
       showsHorizontalScrollIndicator={showsHorizontalScrollIndicator ?? false}
       showsVerticalScrollIndicator={showsVerticalScrollIndicator ?? false}
+      style={[style, { overflow: "visible" }]}
       {...props}
     />
   );

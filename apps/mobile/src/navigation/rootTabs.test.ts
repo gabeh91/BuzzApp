@@ -39,11 +39,16 @@ test("root tabs expose Discover, Activities, Chats, and Profile as bottom destin
   assert.match(bubbleTabBarSource, /scaleY: bubbleSquash\.value/);
   assert.match(bubbleTabBarSource, /bubbleMorph/);
   assert.match(bubbleTabBarSource, /movementDirection/);
+  assert.match(bubbleTabBarSource, /useConnectionRequestInbox/);
+  assert.match(bubbleTabBarSource, /useActivationPingInbox/);
+  assert.match(bubbleTabBarSource, /useChatSummaries/);
+  assert.match(bubbleTabBarSource, /chatsUnreadCount/);
   assert.doesNotMatch(bubbleTabBarSource, /activeBubbleLeadingLobe/);
   assert.doesNotMatch(bubbleTabBarSource, /activeBubbleTrailingLobe/);
   assert.match(bottomTabIconSource, /discover/);
   assert.match(bottomTabIconSource, /activities/);
   assert.match(bottomTabIconSource, /chats/);
+  assert.match(rootTabsSource, /typeof unreadCount === "number"/);
   assert.match(bottomTabIconSource, /profile/);
   assert.doesNotMatch(homeSource, /routes\.profile/);
   assert.doesNotMatch(activitiesSource, /routes\.home/);

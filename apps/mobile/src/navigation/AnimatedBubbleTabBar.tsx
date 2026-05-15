@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -11,10 +11,15 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { useBuzzAuth } from "@/auth/AuthProvider";
 import { ActivateInterestFab } from "@/features/interests/ActivateInterestFab";
+import { useConnectionRequestInbox } from "@/features/chat/ConnectionRequestInboxSingleton";
+import { useChatSummaries } from "@/features/chat/useChatSummaries";
+import { useActivationPingInbox } from "@/features/interests/ActivationPingInboxSingleton";
 import { useActivateInterestActions } from "@/features/interests/useActivateInterestActions";
 import { useActivitiesPickerFocus } from "@/features/activities/ActivitiesPickerFocusContext";
 import { useI18n } from "@/i18n/I18nProvider";
+import { TAB_BAR_CORE_HEIGHT } from "@/navigation/tabBarLayout";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
 import { Text as UiText, useToast } from "@/ui";
@@ -34,6 +39,7 @@ type TabBarIconProps = {
   color: string;
   focused: boolean;
   size: number;
+  unreadCount?: number;
 };
 
 type TabDescriptor = {
@@ -89,6 +95,13 @@ export const AnimatedBubbleTabBar = ({
   const { colors } = theme;
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets.bottom);
+  const { isAuthenticated, user } = useBuzzAuth();
+  const pingInbox = useActivationPingInbox();
+  const connectionRequestInbox = useConnectionRequestInbox();
+  const chatSummaries = useChatSummaries({
+    enabled: isAuthenticated,
+    userId: user.id,
+  });
   const {
     activationBusy,
     handleActivateSelectedInterest,
@@ -101,6 +114,13 @@ export const AnimatedBubbleTabBar = ({
   const { showToast } = useToast();
   const activeRouteName = state.routes[state.index]?.name;
   const isActivitiesTab = activeRouteName === "activities";
+  const chatsUnreadCount =
+    pingInbox.pings.length +
+    connectionRequestInbox.requests.length +
+    chatSummaries.summaries.reduce(
+      (total, summary) => total + summary.unreadCount,
+      0,
+    );
 
   const handleActivitiesEmptyFabPress = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -315,6 +335,7 @@ export const AnimatedBubbleTabBar = ({
                     color,
                     focused,
                     size: 24,
+                    ...(route.name === "chats" ? { unreadCount: chatsUnreadCount } : {}),
                   })}
                   <UiText
                     style={[
@@ -341,7 +362,7 @@ export const AnimatedBubbleTabBar = ({
 };
 
 const createStyles = (theme: BuzzTheme, bottomInset: number) => {
-  const { colors, fontSizes, radii, shadows, spacing } = theme;
+  const { borderWidths, colors, fontSizes, radii, spacing } = theme;
 
   return StyleSheet.create({
     container: {
@@ -353,13 +374,13 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
       borderColor: colors.border,
       borderTopLeftRadius: radii.xl,
       borderTopRightRadius: radii.xl,
-      borderTopWidth: 1,
-      height: 82 + Math.max(bottomInset, spacing[2]),
+      borderTopWidth: borderWidths.hairline,
+      elevation: 0,
+      height: TAB_BAR_CORE_HEIGHT + Math.max(bottomInset, spacing[2]),
       paddingBottom: Math.max(bottomInset, spacing[2]),
       paddingHorizontal: spacing[5],
       paddingTop: spacing[3],
-      ...shadows.card,
-      elevation: Platform.OS === "android" ? 12 : shadows.card.elevation,
+      shadowOpacity: 0,
       zIndex: 1,
     },
     track: {

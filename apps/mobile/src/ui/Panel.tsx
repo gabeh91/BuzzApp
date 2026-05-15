@@ -28,22 +28,23 @@ export const Panel = ({
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, radii, spacing, borderWidths, shadows } = theme;
+  const { colors, radii, spacing, borderWidths } = theme;
 
   return StyleSheet.create({
     base: {
       borderRadius: radii.xl,
       gap: spacing[3],
-      padding: spacing[5],
+      padding: spacing[6],
     },
     surface: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
       borderWidth: borderWidths.hairline,
-      ...shadows.card,
     },
     muted: {
       backgroundColor: colors.surfaceMuted,
+      borderColor: colors.border,
+      borderWidth: borderWidths.hairline,
     },
     plain: {
       backgroundColor: colors.surface,
