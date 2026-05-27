@@ -6,7 +6,7 @@ import {
   markAttendanceConfirmed,
   markFeedbackCompleted,
   markGroupJoined,
-} from "./settlingProgressState";
+} from "../settlingProgressState";
 
 test("settling progress state starts with real-world milestones incomplete", () => {
   const state = createInitialSettlingProgressState();

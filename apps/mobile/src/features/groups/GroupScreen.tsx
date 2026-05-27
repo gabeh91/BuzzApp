@@ -1,6 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Share, StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Share,
+  StyleSheet,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   useActivityGroupSummaryQuery,
@@ -21,7 +30,6 @@ import {
   createDefaultActivityPlan,
   type ActivityPlanConfirmationStatus,
 } from "@/features/plans/activityPlan";
-import { useSettlingProgressState } from "@/features/progress/SettlingProgressProvider";
 import {
   canShowExactLocation,
   createBlockPayload,
@@ -29,23 +37,25 @@ import {
 } from "@/features/safety/safetyActions";
 import { useI18n } from "@/i18n/I18nProvider";
 import {
-  runAttendanceAction,
   runBlockAction,
   runCreateInviteAction,
-  runFeedbackAction,
   runLeaveGroupAction,
   runReportAction,
 } from "@/lib/functions";
 import { buzzSupabase } from "@/lib/supabase";
 import { routes } from "@/navigation/routes";
+import { tabBarTotalHeight } from "@/navigation/tabBarLayout";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
-import type { BuzzTheme } from "@/theme/tokens";
+import { type BuzzTheme } from "@/theme/tokens";
 import {
   Avatar,
+  BackHeader,
   Button,
-  Header,
   List,
+  Panel,
   Screen,
+  SegmentedTwoTabs,
+  Sheet,
   Text as UiText,
   type ListRenderItem,
 } from "@/ui";
@@ -96,42 +106,45 @@ const normalizeGroupStatus = (
   return "forming";
 };
 
-type GroupScreenRow =
+type DetailGroupRow =
   | { type: "context" }
   | { type: "plan" }
   | { type: "safety" }
-  | { type: "invite" }
-  | { type: "attendance" }
-  | { type: "chatHeader" }
+  | { type: "invite" };
+
+type ChatGroupRow =
   | { type: "chatEmpty" }
-  | { type: "chatMessage"; message: ChatMessage; showAvatar: boolean }
-  | { type: "chatFooter" }
-  | { type: "backHome" };
+  | { type: "chatMessage"; message: ChatMessage; showAvatar: boolean };
 
 export const GroupScreen = ({ groupId }: GroupScreenProps) => {
   const router = useRouter();
+  const handleLeaveGroupScreen = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace(routes.chats);
+  }, [router]);
   const { requireAuth, user } = useBuzzAuth();
   const { state } = useInterestFlow();
   const { LL } = useI18n();
   const { theme } = useBuzzTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(
+    () => createStyles(theme, insets.bottom),
+    [theme, insets.bottom],
+  );
   const match = state.matchPreview;
   const isLocalGroup = groupId.startsWith("local-");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [inviteFeedback, setInviteFeedback] = useState<string | null>(null);
   const [inviteCreating, setInviteCreating] = useState(false);
-  const [attendanceFeedback, setAttendanceFeedback] = useState<string | null>(
-    null,
-  );
-  const [attendanceSubmitting, setAttendanceSubmitting] = useState(false);
-  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
   const [safetySubmitting, setSafetySubmitting] = useState(false);
   const [confirmationStatus, setConfirmationStatus] =
     useState<ActivityPlanConfirmationStatus>("pending");
-  const { markAttendanceConfirmed, markFeedbackCompleted, markGroupJoined } =
-    useSettlingProgressState();
   const { data: groupSummaryData } = useActivityGroupSummaryQuery({
     variables: { groupId },
     skip: isLocalGroup,
@@ -141,6 +154,9 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     skip: isLocalGroup,
   });
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [activeTab, setActiveTab] = useState<"details" | "chat">("details");
+  const [groupMenuVisible, setGroupMenuVisible] = useState(false);
+  const [groupMenuRemountKey, setGroupMenuRemountKey] = useState(0);
   const remoteGroup =
     groupSummaryData?.activityGroupsCollection?.edges[0]?.node ?? null;
   const remotePlan =
@@ -419,107 +435,6 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     });
   };
 
-  const confirmAttendance = async () => {
-    await requireAuth("attend_activity", async (authUser, accessToken) => {
-      markGroupJoined();
-
-      if (isLocalGroup) {
-        markAttendanceConfirmed();
-        setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
-        return;
-      }
-
-      setAttendanceSubmitting(true);
-
-      try {
-        await runAttendanceAction({
-          accessToken,
-          activityGroupId: group.id,
-          profileId: authUser.id,
-        });
-        markAttendanceConfirmed();
-        setAttendanceFeedback(LL.groups.attendance.attendanceConfirmed());
-      } catch {
-        setAttendanceFeedback(LL.groups.attendance.attendanceFailed());
-      } finally {
-        setAttendanceSubmitting(false);
-      }
-    });
-  };
-
-  const postPlanSafety = async () => {
-    await requireAuth(
-      "post_activity_feedback",
-      async (authUser, accessToken) => {
-        markGroupJoined();
-
-        if (isLocalGroup) {
-          markFeedbackCompleted();
-          setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
-          return;
-        }
-
-        setFeedbackSubmitting(true);
-
-        try {
-          await runFeedbackAction({
-            accessToken,
-            activityGroupId: group.id,
-            feltSafe: true,
-            profileId: authUser.id,
-            wouldMeetAgain: true,
-          });
-          markFeedbackCompleted();
-          setAttendanceFeedback(LL.groups.attendance.safetyCompleted());
-        } catch {
-          setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
-        } finally {
-          setFeedbackSubmitting(false);
-        }
-      },
-    );
-  };
-
-  const postPlanIssue = async () => {
-    await requireAuth(
-      "post_activity_feedback",
-      async (authUser, accessToken) => {
-        markGroupJoined();
-
-        if (isLocalGroup) {
-          markFeedbackCompleted();
-          setAttendanceFeedback(LL.groups.attendance.issueReported());
-          return;
-        }
-
-        setFeedbackSubmitting(true);
-
-        try {
-          await runFeedbackAction({
-            accessToken,
-            activityGroupId: group.id,
-            feltSafe: false,
-            profileId: authUser.id,
-            wouldMeetAgain: false,
-          });
-          await runReportAction({
-            accessToken,
-            activityGroupId: group.id,
-            category: "unsafe",
-            profileId: authUser.id,
-            reason: "Post-plan safety issue",
-          });
-          markFeedbackCompleted();
-          setAttendanceFeedback(LL.groups.attendance.issueReported());
-        } catch {
-          setAttendanceFeedback(LL.groups.attendance.feedbackFailed());
-        } finally {
-          setFeedbackSubmitting(false);
-        }
-      },
-    );
-  };
-
   const handlePlanConfirmation = async (
     nextStatus: ActivityPlanConfirmationStatus,
   ) => {
@@ -528,41 +443,53 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     });
   };
 
-  const groupRows = useMemo<GroupScreenRow[]>(() => {
-    const rows: GroupScreenRow[] = [
+  const openGroupMenu = useCallback(() => {
+    setGroupMenuRemountKey((key) => key + 1);
+    setGroupMenuVisible(true);
+  }, []);
+
+  const closeGroupMenu = useCallback(() => {
+    setGroupMenuVisible(false);
+  }, []);
+
+  const detailRows = useMemo<DetailGroupRow[]>(
+    () => [
       { type: "context" },
       { type: "plan" },
       { type: "safety" },
       { type: "invite" },
-      { type: "attendance" },
-      { type: "chatHeader" },
-    ];
+    ],
+    [],
+  );
 
+  const chatRows = useMemo<ChatGroupRow[]>(() => {
     if (messages.length === 0) {
-      rows.push({ type: "chatEmpty" });
-    } else {
-      for (let index = 0; index < messages.length; index += 1) {
-        const message = messages[index];
-        const nextMessage = messages[index + 1];
-
-        if (!message) continue;
-
-        rows.push({
-          type: "chatMessage",
-          message,
-          showAvatar:
-            !message.isOwnMessage &&
-            (!nextMessage || nextMessage.senderId !== message.senderId),
-        });
-      }
+      return [{ type: "chatEmpty" }];
     }
 
-    rows.push({ type: "chatFooter" }, { type: "backHome" });
+    const rows: ChatGroupRow[] = [];
+
+    for (let index = 0; index < messages.length; index += 1) {
+      const message = messages[index];
+      const nextMessage = messages[index + 1];
+
+      if (!message) continue;
+
+      rows.push({
+        type: "chatMessage",
+        message,
+        showAvatar:
+          !message.isOwnMessage &&
+          (!nextMessage || nextMessage.senderId !== message.senderId),
+      });
+    }
 
     return rows;
   }, [messages]);
 
-  const getGroupRowKey = useCallback((row: GroupScreenRow) => {
+  const getDetailRowKey = useCallback((row: DetailGroupRow) => row.type, []);
+
+  const getChatRowKey = useCallback((row: ChatGroupRow) => {
     if (row.type === "chatMessage") {
       return `message-${row.message.id}`;
     }
@@ -570,19 +497,11 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     return row.type;
   }, []);
 
-  const listHeader = useMemo(
+  const detailListHeader = useMemo(
     () => (
       <View style={styles.headerStack}>
-        <Header
-          left={<UiText variant="eyebrow">{LL.groups.eyebrow()}</UiText>}
-          right={
-            <UiText variant="status" style={styles.status}>
-              {LL.groups.formingStatus()}
-            </UiText>
-          }
-        />
-
         <View style={styles.hero}>
+          <UiText variant="eyebrow">{LL.groups.eyebrow()}</UiText>
           <UiText style={styles.title}>
             {LL.groups.title({ interest: group.interestName })}
           </UiText>
@@ -590,45 +509,88 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
         </View>
       </View>
     ),
+    [LL, group.interestName, styles.body, styles.headerStack, styles.hero, styles.title],
+  );
+
+  const fixedChrome = useMemo(
+    () => (
+      <View style={styles.chromeStack}>
+        <BackHeader
+          backLabel={LL.common.back()}
+          onBack={handleLeaveGroupScreen}
+          right={
+            <View style={styles.chromeHeaderRow}>
+              <Pressable
+                accessibilityLabel={LL.groups.openMoreMenu()}
+                accessibilityRole="button"
+                hitSlop={12}
+                onPress={openGroupMenu}
+                style={({ pressed }) => [
+                  styles.chromeIconButton,
+                  pressed ? styles.chromeIconButtonPressed : null,
+                ]}
+              >
+                <Ionicons
+                  color={theme.colors.text}
+                  name="settings-outline"
+                  size={22}
+                />
+              </Pressable>
+            </View>
+          }
+        />
+
+        <SegmentedTwoTabs
+          left={{
+            accessibilityHint: LL.groups.tabDetailsHint(),
+            label: LL.groups.tabDetails(),
+          }}
+          right={{
+            accessibilityHint: LL.groups.tabChatHint(),
+            label: LL.groups.tabChat(),
+          }}
+          style={styles.segmentedTabs}
+          value={activeTab === "details" ? "left" : "right"}
+          onChange={(next) => {
+            setActiveTab(next === "left" ? "details" : "chat");
+          }}
+        />
+      </View>
+    ),
     [
       LL,
-      group.interestName,
-      styles.body,
-      styles.headerStack,
-      styles.hero,
+      activeTab,
+      handleLeaveGroupScreen,
+      openGroupMenu,
+      styles.chromeHeaderRow,
+      styles.chromeIconButton,
+      styles.chromeIconButtonPressed,
+      styles.chromeStack,
+      styles.segmentedTabs,
       styles.status,
-      styles.title,
+      styles.statusShrink,
+      theme.colors.text,
     ],
   );
 
   const listExtraData = useMemo(
     () => ({
-      attendanceFeedback,
-      attendanceSubmitting,
       confirmationStatus,
-      feedbackSubmitting,
-      inviteCreating,
       inviteFeedback,
       inviteLink,
       safetyFeedback,
       safetySubmitting,
-      sendingMessage,
     }),
     [
-      attendanceFeedback,
-      attendanceSubmitting,
       confirmationStatus,
-      feedbackSubmitting,
-      inviteCreating,
       inviteFeedback,
       inviteLink,
       safetyFeedback,
       safetySubmitting,
-      sendingMessage,
     ],
   );
 
-  const renderGroupRow = useCallback<ListRenderItem<GroupScreenRow>>(
+  const renderDetailRow = useCallback<ListRenderItem<DetailGroupRow>>(
     ({ item }) => {
       switch (item.type) {
         case "context":
@@ -695,14 +657,13 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
                 <Button
                   label={LL.groups.planCard.confirm()}
                   onPress={() => void handlePlanConfirmation("confirmed")}
-                  style={styles.confirmationAction}
-                  variant="neutral"
+                  style={styles.confirmationPrimary}
                 />
                 <Button
                   label={LL.groups.planCard.requestChanges()}
                   onPress={() => void handlePlanConfirmation("needs_changes")}
-                  style={styles.confirmationAction}
-                  variant="neutral"
+                  style={styles.confirmationSecondary}
+                  variant="bordered"
                 />
               </View>
               <UiText style={styles.safetyFeedback}>
@@ -724,29 +685,6 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
                     : LL.groups.safety.locationHidden()}
                 </UiText>
               </View>
-              <View style={styles.safetyActions}>
-                <Button
-                  disabled={safetySubmitting}
-                  label={LL.groups.safety.report()}
-                  onPress={handlePrepareReport}
-                  style={styles.safetyAction}
-                  variant="neutral"
-                />
-                <Button
-                  disabled={safetySubmitting}
-                  label={LL.groups.safety.block()}
-                  onPress={handlePrepareBlock}
-                  style={styles.safetyAction}
-                  variant="neutral"
-                />
-                <Button
-                  disabled={safetySubmitting}
-                  label={LL.groups.safety.leave()}
-                  onPress={handlePrepareLeave}
-                  style={styles.safetyAction}
-                  variant="neutral"
-                />
-              </View>
               {safetyFeedback ? (
                 <UiText style={styles.safetyFeedback}>{safetyFeedback}</UiText>
               ) : null}
@@ -764,17 +702,6 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
                   {LL.groups.invites.body()}
                 </UiText>
               </View>
-              <Button
-                disabled={inviteCreating}
-                label={
-                  inviteCreating
-                    ? LL.groups.invites.creating()
-                    : LL.groups.invites.create()
-                }
-                onPress={handlePrepareInvite}
-                style={styles.inviteAction}
-                variant="neutral"
-              />
               {inviteLink ? (
                 <View style={styles.inviteLinkBox}>
                   <UiText style={styles.detailTitle}>
@@ -791,110 +718,6 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
             </View>
           );
 
-        case "attendance":
-          return (
-            <View style={[styles.attendancePanel, styles.section]}>
-              <View style={styles.detailStack}>
-                <UiText style={styles.detailTitle}>
-                  {LL.groups.attendance.title()}
-                </UiText>
-                <UiText style={styles.detailBody}>
-                  {LL.groups.attendance.body()}
-                </UiText>
-              </View>
-              <View style={styles.safetyActions}>
-                <Button
-                  disabled={attendanceSubmitting}
-                  label={LL.groups.attendance.confirmAttendance()}
-                  onPress={confirmAttendance}
-                  style={styles.safetyAction}
-                  variant="neutral"
-                />
-                <Button
-                  disabled={feedbackSubmitting}
-                  label={LL.groups.attendance.postPlanSafety()}
-                  onPress={postPlanSafety}
-                  style={styles.safetyAction}
-                  variant="neutral"
-                />
-                <Button
-                  disabled={feedbackSubmitting}
-                  label={LL.groups.attendance.reportIssue()}
-                  onPress={postPlanIssue}
-                  style={styles.safetyAction}
-                  variant="neutral"
-                />
-              </View>
-              {attendanceFeedback ? (
-                <UiText style={styles.safetyFeedback}>
-                  {attendanceFeedback}
-                </UiText>
-              ) : null}
-            </View>
-          );
-
-        case "chatHeader":
-          return <View style={styles.chatPanelHeader} />;
-
-        case "chatEmpty":
-          return (
-            <View style={styles.chatEmptyRow}>
-              <UiText style={styles.chatEmpty}>{LL.chat.empty()}</UiText>
-            </View>
-          );
-
-        case "chatMessage":
-          return (
-            <View
-              style={[
-                styles.chatMessageRow,
-                item.message.isOwnMessage ? styles.chatMessageOwnRow : null,
-              ]}
-            >
-              {!item.message.isOwnMessage ? (
-                <View style={styles.chatMessageAvatarSlot}>
-                  {item.showAvatar ? (
-                    <Avatar
-                      accessibilityLabel={
-                        item.message.senderName ?? LL.chat.directTitleFallback()
-                      }
-                      fallbackInitial={
-                        item.message.senderName ?? item.message.senderId
-                      }
-                      size={30}
-                      uri={item.message.senderPhotoUrl ?? undefined}
-                    />
-                  ) : null}
-                </View>
-              ) : null}
-              <MessageBubble message={item.message} />
-            </View>
-          );
-
-        case "chatFooter":
-          return (
-            <View style={[styles.chatPanelFooter, styles.section]}>
-              <ChatComposer
-                blockedLabel={LL.chat.blocked()}
-                disabled={sendingMessage}
-                onSend={handleSendMessage}
-                placeholder={LL.chat.composerPlaceholder()}
-                sendLabel={LL.chat.send()}
-                sendingLabel={LL.chat.sending()}
-              />
-            </View>
-          );
-
-        case "backHome":
-          return (
-            <Button
-              label={LL.groups.backHome()}
-              onPress={() => {
-                router.replace(routes.home);
-              }}
-              style={styles.button}
-            />
-          );
       }
 
       return null;
@@ -902,49 +725,169 @@ export const GroupScreen = ({ groupId }: GroupScreenProps) => {
     [
       LL,
       activityPlan,
-      attendanceFeedback,
-      attendanceSubmitting,
-      confirmAttendance,
       exactLocationVisible,
-      feedbackSubmitting,
       getConfirmationStatusCopy,
       group.matchName,
       group.suggestedPlan,
       handlePlanConfirmation,
-      handlePrepareBlock,
-      handlePrepareInvite,
-      handlePrepareLeave,
-      handlePrepareReport,
-      handleSendMessage,
-      inviteCreating,
       inviteFeedback,
       inviteLink,
-      postPlanIssue,
-      postPlanSafety,
-      router,
       safetyFeedback,
-      safetySubmitting,
-      sendingMessage,
       styles,
     ],
   );
 
+  const renderChatRow = useCallback<ListRenderItem<ChatGroupRow>>(
+    ({ item }) => {
+      if (item.type === "chatEmpty") {
+        return (
+          <Panel variant="muted" style={styles.chatEmptyPanel}>
+            <UiText variant="panelTitle">{LL.chat.empty()}</UiText>
+          </Panel>
+        );
+      }
+
+      return (
+        <View
+          style={[
+            styles.chatMessageRow,
+            item.message.isOwnMessage ? styles.chatMessageOwnRow : null,
+          ]}
+        >
+          {!item.message.isOwnMessage ? (
+            <View style={styles.chatMessageAvatarSlot}>
+              {item.showAvatar ? (
+                <Avatar
+                  accessibilityLabel={
+                    item.message.senderName ?? LL.chat.directTitleFallback()
+                  }
+                  fallbackInitial={
+                    item.message.senderName ?? item.message.senderId
+                  }
+                  size={30}
+                  uri={item.message.senderPhotoUrl ?? undefined}
+                />
+              ) : null}
+            </View>
+          ) : null}
+          <MessageBubble message={item.message} />
+        </View>
+      );
+    },
+    [LL, styles],
+  );
+
   return (
-    <Screen contentStyle={styles.content} scroll={false}>
-      <List
-        contentContainerStyle={styles.listContent}
-        data={groupRows}
-        extraData={listExtraData}
-        keyExtractor={getGroupRowKey}
-        ListHeaderComponent={listHeader}
-        renderItem={renderGroupRow}
-        style={styles.list}
-      />
+    <Screen
+      contentStyle={styles.content}
+      edges={["top", "bottom", "left", "right"]}
+      scroll={false}
+      stickyHeader={fixedChrome}
+    >
+      <View style={styles.screenBody}>
+        {activeTab === "details" ? (
+          <List<DetailGroupRow>
+            contentContainerStyle={styles.listContent}
+            data={detailRows}
+            extraData={listExtraData}
+            keyExtractor={getDetailRowKey}
+            ListHeaderComponent={detailListHeader}
+            renderItem={renderDetailRow}
+            style={styles.list}
+          />
+        ) : (
+          <KeyboardAvoidingView
+            behavior={Platform.select({ ios: "padding", default: undefined })}
+            keyboardVerticalOffset={Platform.select({ ios: 10, default: 0 })}
+            style={styles.keyboardRoot}
+          >
+            <List<ChatGroupRow>
+              contentContainerStyle={styles.chatListContent}
+              data={chatRows}
+              itemGap={theme.spacing[3]}
+              keyExtractor={getChatRowKey}
+              renderItem={renderChatRow}
+              style={styles.list}
+            />
+            <View style={styles.composerDock}>
+              <Panel variant="plain" style={styles.composerPanel}>
+                <ChatComposer
+                  blockedLabel={LL.chat.blocked()}
+                  disabled={sendingMessage}
+                  onSend={handleSendMessage}
+                  placeholder={LL.chat.composerPlaceholder()}
+                  sendLabel={LL.chat.send()}
+                  sendingLabel={LL.chat.sending()}
+                />
+              </Panel>
+            </View>
+          </KeyboardAvoidingView>
+        )}
+      </View>
+
+      <Sheet
+        contentStyle={styles.menuSheetContent}
+        onDismiss={closeGroupMenu}
+        remountKey={groupMenuRemountKey}
+        snapPoints={["48%"]}
+        testID="group-options-sheet"
+        visible={groupMenuVisible}
+      >
+        <View style={styles.menuSheetStack}>
+          <UiText variant="panelTitle">{LL.groups.moreMenuTitle()}</UiText>
+          <UiText variant="panelBody">{LL.groups.moreMenuBody()}</UiText>
+          <View style={styles.menuSheetActions}>
+            <Button
+              disabled={inviteCreating}
+              label={
+                inviteCreating
+                  ? LL.groups.invites.creating()
+                  : LL.groups.invites.create()
+              }
+              onPress={() => {
+                closeGroupMenu();
+                void handlePrepareInvite();
+              }}
+              style={styles.actionButton}
+            />
+            <Button
+              disabled={safetySubmitting}
+              label={LL.groups.safety.report()}
+              onPress={() => {
+                closeGroupMenu();
+                void handlePrepareReport();
+              }}
+              style={styles.actionButton}
+              variant="secondary"
+            />
+            <Button
+              disabled={safetySubmitting}
+              label={LL.groups.safety.block()}
+              onPress={() => {
+                closeGroupMenu();
+                void handlePrepareBlock();
+              }}
+              style={styles.actionButton}
+              variant="bordered"
+            />
+            <Button
+              disabled={safetySubmitting}
+              label={LL.groups.safety.leave()}
+              onPress={() => {
+                closeGroupMenu();
+                void handlePrepareLeave();
+              }}
+              style={styles.actionButton}
+              variant="bordered"
+            />
+          </View>
+        </View>
+      </Sheet>
     </Screen>
   );
 };
 
-const createStyles = (theme: BuzzTheme) => {
+const createStyles = (theme: BuzzTheme, bottomInset: number) => {
   const {
     colors,
     fontStyles,
@@ -956,6 +899,8 @@ const createStyles = (theme: BuzzTheme) => {
     shadows,
   } = theme;
 
+  const horizontalGutter = spacing[4];
+
   return StyleSheet.create({
     screen: {
       flex: 1,
@@ -965,14 +910,87 @@ const createStyles = (theme: BuzzTheme) => {
       flex: 1,
       flexGrow: 1,
       gap: 0,
-      padding: 0,
+      paddingBottom: 0,
+      paddingHorizontal: 0,
+      paddingTop: 0,
+    },
+    screenBody: {
+      flex: 1,
+    },
+    chromeStack: {
+      borderBottomColor: colors.overlay,
+      borderBottomWidth: borderWidths.hairline,
+      gap: spacing[3],
+      paddingBottom: spacing[3],
+    },
+    chromeHeaderRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      flexShrink: 1,
+      gap: spacing[2],
+      justifyContent: "flex-end",
+      marginLeft: spacing[2],
+      maxWidth: "100%",
+    },
+    chromeIconButton: {
+      alignItems: "center",
+      height: 40,
+      justifyContent: "center",
+      width: 40,
+    },
+    chromeIconButtonPressed: {
+      opacity: 0.72,
+    },
+    statusShrink: {
+      flexShrink: 1,
+      minWidth: 0,
+    },
+    segmentedTabs: {
+      alignSelf: "stretch",
+      marginBottom: spacing[1],
+    },
+    keyboardRoot: {
+      flex: 1,
     },
     list: {
       flex: 1,
     },
     listContent: {
-      padding: spacing[6],
-      paddingBottom: spacing[8],
+      paddingBottom: tabBarTotalHeight(theme, bottomInset) + spacing[6],
+      paddingHorizontal: horizontalGutter,
+      paddingTop: spacing[4],
+    },
+    chatListContent: {
+      flexGrow: 1,
+      paddingBottom: tabBarTotalHeight(theme, bottomInset) + spacing[4],
+      paddingHorizontal: horizontalGutter,
+      paddingTop: spacing[2],
+    },
+    composerDock: {
+      backgroundColor: colors.background,
+      borderTopColor: colors.overlay,
+      borderTopWidth: borderWidths.hairline,
+      paddingBottom: Math.max(bottomInset, spacing[3]),
+      paddingHorizontal: horizontalGutter,
+      paddingTop: spacing[3],
+    },
+    composerPanel: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radii.xl,
+      borderWidth: borderWidths.hairline,
+      gap: spacing[3],
+      padding: spacing[3],
+    },
+    menuSheetContent: {
+      paddingHorizontal: spacing[5],
+    },
+    menuSheetStack: {
+      gap: spacing[4],
+      paddingTop: spacing[2],
+    },
+    menuSheetActions: {
+      gap: spacing[2],
     },
     headerStack: {
       gap: spacing[5],
@@ -989,7 +1007,7 @@ const createStyles = (theme: BuzzTheme) => {
     eyebrow: {
       color: colors.accent,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
+      ...theme.fontStyles.black,
       letterSpacing: 1,
       textTransform: "uppercase",
     },
@@ -998,7 +1016,7 @@ const createStyles = (theme: BuzzTheme) => {
       borderRadius: radii.full,
       color: colors.accent,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       overflow: "hidden",
       paddingHorizontal: spacing[3],
       paddingVertical: spacing[2],
@@ -1029,35 +1047,15 @@ const createStyles = (theme: BuzzTheme) => {
       gap: spacing[5],
       padding: spacing[5],
     },
-    chatPanel: {
-      backgroundColor: colors.surfaceMuted,
-      borderRadius: radii.xl,
-      gap: spacing[5],
-      padding: spacing[5],
-    },
-    chatPanelHeader: {
-      backgroundColor: colors.surfaceMuted,
-      borderTopLeftRadius: radii.xl,
-      borderTopRightRadius: radii.xl,
-      height: spacing[5],
-    },
-    chatEmptyRow: {
-      backgroundColor: colors.surfaceMuted,
-      paddingHorizontal: spacing[5],
-      paddingBottom: spacing[3],
-    },
-    chatEmpty: {
-      color: colors.brand,
-      fontSize: fontSizes.base,
-      lineHeight: lineHeights.body,
+    chatEmptyPanel: {
+      gap: spacing[2],
     },
     chatMessageRow: {
       alignItems: "flex-end",
-      backgroundColor: colors.surfaceMuted,
       flexDirection: "row",
       gap: spacing[2],
-      paddingHorizontal: spacing[5],
-      paddingBottom: spacing[3],
+      paddingBottom: spacing[2],
+      paddingHorizontal: spacing[1],
     },
     chatMessageOwnRow: {
       justifyContent: "flex-end",
@@ -1065,14 +1063,6 @@ const createStyles = (theme: BuzzTheme) => {
     chatMessageAvatarSlot: {
       alignItems: "center",
       width: 30,
-    },
-    chatPanelFooter: {
-      backgroundColor: colors.surfaceMuted,
-      borderBottomLeftRadius: radii.xl,
-      borderBottomRightRadius: radii.xl,
-      paddingHorizontal: spacing[5],
-      paddingTop: spacing[2],
-      paddingBottom: spacing[5],
     },
     planCard: {
       backgroundColor: colors.surface,
@@ -1085,7 +1075,7 @@ const createStyles = (theme: BuzzTheme) => {
     planCardTitle: {
       color: colors.text,
       fontSize: fontSizes.xl,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       lineHeight: lineHeights.title,
     },
     planMetaRow: {
@@ -1098,7 +1088,7 @@ const createStyles = (theme: BuzzTheme) => {
       borderRadius: radii.sm,
       color: colors.brand,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
+      ...theme.fontStyles.labelStrong,
       overflow: "hidden",
       paddingHorizontal: spacing[2],
       paddingVertical: spacing[1],
@@ -1106,21 +1096,24 @@ const createStyles = (theme: BuzzTheme) => {
     planSafety: {
       color: colors.textMuted,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
+      ...theme.fontStyles.labelStrong,
       lineHeight: lineHeights.tight,
     },
     confirmationActions: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: spacing[3],
+      gap: spacing[2],
     },
-    confirmationAction: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceMuted,
-      borderRadius: radii.sm,
-      minWidth: 128,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[2],
+    confirmationPrimary: {
+      flex: 1,
+      minWidth: 140,
+    },
+    confirmationSecondary: {
+      flex: 1,
+      minWidth: 140,
+    },
+    actionButton: {
+      alignSelf: "stretch",
     },
     safetyPanel: {
       backgroundColor: colors.surface,
@@ -1130,29 +1123,10 @@ const createStyles = (theme: BuzzTheme) => {
       gap: spacing[4],
       padding: spacing[5],
     },
-    safetyActions: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: spacing[3],
-    },
-    safetyAction: {
-      alignItems: "center",
-      borderColor: colors.border,
-      borderRadius: radii.sm,
-      borderWidth: borderWidths.hairline,
-      minWidth: 88,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[2],
-    },
-    safetyActionText: {
-      color: colors.text,
-      fontSize: fontSizes.sm,
-      fontWeight: "900",
-    },
     safetyFeedback: {
       color: colors.textMuted,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
+      ...theme.fontStyles.labelStrong,
       lineHeight: lineHeights.tight,
     },
     invitePanel: {
@@ -1163,20 +1137,6 @@ const createStyles = (theme: BuzzTheme) => {
       gap: spacing[4],
       padding: spacing[5],
     },
-    attendancePanel: {
-      backgroundColor: colors.surfaceMuted,
-      borderRadius: radii.xl,
-      gap: spacing[4],
-      padding: spacing[5],
-    },
-    inviteAction: {
-      alignItems: "center",
-      alignSelf: "flex-start",
-      backgroundColor: colors.surfaceMuted,
-      borderRadius: radii.sm,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3],
-    },
     inviteLinkBox: {
       backgroundColor: colors.background,
       borderRadius: radii.sm,
@@ -1186,13 +1146,13 @@ const createStyles = (theme: BuzzTheme) => {
     inviteLink: {
       color: colors.text,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
+      ...theme.fontStyles.labelStrong,
       lineHeight: lineHeights.tight,
     },
     panelLabel: {
       color: colors.brand,
       fontSize: fontSizes["2xl"],
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       lineHeight: lineHeights.title,
     },
     detailStack: {
@@ -1201,7 +1161,7 @@ const createStyles = (theme: BuzzTheme) => {
     detailTitle: {
       color: colors.brand,
       fontSize: fontSizes.sm,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       letterSpacing: 0.6,
       textTransform: "uppercase",
     },
@@ -1209,18 +1169,6 @@ const createStyles = (theme: BuzzTheme) => {
       color: colors.brand,
       fontSize: fontSizes.base,
       lineHeight: lineHeights.body,
-    },
-    button: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceInverse,
-      borderRadius: radii.full,
-      paddingHorizontal: spacing[5],
-      paddingVertical: spacing[4],
-    },
-    buttonText: {
-      color: colors.textInverse,
-      fontSize: fontSizes.base,
-      fontWeight: "900",
     },
   });
 };

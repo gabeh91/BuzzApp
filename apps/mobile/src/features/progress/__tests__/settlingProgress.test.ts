@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
-import { createSettlingProgress } from "./settlingProgress";
+import { createSettlingProgress } from "../settlingProgress";
 
 const migrationPath =
   "../../supabase/migrations/000017_attendance_starter_admin_backfill.sql";
@@ -95,6 +95,10 @@ test("mobile and admin surfaces expose attendance progress and admin visibility"
     "src/features/groups/GroupScreen.tsx",
     "utf8",
   );
+  const checkInPromptSource = readFileSync(
+    "src/features/progress/PostActivityCheckInPrompt.tsx",
+    "utf8",
+  );
   const profileSource = readFileSync(
     "src/features/profile/ProfileScreen.tsx",
     "utf8",
@@ -106,9 +110,10 @@ test("mobile and admin surfaces expose attendance progress and admin visibility"
     "utf8",
   );
 
-  assert.match(groupSource, /confirmAttendance/);
-  assert.match(groupSource, /postPlanSafety/);
-  assert.match(groupSource, /LL\.groups\.attendance/);
+  assert.doesNotMatch(groupSource, /LL\.groups\.attendance/);
+  assert.match(checkInPromptSource, /runAttendanceAction/);
+  assert.match(checkInPromptSource, /runFeedbackAction/);
+  assert.match(checkInPromptSource, /LL\.postActivityCheckIn/);
   assert.match(profileSource, /createSettlingProgress/);
   assert.match(profileSource, /LL\.profile\.settlingProgress/);
   assert.match(translationsSource, /settlingProgress:/);

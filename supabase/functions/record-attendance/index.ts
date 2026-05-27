@@ -13,18 +13,24 @@ type ActivityGroupMemberRow = {
 
 type ReliabilityRow = {
   attended_count: number;
+  attended_plan_streak: number;
 };
 
-const jsonResponse = (body: Record<string, unknown>, status = 200): Response => {
+const jsonResponse = (
+  body: Record<string, unknown>,
+  status = 200,
+): Response => {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" }
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 };
 
 const readActivityGroupId = async (request: Request): Promise<string> => {
   const body = await request.json().catch(() => ({}));
-  const activityGroupId = typeof body.activityGroupId === "string" ? body.activityGroupId.trim() : "";
+  const activityGroupId = typeof body.activityGroupId === "string"
+    ? body.activityGroupId.trim()
+    : "";
 
   if (!activityGroupId) {
     throw new Error("activityGroupId is required");
@@ -34,8 +40,12 @@ const readActivityGroupId = async (request: Request): Promise<string> => {
 };
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (request.method !== "POST") return jsonError("Method not allowed", 405, corsHeaders);
+  if (request.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+  if (request.method !== "POST") {
+    return jsonError("Method not allowed", 405, corsHeaders);
+  }
 
   const serviceClient = createServiceRoleClient();
 
@@ -43,29 +53,37 @@ Deno.serve(async (request) => {
     const activityGroupId = await readActivityGroupId(request);
     const { profileId } = await resolveCurrentProfile(request, serviceClient);
 
-    const { data: existingMember, error: existingMemberError } = await serviceClient
-      .from("activity_group_members")
-      .select("activity_group_id, user_id, rsvp_status, attendance_status, attendance_confirmed_at")
-      .eq("activity_group_id", activityGroupId)
-      .eq("user_id", profileId)
-      .maybeSingle<ActivityGroupMemberRow>();
+    const { data: existingMember, error: existingMemberError } =
+      await serviceClient
+        .from("activity_group_members")
+        .select(
+          "activity_group_id, user_id, rsvp_status, attendance_status, attendance_confirmed_at",
+        )
+        .eq("activity_group_id", activityGroupId)
+        .eq("user_id", profileId)
+        .maybeSingle<ActivityGroupMemberRow>();
 
     if (existingMemberError) throw existingMemberError;
-    if (!existingMember) return jsonError("Group membership not found", 404, corsHeaders);
+    if (!existingMember) {
+      return jsonError("Group membership not found", 404, corsHeaders);
+    }
 
     const alreadyAttended = existingMember.attendance_status === "attended";
-    const attendanceConfirmedAt = existingMember.attendance_confirmed_at ?? new Date().toISOString();
+    const attendanceConfirmedAt = existingMember.attendance_confirmed_at ??
+      new Date().toISOString();
 
     const { data: member, error: memberError } = await serviceClient
       .from("activity_group_members")
       .update({
         attendance_confirmed_at: attendanceConfirmedAt,
         attendance_status: "attended",
-        rsvp_status: "confirmed"
+        rsvp_status: "confirmed",
       })
       .eq("activity_group_id", activityGroupId)
       .eq("user_id", profileId)
-      .select("activity_group_id, user_id, rsvp_status, attendance_status, attendance_confirmed_at")
+      .select(
+        "activity_group_id, user_id, rsvp_status, attendance_status, attendance_confirmed_at",
+      )
       .single<ActivityGroupMemberRow>();
 
     if (memberError) throw memberError;
@@ -73,20 +91,39 @@ Deno.serve(async (request) => {
     if (!alreadyAttended) {
       const { data: reliability, error: reliabilityError } = await serviceClient
         .from("user_reliability")
-        .select("attended_count")
+        .select("attended_count, attended_plan_streak")
         .eq("user_id", profileId)
         .maybeSingle<ReliabilityRow>();
 
       if (reliabilityError) throw reliabilityError;
 
       const nextAttendedCount = (reliability?.attended_count ?? 0) + 1;
+      const nextAttendedPlanStreak = (reliability?.attended_plan_streak ?? 0) +
+        1;
       const reliabilityPayload = {
         attended_count: nextAttendedCount,
+        attended_plan_streak: nextAttendedPlanStreak,
         last_attended_at: attendanceConfirmedAt,
+        last_reliability_event_at: attendanceConfirmedAt,
         reliability_score: 1,
         updated_at: new Date().toISOString(),
-        user_id: profileId
+        user_id: profileId,
       };
+
+      const { error: reliabilityEventError } = await serviceClient
+        .from("user_reliability_events")
+        .upsert(
+          {
+            activity_group_id: activityGroupId,
+            event_type: "attended_plan",
+            idempotency_key: `attended-plan:${activityGroupId}:${profileId}`,
+            metadata_json: { attendanceConfirmedAt },
+            user_id: profileId,
+          },
+          { onConflict: "idempotency_key" },
+        );
+
+      if (reliabilityEventError) throw reliabilityEventError;
 
       const { error: upsertReliabilityError } = await serviceClient
         .from("user_reliability")
@@ -100,10 +137,12 @@ Deno.serve(async (request) => {
       activityGroupId: member.activity_group_id,
       attendanceConfirmedAt: member.attendance_confirmed_at,
       attendanceStatus: "attended",
-      rsvpStatus: "confirmed"
+      rsvpStatus: "confirmed",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to confirm attendance";
+    const message = error instanceof Error
+      ? error.message
+      : "Unable to confirm attendance";
     const status = message === "Authentication required" ? 401 : 400;
     return jsonError(message, status, corsHeaders);
   }

@@ -4,7 +4,7 @@ import { Text, Pressable } from "react-native";
 import {
   SettlingProgressProvider,
   useSettlingProgressState,
-} from "./SettlingProgressProvider";
+} from "../SettlingProgressProvider";
 
 const ProgressHarness = () => {
   const {
