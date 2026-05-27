@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ElementRef,
 } from "react";
 import { StyleSheet, View } from "react-native";
@@ -40,8 +41,11 @@ import {
   Panel,
   Screen,
   Text as UiText,
+  useToast,
 } from "@/ui";
 
+import { ActivityMatchCard } from "./ActivityMatchCard";
+import { OutgoingActivationCancelSheet } from "./OutgoingActivationCancelSheet";
 import { useActivitiesPickerFocus } from "./ActivitiesPickerFocusContext";
 
 const PICKER_SCROLL_TOP_INSET_SPACING: keyof BuzzTheme["spacing"] = 3;
@@ -61,6 +65,7 @@ export const ActivitiesScreen = () => {
     () => createStyles(theme, insets.bottom),
     [theme, insets.bottom],
   );
+  const { showToast } = useToast();
   const { isAuthenticated, user } = useBuzzAuth();
   const { isActivationGestureLocked } = useActivationGestureLock();
   const interestFlow = useInterestFlow();
@@ -86,6 +91,12 @@ export const ActivitiesScreen = () => {
   > | null>(null);
   const headerStackRef = useRef<View>(null);
   const pickerWrapRef = useRef<View>(null);
+  const [cancellingActivationId, setCancellingActivationId] = useState<
+    string | null
+  >(null);
+  const [cancelSheetActivation, setCancelSheetActivation] =
+    useState<OutgoingActivationSummary | null>(null);
+  const [cancelSheetRemountKey, setCancelSheetRemountKey] = useState(0);
   const pickerPulse = useSharedValue(0);
   const visibleOutgoingActivations = useMemo(
     () => outgoingSummary.activations.slice(0, 3),
@@ -151,6 +162,36 @@ export const ActivitiesScreen = () => {
     );
   }, [runPickerPulse, scrollListToOffset, theme.spacing]);
 
+  const cancelOutgoingActivation = useCallback(
+    async (activation: OutgoingActivationSummary) => {
+      setCancellingActivationId(activation.activationId);
+
+      try {
+        await outgoingSummary.cancelActivation(activation.activationId);
+        setCancelSheetActivation(null);
+        showToast({
+          message: LL.activities.outgoing.cancelled(),
+          placement: "bottom",
+          variant: "success",
+        });
+      } catch {
+        showToast({
+          message: LL.activities.outgoing.cancelFailed(),
+          placement: "bottom",
+          variant: "error",
+        });
+      } finally {
+        setCancellingActivationId(null);
+      }
+    },
+    [LL.activities.outgoing, outgoingSummary, showToast],
+  );
+
+  const openCancelSheet = useCallback((activation: OutgoingActivationSummary) => {
+    setCancelSheetActivation(activation);
+    setCancelSheetRemountKey((current) => current + 1);
+  }, []);
+
   useEffect(() => {
     registerFocusHandler(scrollPickerIntoViewAndPulse);
 
@@ -193,7 +234,11 @@ export const ActivitiesScreen = () => {
             {visibleOutgoingActivations.map((activation) => (
               <OutgoingActivationCard
                 activation={activation}
+                cancelling={cancellingActivationId === activation.activationId}
                 key={activation.activationId}
+                onManage={() => {
+                  openCancelSheet(activation);
+                }}
               />
             ))}
           </Panel>
@@ -209,6 +254,9 @@ export const ActivitiesScreen = () => {
       interestFlow.state.activation.message,
       pulseRingStyle,
       selectedInterest?.id,
+      cancellingActivationId,
+      setCancelSheetActivation,
+      openCancelSheet,
       styles.headerStack,
       styles.outgoingPanel,
       styles.pickerEmphasis,
@@ -217,6 +265,10 @@ export const ActivitiesScreen = () => {
       visibleOutgoingActivations,
     ],
   );
+
+  const handleCloseCancelSheet = useCallback(() => {
+    setCancelSheetActivation(null);
+  }, []);
 
   return (
     <Screen
@@ -239,40 +291,62 @@ export const ActivitiesScreen = () => {
         scrollEnabled={!isActivationGestureLocked}
         style={styles.list}
       />
+      <OutgoingActivationCancelSheet
+        activation={cancelSheetActivation}
+        cancelling={cancellingActivationId !== null}
+        onCancel={handleCloseCancelSheet}
+        onConfirm={(activation) => {
+          void cancelOutgoingActivation(activation);
+        }}
+        remountKey={cancelSheetRemountKey}
+      />
     </Screen>
   );
 };
 
 const OutgoingActivationCard = ({
   activation,
+  cancelling,
+  onManage,
 }: {
   activation: OutgoingActivationSummary;
+  cancelling: boolean;
+  onManage: () => void;
 }) => {
   const { LL } = useI18n();
-  const { theme } = useBuzzTheme();
-  const styles = useMemo(() => createOutgoingCardStyles(theme), [theme]);
   const summary = activation.responseSummary;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.titleRow}>
-        <UiText variant="feedback" style={styles.title}>
-          {activation.interestName}
-        </UiText>
-        {activation.activityGroupId ? (
-          <UiText variant="status" style={styles.readyBadge}>
-            {LL.activities.outgoing.groupReady()}
-          </UiText>
-        ) : null}
-      </View>
-      <UiText variant="panelBody" style={styles.summary}>
-        {LL.activities.outgoing.summary({
-          maybe: summary.maybe,
-          pending: summary.pending,
-          yes: summary.yes,
-        })}
-      </UiText>
-    </View>
+    <ActivityMatchCard
+      interest={{
+        name: activation.interestName,
+        slug: activation.interestSlug ?? undefined,
+      }}
+      socialMeta={[
+        {
+          icon: "checkmark-circle-outline",
+          label: LL.home.activityMeta.going({ count: summary.yes }),
+        },
+        {
+          icon: "help-circle-outline",
+          label: LL.home.activityMeta.maybe({ count: summary.maybe }),
+        },
+        {
+          icon: "chatbubble-ellipses-outline",
+          label: LL.home.activityMeta.pending({ count: summary.pending }),
+        },
+      ]}
+      statusLabel={
+        activation.activityGroupId
+          ? LL.activities.outgoing.groupReady()
+          : activation.status
+      }
+      statusAccessibilityLabel={LL.activities.outgoing.manage()}
+      statusDisabled={cancelling}
+      onStatusPress={activation.activityGroupId ? undefined : onManage}
+      title={activation.interestName}
+      tone={activation.activityGroupId ? "ready" : "live"}
+    />
   );
 };
 
@@ -306,7 +380,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     },
     pickerEmphasis: {
       borderColor: colors.clear,
-      borderRadius: radii.xl + 3,
+      borderRadius: radii["2xl"],
       borderWidth: borderWidths.hairline,
       paddingHorizontal: 0,
       paddingVertical: spacing[1],
@@ -319,41 +393,6 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     },
     outgoingPanel: {
       gap: spacing[3],
-    },
-  });
-};
-
-const createOutgoingCardStyles = (theme: BuzzTheme) => {
-  const { colors, radii, spacing } = theme;
-
-  return StyleSheet.create({
-    card: {
-      backgroundColor: colors.background,
-      borderRadius: radii.lg,
-      gap: spacing[2],
-      padding: spacing[4],
-    },
-    titleRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: spacing[2],
-      justifyContent: "space-between",
-    },
-    title: {
-      color: colors.text,
-      flex: 1,
-      fontSize: theme.fontSizes.md,
-    },
-    readyBadge: {
-      backgroundColor: colors.warningSoft,
-      borderRadius: radii.full,
-      color: colors.text,
-      overflow: "hidden",
-      paddingHorizontal: spacing[2],
-      paddingVertical: spacing[1],
-    },
-    summary: {
-      color: colors.textMuted,
     },
   });
 };

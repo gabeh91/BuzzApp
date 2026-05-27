@@ -13,6 +13,8 @@ test("mobile GraphQL operations cover activation ping reads and response mutatio
   assert.match(source, /getChatSummaries/);
   assert.match(source, /mutation RespondToActivationPing/);
   assert.match(source, /respondToActivationPing/);
+  assert.match(source, /mutation CancelInterestActivation/);
+  assert.match(source, /cancelInterestActivation/);
 });
 
 test("activation ping realtime hooks patch incoming and outgoing ping state", () => {
@@ -49,6 +51,7 @@ test("activation ping realtime hooks patch incoming and outgoing ping state", ()
 
   assert.match(outgoingSource, /useOutgoingActivationSummary/);
   assert.match(outgoingSource, /useOutgoingActivationSummaryQuery/);
+  assert.match(outgoingSource, /useCancelInterestActivationMutation/);
   assert.match(outgoingSource, /JSON\.parse/);
   assert.match(outgoingSource, /fetchPolicy:\s*"cache-and-network"/);
   assert.match(
@@ -59,6 +62,7 @@ test("activation ping realtime hooks patch incoming and outgoing ping state", ()
   assert.match(outgoingSource, /table:\s*"activation_pings"/);
   assert.match(outgoingSource, /filter:\s*`sender_id=eq\.\$\{userId\}`/);
   assert.match(outgoingSource, /refetch/);
+  assert.match(outgoingSource, /cancelActivation/);
   assert.match(outgoingSource, /removeChannel/);
 });
 
@@ -91,6 +95,28 @@ test("existing chat activation pings stay distinct from direct chats", () => {
   assert.match(chatsSource, /LL\.chats\.requests\.openExistingChat/);
   assert.match(chatsSource, /`ping:\$\{item\.ping\.id\}`/);
   assert.match(chatsSource, /`chat:\$\{item\.chat\.kind\}:\$\{item\.chat\.id\}`/);
+});
+
+test("activation ping responses parse GraphQL JSON scalar strings", () => {
+  const responseHookSource = readFileSync(
+    "src/features/interests/useRespondToActivationPing.ts",
+    "utf8",
+  );
+
+  assert.match(responseHookSource, /parseJsonScalar/);
+  assert.match(responseHookSource, /JSON\.parse/);
+  assert.match(responseHookSource, /normalizeResponseResult\(\s*parseJsonScalar\(/);
+});
+
+test("activity accept failures toast and dismiss the sheet", () => {
+  const chatsSource = readFileSync("src/features/chat/ChatsScreen.tsx", "utf8");
+
+  assert.match(chatsSource, /useToast/);
+  assert.match(chatsSource, /showToast\(\{/);
+  assert.match(chatsSource, /variant:\s*"error"/);
+  assert.match(chatsSource, /setAcceptSheetVisible\(false\)/);
+  assert.doesNotMatch(chatsSource, /setAcceptFlowError/);
+  assert.doesNotMatch(chatsSource, /acceptSheetFeedback/);
 });
 
 test("chat summaries use an instance-unique realtime topic", () => {
@@ -170,8 +196,10 @@ test("global ping singleton and chats screen render the realtime-backed MVP surf
   assert.match(chatsSource, /pingInbox\.respondToPing\(acceptingPing, "yes"\)/);
   assert.match(chatsSource, /routes\.group/);
   assert.match(chatsSource, /routes\.directChat/);
-  assert.match(chatsSource, /styles\.requestCard/);
-  assert.match(chatsSource, /requestCard: \{/);
+  assert.match(chatsSource, /styles\.requestSection/);
+  assert.match(chatsSource, /styles\.requestResponseRow/);
+  assert.match(chatsSource, /activityIconForInterest/);
+  assert.doesNotMatch(chatsSource, /messageListCard/);
 });
 
 test("global inbox nudge dismissal is scoped to the current pending request batch", () => {

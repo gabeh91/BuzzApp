@@ -163,6 +163,9 @@ Responsibilities:
 - Upsert `match_candidates`.
 - Upsert `activation_pings` for eligible recipients in the same transaction.
 - Queue `notification_outbox` rows for pending pings.
+- Enforce activation rate limits server-side before creating pings:
+  - one activation attempt per user and interest every 10 minutes,
+  - 20 total activation attempts per user per rolling 24 hours.
 - Return:
 
 ```ts
@@ -181,6 +184,8 @@ type ActivationPingResult = {
   };
 };
 ```
+
+Rate-limited responses return `ok: false`, a stable `code` (`rate_limited_activity` or `rate_limited_daily`), and `retryAfterSeconds` so the client can show useful copy without guessing.
 
 Do not return fake people in production. Local/demo seed data may create test recipients, but the hosted project should only return real matched profiles.
 

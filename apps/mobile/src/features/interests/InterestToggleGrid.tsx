@@ -158,7 +158,7 @@ const createStyles = (theme: BuzzTheme) => {
     sectionTitle: {
       color: colors.accent,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       letterSpacing: 1,
       lineHeight: 16,
       textTransform: "uppercase",
@@ -185,8 +185,9 @@ const createStyles = (theme: BuzzTheme) => {
       padding: spacing[3],
     },
     cardSelected: {
-      backgroundColor: colors.surfaceInverse,
-      borderColor: colors.surfaceInverse,
+      backgroundColor: colors.surface,
+      borderColor: colors.brand,
+      borderWidth: borderWidths.focus,
     },
     cardPressed: {
       opacity: 0.78,
@@ -195,7 +196,7 @@ const createStyles = (theme: BuzzTheme) => {
     iconBadge: {
       alignItems: "center",
       alignSelf: "flex-start",
-      backgroundColor: colors.warningSoft,
+      backgroundColor: colors.surfaceMuted,
       borderRadius: radii.full,
       flexShrink: 0,
       height: 34,
@@ -203,7 +204,7 @@ const createStyles = (theme: BuzzTheme) => {
       width: 34,
     },
     iconBadgeSelected: {
-      backgroundColor: colors.badgeSelectedTint,
+      backgroundColor: colors.brandSoft,
     },
     cardLabelWrap: {
       flexGrow: 0,
@@ -216,12 +217,12 @@ const createStyles = (theme: BuzzTheme) => {
       color: colors.text,
       flexShrink: 1,
       fontSize: fontSizes.sm,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       lineHeight: 19,
       width: "100%",
     },
     cardLabelSelected: {
-      color: colors.surface,
+      color: colors.text,
     },
   });
 };

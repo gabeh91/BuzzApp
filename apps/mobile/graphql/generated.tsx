@@ -498,6 +498,7 @@ export type ActivityGroups = Node & {
   reportsCollection?: Maybe<ReportsConnection>;
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
+  userReliabilityEventsCollection?: Maybe<UserReliabilityEventsConnection>;
 };
 
 
@@ -610,6 +611,17 @@ export type ActivityGroupsReportsCollectionArgs = {
   orderBy?: InputMaybe<Array<ReportsOrderBy>>;
 };
 
+
+export type ActivityGroupsUserReliabilityEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<UserReliabilityEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<UserReliabilityEventsOrderBy>>;
+};
+
 export type ActivityGroupsConnection = {
   edges: Array<ActivityGroupsEdge>;
   pageInfo: PageInfo;
@@ -717,6 +729,7 @@ export type ActivityPlans = Node & {
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
   updatedAt: Scalars['Datetime']['output'];
+  userReliabilityEventsCollection?: Maybe<UserReliabilityEventsConnection>;
   venueType: Scalars['String']['output'];
 };
 
@@ -740,6 +753,17 @@ export type ActivityPlansPlanSafetyChecksCollectionArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<Array<PlanSafetyChecksOrderBy>>;
+};
+
+
+export type ActivityPlansUserReliabilityEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<UserReliabilityEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<UserReliabilityEventsOrderBy>>;
 };
 
 export type ActivityPlansConnection = {
@@ -2764,7 +2788,7 @@ export type GroupInviteEvents = Node & {
   createdAt: Scalars['Datetime']['output'];
   eventType: Scalars['String']['output'];
   id: Scalars['UUID']['output'];
-  invite: GroupInvites;
+  invite?: Maybe<GroupInvites>;
   inviteId: Scalars['UUID']['output'];
   metadataJson: Scalars['JSON']['output'];
   /** Globally Unique Record Identifier */
@@ -3426,7 +3450,7 @@ export type LandingPlanItems = Node & {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['UUID']['output'];
   itemType: Scalars['String']['output'];
-  landingPlan: LandingPlans;
+  landingPlan?: Maybe<LandingPlans>;
   landingPlanId: Scalars['UUID']['output'];
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
@@ -3891,6 +3915,7 @@ export type ModerationActionsUpdateResponse = {
 /** The root type for creating and mutating data */
 export type Mutation = {
   activateInterest?: Maybe<Scalars['JSON']['output']>;
+  cancelInterestActivation?: Maybe<Scalars['JSON']['output']>;
   /** Deletes zero or more records from the `ActivationPingEvents` collection */
   deleteFromActivationPingEventsCollection: ActivationPingEventsDeleteResponse;
   /** Deletes zero or more records from the `ActivationPings` collection */
@@ -3983,6 +4008,8 @@ export type Mutation = {
   deleteFromUserInterestsCollection: UserInterestsDeleteResponse;
   /** Deletes zero or more records from the `UserReliability` collection */
   deleteFromUserReliabilityCollection: UserReliabilityDeleteResponse;
+  /** Deletes zero or more records from the `UserReliabilityEvents` collection */
+  deleteFromUserReliabilityEventsCollection: UserReliabilityEventsDeleteResponse;
   /** Deletes zero or more records from the `UserSafetySettings` collection */
   deleteFromUserSafetySettingsCollection: UserSafetySettingsDeleteResponse;
   /** Deletes zero or more records from the `UserSocialPreferences` collection */
@@ -4086,6 +4113,8 @@ export type Mutation = {
   insertIntoUserInterestsCollection?: Maybe<UserInterestsInsertResponse>;
   /** Adds one or more `UserReliability` records to the collection */
   insertIntoUserReliabilityCollection?: Maybe<UserReliabilityInsertResponse>;
+  /** Adds one or more `UserReliabilityEvents` records to the collection */
+  insertIntoUserReliabilityEventsCollection?: Maybe<UserReliabilityEventsInsertResponse>;
   /** Adds one or more `UserSafetySettings` records to the collection */
   insertIntoUserSafetySettingsCollection?: Maybe<UserSafetySettingsInsertResponse>;
   /** Adds one or more `UserSocialPreferences` records to the collection */
@@ -4198,6 +4227,8 @@ export type Mutation = {
   updateUserInterestsCollection: UserInterestsUpdateResponse;
   /** Updates zero or more records in the `UserReliability` collection */
   updateUserReliabilityCollection: UserReliabilityUpdateResponse;
+  /** Updates zero or more records in the `UserReliabilityEvents` collection */
+  updateUserReliabilityEventsCollection: UserReliabilityEventsUpdateResponse;
   /** Updates zero or more records in the `UserSafetySettings` collection */
   updateUserSafetySettingsCollection: UserSafetySettingsUpdateResponse;
   /** Updates zero or more records in the `UserSocialPreferences` collection */
@@ -4213,6 +4244,12 @@ export type Mutation = {
 /** The root type for creating and mutating data */
 export type MutationActivateInterestArgs = {
   interestId: Scalars['UUID']['input'];
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationCancelInterestActivationArgs = {
+  activationId: Scalars['UUID']['input'];
 };
 
 
@@ -4539,6 +4576,13 @@ export type MutationDeleteFromUserReliabilityCollectionArgs = {
 
 
 /** The root type for creating and mutating data */
+export type MutationDeleteFromUserReliabilityEventsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<UserReliabilityEventsFilter>;
+};
+
+
+/** The root type for creating and mutating data */
 export type MutationDeleteFromUserSafetySettingsCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<UserSafetySettingsFilter>;
@@ -4839,6 +4883,12 @@ export type MutationInsertIntoUserInterestsCollectionArgs = {
 /** The root type for creating and mutating data */
 export type MutationInsertIntoUserReliabilityCollectionArgs = {
   objects: Array<UserReliabilityInsertInput>;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationInsertIntoUserReliabilityEventsCollectionArgs = {
+  objects: Array<UserReliabilityEventsInsertInput>;
 };
 
 
@@ -5306,6 +5356,14 @@ export type MutationUpdateUserReliabilityCollectionArgs = {
   atMost?: Scalars['Int']['input'];
   filter?: InputMaybe<UserReliabilityFilter>;
   set: UserReliabilityUpdateInput;
+};
+
+
+/** The root type for creating and mutating data */
+export type MutationUpdateUserReliabilityEventsCollectionArgs = {
+  atMost?: Scalars['Int']['input'];
+  filter?: InputMaybe<UserReliabilityEventsFilter>;
+  set: UserReliabilityEventsUpdateInput;
 };
 
 
@@ -5834,6 +5892,7 @@ export type Profiles = Node & {
   updatedAt: Scalars['Datetime']['output'];
   userInterestsCollection?: Maybe<UserInterestsConnection>;
   userReliability?: Maybe<UserReliability>;
+  userReliabilityEventsCollection?: Maybe<UserReliabilityEventsConnection>;
   userSafetySettings?: Maybe<UserSafetySettings>;
   userSocialPreferences?: Maybe<UserSocialPreferences>;
   userSuburbMatchesCollection?: Maybe<UserSuburbMatchesConnection>;
@@ -6106,6 +6165,17 @@ export type ProfilesUserInterestsCollectionArgs = {
 };
 
 
+export type ProfilesUserReliabilityEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<UserReliabilityEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<UserReliabilityEventsOrderBy>>;
+};
+
+
 export type ProfilesUserSuburbMatchesCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
@@ -6327,6 +6397,8 @@ export type Query = {
   /** A pagable collection of type `Interests` */
   interestsCollection?: Maybe<InterestsConnection>;
   isActivityGroupMember?: Maybe<Scalars['Boolean']['output']>;
+  isLandingPlanOwner?: Maybe<Scalars['Boolean']['output']>;
+  isMatchCandidateParticipant?: Maybe<Scalars['Boolean']['output']>;
   /** A pagable collection of type `LandingPlanItems` */
   landingPlanItemsCollection?: Maybe<LandingPlanItemsConnection>;
   /** A pagable collection of type `LandingPlans` */
@@ -6465,6 +6537,8 @@ export type Query = {
   userInterestsCollection?: Maybe<UserInterestsConnection>;
   /** A pagable collection of type `UserReliability` */
   userReliabilityCollection?: Maybe<UserReliabilityConnection>;
+  /** A pagable collection of type `UserReliabilityEvents` */
+  userReliabilityEventsCollection?: Maybe<UserReliabilityEventsConnection>;
   /** A pagable collection of type `UserSafetySettings` */
   userSafetySettingsCollection?: Maybe<UserSafetySettingsConnection>;
   /** A pagable collection of type `UserSocialPreferences` */
@@ -7029,6 +7103,21 @@ export type QueryInterestsCollectionArgs = {
 /** The root type for querying data */
 export type QueryIsActivityGroupMemberArgs = {
   activityGroupId: Scalars['UUID']['input'];
+  profileId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
+/** The root type for querying data */
+export type QueryIsLandingPlanOwnerArgs = {
+  landingPlanId: Scalars['UUID']['input'];
+  profileId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+
+/** The root type for querying data */
+export type QueryIsMatchCandidateParticipantArgs = {
+  activationId: Scalars['UUID']['input'];
+  matchedUserId: Scalars['UUID']['input'];
   profileId?: InputMaybe<Scalars['UUID']['input']>;
 };
 
@@ -7868,6 +7957,18 @@ export type QueryUserReliabilityCollectionArgs = {
 
 
 /** The root type for querying data */
+export type QueryUserReliabilityEventsCollectionArgs = {
+  after?: InputMaybe<Scalars['Cursor']['input']>;
+  before?: InputMaybe<Scalars['Cursor']['input']>;
+  filter?: InputMaybe<UserReliabilityEventsFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Array<UserReliabilityEventsOrderBy>>;
+};
+
+
+/** The root type for querying data */
 export type QueryUserSafetySettingsCollectionArgs = {
   after?: InputMaybe<Scalars['Cursor']['input']>;
   before?: InputMaybe<Scalars['Cursor']['input']>;
@@ -8226,7 +8327,7 @@ export type StarterPlanSteps = Node & {
   id: Scalars['UUID']['output'];
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
-  starterPlan: StarterPlans;
+  starterPlan?: Maybe<StarterPlans>;
   starterPlanId: Scalars['UUID']['output'];
   stepOrder: Scalars['Int']['output'];
   title: Scalars['String']['output'];
@@ -8784,16 +8885,20 @@ export type UserInterestsUpdateResponse = {
 
 export type UserReliability = Node & {
   attendedCount: Scalars['Int']['output'];
+  attendedPlanStreak: Scalars['Int']['output'];
   cancelledLateCount: Scalars['Int']['output'];
+  checkInStreak: Scalars['Int']['output'];
   createdAt: Scalars['Datetime']['output'];
   feedbackCount: Scalars['Int']['output'];
   lastAttendedAt?: Maybe<Scalars['Datetime']['output']>;
   lastFeedbackAt?: Maybe<Scalars['Datetime']['output']>;
+  lastReliabilityEventAt?: Maybe<Scalars['Datetime']['output']>;
   noShowCount: Scalars['Int']['output'];
   /** Globally Unique Record Identifier */
   nodeId: Scalars['ID']['output'];
   positiveFeedbackCount: Scalars['Int']['output'];
   reliabilityScore: Scalars['BigFloat']['output'];
+  reliablePlanStreak: Scalars['Int']['output'];
   updatedAt: Scalars['Datetime']['output'];
   user?: Maybe<Profiles>;
   userId: Scalars['UUID']['output'];
@@ -8816,15 +8921,114 @@ export type UserReliabilityEdge = {
   node: UserReliability;
 };
 
+export type UserReliabilityEvents = Node & {
+  activityGroup?: Maybe<ActivityGroups>;
+  activityGroupId?: Maybe<Scalars['UUID']['output']>;
+  activityPlan?: Maybe<ActivityPlans>;
+  activityPlanId?: Maybe<Scalars['UUID']['output']>;
+  createdAt: Scalars['Datetime']['output'];
+  eventType: Scalars['String']['output'];
+  id: Scalars['UUID']['output'];
+  idempotencyKey: Scalars['String']['output'];
+  metadataJson: Scalars['JSON']['output'];
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars['ID']['output'];
+  user?: Maybe<Profiles>;
+  userId: Scalars['UUID']['output'];
+};
+
+export type UserReliabilityEventsConnection = {
+  edges: Array<UserReliabilityEventsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type UserReliabilityEventsDeleteResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<UserReliabilityEvents>;
+};
+
+export type UserReliabilityEventsEdge = {
+  cursor: Scalars['String']['output'];
+  node: UserReliabilityEvents;
+};
+
+export type UserReliabilityEventsFilter = {
+  activityGroupId?: InputMaybe<UuidFilter>;
+  activityPlanId?: InputMaybe<UuidFilter>;
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<UserReliabilityEventsFilter>>;
+  createdAt?: InputMaybe<DatetimeFilter>;
+  eventType?: InputMaybe<StringFilter>;
+  id?: InputMaybe<UuidFilter>;
+  idempotencyKey?: InputMaybe<StringFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<UserReliabilityEventsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<UserReliabilityEventsFilter>>;
+  userId?: InputMaybe<UuidFilter>;
+};
+
+export type UserReliabilityEventsInsertInput = {
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
+  activityPlanId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  eventType?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  metadataJson?: InputMaybe<Scalars['JSON']['input']>;
+  userId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type UserReliabilityEventsInsertResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<UserReliabilityEvents>;
+};
+
+export type UserReliabilityEventsOrderBy = {
+  activityGroupId?: InputMaybe<OrderByDirection>;
+  activityPlanId?: InputMaybe<OrderByDirection>;
+  createdAt?: InputMaybe<OrderByDirection>;
+  eventType?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  idempotencyKey?: InputMaybe<OrderByDirection>;
+  userId?: InputMaybe<OrderByDirection>;
+};
+
+export type UserReliabilityEventsUpdateInput = {
+  activityGroupId?: InputMaybe<Scalars['UUID']['input']>;
+  activityPlanId?: InputMaybe<Scalars['UUID']['input']>;
+  createdAt?: InputMaybe<Scalars['Datetime']['input']>;
+  eventType?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['UUID']['input']>;
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  metadataJson?: InputMaybe<Scalars['JSON']['input']>;
+  userId?: InputMaybe<Scalars['UUID']['input']>;
+};
+
+export type UserReliabilityEventsUpdateResponse = {
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars['Int']['output'];
+  /** Array of records impacted by the mutation */
+  records: Array<UserReliabilityEvents>;
+};
+
 export type UserReliabilityFilter = {
   /** Returns true only if all its inner filters are true, otherwise returns false */
   and?: InputMaybe<Array<UserReliabilityFilter>>;
   attendedCount?: InputMaybe<IntFilter>;
+  attendedPlanStreak?: InputMaybe<IntFilter>;
   cancelledLateCount?: InputMaybe<IntFilter>;
+  checkInStreak?: InputMaybe<IntFilter>;
   createdAt?: InputMaybe<DatetimeFilter>;
   feedbackCount?: InputMaybe<IntFilter>;
   lastAttendedAt?: InputMaybe<DatetimeFilter>;
   lastFeedbackAt?: InputMaybe<DatetimeFilter>;
+  lastReliabilityEventAt?: InputMaybe<DatetimeFilter>;
   noShowCount?: InputMaybe<IntFilter>;
   nodeId?: InputMaybe<IdFilter>;
   /** Negates a filter */
@@ -8833,20 +9037,25 @@ export type UserReliabilityFilter = {
   or?: InputMaybe<Array<UserReliabilityFilter>>;
   positiveFeedbackCount?: InputMaybe<IntFilter>;
   reliabilityScore?: InputMaybe<BigFloatFilter>;
+  reliablePlanStreak?: InputMaybe<IntFilter>;
   updatedAt?: InputMaybe<DatetimeFilter>;
   userId?: InputMaybe<UuidFilter>;
 };
 
 export type UserReliabilityInsertInput = {
   attendedCount?: InputMaybe<Scalars['Int']['input']>;
+  attendedPlanStreak?: InputMaybe<Scalars['Int']['input']>;
   cancelledLateCount?: InputMaybe<Scalars['Int']['input']>;
+  checkInStreak?: InputMaybe<Scalars['Int']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   feedbackCount?: InputMaybe<Scalars['Int']['input']>;
   lastAttendedAt?: InputMaybe<Scalars['Datetime']['input']>;
   lastFeedbackAt?: InputMaybe<Scalars['Datetime']['input']>;
+  lastReliabilityEventAt?: InputMaybe<Scalars['Datetime']['input']>;
   noShowCount?: InputMaybe<Scalars['Int']['input']>;
   positiveFeedbackCount?: InputMaybe<Scalars['Int']['input']>;
   reliabilityScore?: InputMaybe<Scalars['BigFloat']['input']>;
+  reliablePlanStreak?: InputMaybe<Scalars['Int']['input']>;
   updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
   userId?: InputMaybe<Scalars['UUID']['input']>;
 };
@@ -8860,28 +9069,36 @@ export type UserReliabilityInsertResponse = {
 
 export type UserReliabilityOrderBy = {
   attendedCount?: InputMaybe<OrderByDirection>;
+  attendedPlanStreak?: InputMaybe<OrderByDirection>;
   cancelledLateCount?: InputMaybe<OrderByDirection>;
+  checkInStreak?: InputMaybe<OrderByDirection>;
   createdAt?: InputMaybe<OrderByDirection>;
   feedbackCount?: InputMaybe<OrderByDirection>;
   lastAttendedAt?: InputMaybe<OrderByDirection>;
   lastFeedbackAt?: InputMaybe<OrderByDirection>;
+  lastReliabilityEventAt?: InputMaybe<OrderByDirection>;
   noShowCount?: InputMaybe<OrderByDirection>;
   positiveFeedbackCount?: InputMaybe<OrderByDirection>;
   reliabilityScore?: InputMaybe<OrderByDirection>;
+  reliablePlanStreak?: InputMaybe<OrderByDirection>;
   updatedAt?: InputMaybe<OrderByDirection>;
   userId?: InputMaybe<OrderByDirection>;
 };
 
 export type UserReliabilityUpdateInput = {
   attendedCount?: InputMaybe<Scalars['Int']['input']>;
+  attendedPlanStreak?: InputMaybe<Scalars['Int']['input']>;
   cancelledLateCount?: InputMaybe<Scalars['Int']['input']>;
+  checkInStreak?: InputMaybe<Scalars['Int']['input']>;
   createdAt?: InputMaybe<Scalars['Datetime']['input']>;
   feedbackCount?: InputMaybe<Scalars['Int']['input']>;
   lastAttendedAt?: InputMaybe<Scalars['Datetime']['input']>;
   lastFeedbackAt?: InputMaybe<Scalars['Datetime']['input']>;
+  lastReliabilityEventAt?: InputMaybe<Scalars['Datetime']['input']>;
   noShowCount?: InputMaybe<Scalars['Int']['input']>;
   positiveFeedbackCount?: InputMaybe<Scalars['Int']['input']>;
   reliabilityScore?: InputMaybe<Scalars['BigFloat']['input']>;
+  reliablePlanStreak?: InputMaybe<Scalars['Int']['input']>;
   updatedAt?: InputMaybe<Scalars['Datetime']['input']>;
   userId?: InputMaybe<Scalars['UUID']['input']>;
 };
@@ -9320,6 +9537,13 @@ export type OutgoingActivationSummaryQueryVariables = Exact<{ [key: string]: nev
 
 export type OutgoingActivationSummaryQuery = { getOutgoingActivationSummary: Record<string, unknown> | null };
 
+export type CancelInterestActivationMutationVariables = Exact<{
+  activationId: string;
+}>;
+
+
+export type CancelInterestActivationMutation = { cancelInterestActivation: Record<string, unknown> | null };
+
 export type ChatSummariesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -9519,6 +9743,37 @@ export type OutgoingActivationSummaryQueryHookResult = ReturnType<typeof useOutg
 export type OutgoingActivationSummaryLazyQueryHookResult = ReturnType<typeof useOutgoingActivationSummaryLazyQuery>;
 export type OutgoingActivationSummarySuspenseQueryHookResult = ReturnType<typeof useOutgoingActivationSummarySuspenseQuery>;
 export type OutgoingActivationSummaryQueryResult = ApolloReactCommon.QueryResult<OutgoingActivationSummaryQuery, OutgoingActivationSummaryQueryVariables>;
+export const CancelInterestActivationDocument = gql`
+    mutation CancelInterestActivation($activationId: UUID!) {
+  cancelInterestActivation(activationId: $activationId)
+}
+    `;
+export type CancelInterestActivationMutationFn = ApolloReactCommon.MutationFunction<CancelInterestActivationMutation, CancelInterestActivationMutationVariables>;
+
+/**
+ * __useCancelInterestActivationMutation__
+ *
+ * To run a mutation, you first call `useCancelInterestActivationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCancelInterestActivationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [cancelInterestActivationMutation, { data, loading, error }] = useCancelInterestActivationMutation({
+ *   variables: {
+ *      activationId: // value for 'activationId'
+ *   },
+ * });
+ */
+export function useCancelInterestActivationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CancelInterestActivationMutation, CancelInterestActivationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CancelInterestActivationMutation, CancelInterestActivationMutationVariables>(CancelInterestActivationDocument, options);
+      }
+export type CancelInterestActivationMutationHookResult = ReturnType<typeof useCancelInterestActivationMutation>;
+export type CancelInterestActivationMutationResult = ApolloReactCommon.MutationResult<CancelInterestActivationMutation>;
+export type CancelInterestActivationMutationOptions = ApolloReactCommon.BaseMutationOptions<CancelInterestActivationMutation, CancelInterestActivationMutationVariables>;
 export const ChatSummariesDocument = gql`
     query ChatSummaries {
   getChatSummaries

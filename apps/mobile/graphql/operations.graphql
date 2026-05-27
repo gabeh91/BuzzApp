@@ -23,6 +23,10 @@ query OutgoingActivationSummary {
   getOutgoingActivationSummary
 }
 
+mutation CancelInterestActivation($activationId: UUID!) {
+  cancelInterestActivation(activationId: $activationId)
+}
+
 query ChatSummaries {
   getChatSummaries
 }

@@ -113,12 +113,12 @@ const createStyles = (theme: BuzzTheme) => {
     buttonText: {
       color: colors.textInverse,
       fontSize: fontSizes.sm,
-      fontWeight: "900",
+      ...theme.fontStyles.black,
     },
     warning: {
       color: colors.accent,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
+      ...theme.fontStyles.heavy,
       lineHeight: lineHeights.tight,
     },
   });

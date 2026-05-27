@@ -6,10 +6,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
-import { ActivateInterestFab } from "./ActivateInterestFab";
-import { computeMorphSpreadBlend } from "./activateFab/activateFabMorph";
-import { MORPH_SPREAD_START } from "./activateFab/activateFabMorphConfig";
-import type { BuzzInterest } from "./interestFlow";
+import { ActivateInterestFab } from "../ActivateInterestFab";
+import { computeMorphSpreadBlend } from "../activateFab/activateFabMorph";
+import { MORPH_SPREAD_START } from "../activateFab/activateFabMorphConfig";
+import type { BuzzInterest } from "../interestFlow";
 
 const interests: BuzzInterest[] = [
   {

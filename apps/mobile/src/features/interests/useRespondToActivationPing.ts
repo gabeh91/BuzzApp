@@ -14,6 +14,18 @@ export type ActivationPingResponseResult = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+const parseJsonScalar = (value: unknown): unknown => {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
 const normalizeResponseResult = (
   value: unknown,
   fallbackStatus: ActivationPingResponse,
@@ -51,7 +63,7 @@ export const useRespondToActivationPing = () => {
       });
 
       return normalizeResponseResult(
-        result.data?.respondToActivationPing,
+        parseJsonScalar(result.data?.respondToActivationPing),
         response,
       );
     },
@@ -64,4 +76,3 @@ export const useRespondToActivationPing = () => {
     respondToPing,
   };
 };
-

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createHomePlanCopy } from "./homePlanCopy";
+import { createHomePlanCopy } from "../homePlanCopy";
 
 const copy = {
   titleActivated: ({ interest }: { interest: string }) => `You activated ${interest}.`,

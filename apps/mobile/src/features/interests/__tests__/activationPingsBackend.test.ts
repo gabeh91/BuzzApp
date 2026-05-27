@@ -8,6 +8,10 @@ const acceptFlowFixMigrationPath =
   "../../supabase/migrations/000034_activation_ping_accept_flow_fix.sql";
 const displayFallbackMigrationPath =
   "../../supabase/migrations/000043_activation_ping_display_fallbacks.sql";
+const cancelActivationMigrationPath =
+  "../../supabase/migrations/000044_cancel_interest_activation.sql";
+const activationRateLimitMigrationPath =
+  "../../supabase/migrations/000046_activation_rate_limits.sql";
 
 test("activation pings migration adds realtime-safe ping tables and response functions", () => {
   assert.equal(
@@ -74,4 +78,39 @@ test("incoming activation pings use user-facing fallback copy", () => {
   assert.match(source, /Someone nearby/);
   assert.match(source, /this activity/);
   assert.doesNotMatch(source, /Buzz Member/);
+});
+
+test("outgoing activation pings can be cancelled by the sender", () => {
+  assert.equal(
+    existsSync(cancelActivationMigrationPath),
+    true,
+    "activation ping cancellation migration should exist",
+  );
+
+  const source = readFileSync(cancelActivationMigrationPath, "utf8");
+
+  assert.match(source, /create or replace function public\."cancelInterestActivation"/);
+  assert.match(source, /status = 'cancelled'/);
+  assert.match(source, /activation_ping_events[\s\S]*'cancelled'/);
+  assert.match(source, /'interestSlug'/);
+  assert.match(source, /grant execute on function public\."cancelInterestActivation"\(uuid\) to authenticated/);
+});
+
+test("interest activation is rate limited per activity and per day", () => {
+  assert.equal(
+    existsSync(activationRateLimitMigrationPath),
+    true,
+    "activation rate-limit migration should exist",
+  );
+
+  const source = readFileSync(activationRateLimitMigrationPath, "utf8");
+
+  assert.match(source, /create table if not exists public\.interest_activation_attempts/);
+  assert.match(source, /interval '10 minutes'/);
+  assert.match(source, /daily_limit integer := 20/);
+  assert.match(source, /rate_limited_activity/);
+  assert.match(source, /rate_limited_daily/);
+  assert.match(source, /retryAfterSeconds/);
+  assert.match(source, /insert into public\.interest_activation_attempts/);
+  assert.match(source, /grant execute on function public\."activateInterest"\(uuid\) to authenticated/);
 });

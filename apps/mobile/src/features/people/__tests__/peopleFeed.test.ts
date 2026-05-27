@@ -5,7 +5,7 @@ import {
   loadPeopleMatches,
   normalizePeopleMatchesResult,
   sendConnectionRequest,
-} from "./peopleFeed";
+} from "../peopleFeed";
 
 const backendPayload = {
   ok: true,

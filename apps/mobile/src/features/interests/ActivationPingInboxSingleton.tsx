@@ -335,7 +335,7 @@ const createStyles = (theme: BuzzTheme) => {
     },
     summaryIcon: {
       alignItems: "center",
-      backgroundColor: colors.warningSoft,
+      backgroundColor: colors.surfaceMuted,
       borderRadius: radii.full,
       height: 38,
       justifyContent: "center",
@@ -366,7 +366,7 @@ const createStyles = (theme: BuzzTheme) => {
     },
     closeButton: {
       alignItems: "center",
-      backgroundColor: colors.warningSoft,
+      backgroundColor: colors.surfaceMuted,
       borderRadius: radii.full,
       height: 34,
       justifyContent: "center",

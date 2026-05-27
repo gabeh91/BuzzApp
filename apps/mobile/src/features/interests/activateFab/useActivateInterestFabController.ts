@@ -35,7 +35,6 @@ import {
   EXPANDED_PANEL_TAB_GAP,
   FAB_DIAMETER,
   HOLD_TO_ACTIVATE_MS,
-  IDLE_PULSE_DURATION_MS,
   LIVE_BORDER_PULSE_DURATION_MS,
   READY_SETTLE_MS,
   RIPPLE_DURATION_MS,
@@ -149,7 +148,6 @@ export const useActivateInterestFabController = ({
   const chargeProgress = useSharedValue(0);
   const readyPulse = useSharedValue(0);
   const rippleProgress = useSharedValue(0);
-  const idleColorPulse = useSharedValue(0);
   const liveBorderPulse = useSharedValue(0);
 
   const groupedInterests = useMemo(
@@ -207,32 +205,6 @@ export const useActivateInterestFabController = ({
       setPendingSelectedInterest(null);
     }
   }, [selectedInterest, setMode]);
-
-  useEffect(() => {
-    const shouldPulse =
-      mode === "idle" && !selectedInterest && !disabled && !activationBusy;
-
-    if (!shouldPulse) {
-      cancelAnimation(idleColorPulse);
-      idleColorPulse.value = withTiming(0, { duration: 220 });
-      return;
-    }
-
-    idleColorPulse.value = withRepeat(
-      withSequence(
-        withTiming(1, {
-          duration: IDLE_PULSE_DURATION_MS,
-          easing: Easing.inOut(Easing.sin),
-        }),
-        withTiming(0, {
-          duration: IDLE_PULSE_DURATION_MS,
-          easing: Easing.inOut(Easing.sin),
-        }),
-      ),
-      -1,
-      false,
-    );
-  }, [activationBusy, disabled, idleColorPulse, mode, selectedInterest]);
 
   useEffect(() => {
     const shouldPulse =
@@ -553,14 +525,13 @@ export const useActivateInterestFabController = ({
     livePanelBorderStyle,
   } = useActivateFabDockShellStyles({
     chargeProgress,
-    colors,
-    fabIdlePulse: {
-      fillEnd: theme.fabWheel.idlePulseFillEnd,
-      borderEnd: theme.fabWheel.idlePulseBorderEnd,
+    compactBorderRadius: theme.radii.sm,
+    fabColors: {
+      border: theme.colors.brandSoft,
+      fill: theme.colors.surfaceMuted,
     },
     compactBottomOffset,
     hairlineW,
-    idleColorPulse,
     liftPx,
     liveBorderPulse,
     morphProgress,

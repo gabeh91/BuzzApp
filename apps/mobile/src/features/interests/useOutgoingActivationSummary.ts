@@ -1,6 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
-import { useOutgoingActivationSummaryQuery } from "@graphql/generated";
+import {
+  useCancelInterestActivationMutation,
+  useOutgoingActivationSummaryQuery,
+} from "@graphql/generated";
 import { buzzSupabase } from "@/lib/supabase";
 
 export type ActivationResponseSummary = {
@@ -14,6 +17,7 @@ export type OutgoingActivationSummary = {
   activationId: string;
   interestId: string;
   interestName: string;
+  interestSlug?: string | null;
   status: string;
   expiresAt?: string | null;
   activityGroupId?: string | null;
@@ -74,6 +78,8 @@ const normalizeOutgoingActivation = (
     expiresAt: typeof value.expiresAt === "string" ? value.expiresAt : null,
     interestId,
     interestName: readString(value, "interestName", "Activity"),
+    interestSlug:
+      typeof value.interestSlug === "string" ? value.interestSlug : null,
     responseSummary: normalizeResponseSummary(value.responseSummary),
     status: readString(value, "status", "active"),
   };
@@ -122,10 +128,27 @@ export const useOutgoingActivationSummary = ({
     nextFetchPolicy: "cache-and-network",
     skip: !enabled || !userId,
   });
+  const [runCancelActivation, cancelActivationState] =
+    useCancelInterestActivationMutation();
   const { data, loading, refetch } = query;
   const activations = useMemo(
     () => normalizeOutgoingActivations(data?.getOutgoingActivationSummary),
     [data?.getOutgoingActivationSummary],
+  );
+
+  const cancelActivation = useCallback(
+    async (activationId: string) => {
+      const result = await runCancelActivation({
+        variables: {
+          activationId,
+        },
+      });
+
+      await refetch();
+
+      return parseJsonScalar(result.data?.cancelInterestActivation);
+    },
+    [refetch, runCancelActivation],
   );
 
   useEffect(() => {
@@ -156,6 +179,8 @@ export const useOutgoingActivationSummary = ({
 
   return {
     activations,
+    cancelActivation,
+    cancelling: cancelActivationState.loading,
     loading,
     refetch,
   };

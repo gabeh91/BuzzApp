@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  TextInput,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -34,6 +33,7 @@ import {
   Screen,
   Sheet,
   Text as UiText,
+  TextInputGroup,
   useToast,
 } from "@/ui";
 
@@ -417,7 +417,7 @@ export const DirectChatScreen = ({ conversationId }: DirectChatScreenProps) => {
         contentStyle={styles.leaveSheetContent}
         onDismiss={closeLeaveConfirmation}
         remountKey={leaveConfirmRemountKey}
-        snapPoints={["38%"]}
+        snapPoints={["52%"]}
         testID="leave-chat-confirmation-sheet"
         visible={leaveConfirmVisible}
       >
@@ -465,6 +465,7 @@ export const DirectChatScreen = ({ conversationId }: DirectChatScreenProps) => {
         onDismiss={closeReportQuestionnaire}
         remountKey={reportSheetRemountKey}
         snapPoints={["58%", "86%"]}
+        initialSnapIndex={1}
         testID="report-chat-questionnaire-sheet"
         visible={reportSheetVisible}
       >
@@ -529,20 +530,16 @@ export const DirectChatScreen = ({ conversationId }: DirectChatScreenProps) => {
             })}
           </View>
 
-          <View style={styles.reportDetailsStack}>
-            <UiText variant="button" style={styles.reportDetailsLabel}>
-              {LL.chat.reportDetailsLabel()}
-            </UiText>
-            <TextInput
-              multiline
-              onChangeText={setReportDetails}
-              placeholder={LL.chat.reportDetailsPlaceholder()}
-              placeholderTextColor={theme.colors.textMuted}
-              style={styles.reportDetailsInput}
-              textAlignVertical="top"
-              value={reportDetails}
-            />
-          </View>
+          <TextInputGroup
+            containerStyle={styles.reportDetailsStack}
+            description={LL.chat.reportDetailsPlaceholder()}
+            inputStyle={styles.reportDetailsInput}
+            label={LL.chat.reportDetailsLabel()}
+            multiline
+            onChangeText={setReportDetails}
+            textAlignVertical="top"
+            value={reportDetails}
+          />
 
           <View style={styles.reportSheetActions}>
             <Button
@@ -700,7 +697,9 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     },
     safetyAction: {
       alignItems: "center",
-      backgroundColor: colors.warningSoft,
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderWidth: borderWidths.hairline,
       borderRadius: radii.full,
       flexDirection: "row",
       flex: 1,
@@ -734,7 +733,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     leaveSheetIcon: {
       alignItems: "center",
       alignSelf: "flex-start",
-      backgroundColor: colors.warningSoft,
+      backgroundColor: colors.surfaceMuted,
       borderRadius: radii.full,
       height: 48,
       justifyContent: "center",
@@ -766,7 +765,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     },
     reportSheetIcon: {
       alignItems: "center",
-      backgroundColor: colors.warningSoft,
+      backgroundColor: colors.surfaceMuted,
       borderRadius: radii.full,
       height: 48,
       justifyContent: "center",
@@ -807,8 +806,9 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
       paddingVertical: spacing[3],
     },
     reportCategoryPillSelected: {
-      backgroundColor: colors.warningSoft,
-      borderColor: colors.warning,
+      backgroundColor: colors.surface,
+      borderColor: colors.brand,
+      borderWidth: borderWidths.focus,
     },
     reportCategoryPillPressed: {
       opacity: 0.78,
@@ -824,21 +824,9 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     reportDetailsStack: {
       gap: spacing[2],
     },
-    reportDetailsLabel: {
-      color: colors.text,
-    },
     reportDetailsInput: {
-      backgroundColor: colors.background,
-      borderColor: colors.border,
-      borderRadius: radii.lg,
-      borderWidth: borderWidths.hairline,
-      color: colors.text,
-      fontFamily: theme.fontFamilies.body,
-      fontSize: theme.fontSizes.md,
-      lineHeight: theme.lineHeights.body,
       minHeight: 118,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3],
+      textAlignVertical: "top",
     },
     reportSheetActions: {
       gap: spacing[2],

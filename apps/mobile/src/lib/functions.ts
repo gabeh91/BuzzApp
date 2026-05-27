@@ -24,6 +24,7 @@ export type AttendanceActionResult = {
 export type FeedbackActionResult = {
   ok: boolean;
   activityGroupId: string;
+  userAttended?: boolean;
   feedbackStatus: "completed";
   positiveFeedbackRecorded: boolean;
   feedbackCompletedAt?: string;
@@ -114,6 +115,7 @@ export type CreateAttendanceActionRequestInput = {
 export type CreateFeedbackActionRequestInput =
   CreateAttendanceActionRequestInput & {
     feltSafe?: boolean;
+    userAttended?: boolean;
     wouldMeetAgain?: boolean;
   };
 
@@ -503,6 +505,7 @@ export const createFeedbackActionRequest = ({
   appEnv = defaultAppEnv,
   supabaseAnonKey = defaultSupabaseAnonKey,
   supabaseUrl = defaultSupabaseUrl,
+  userAttended = true,
   wouldMeetAgain,
 }: CreateFeedbackActionRequestInput): MatchActionRequest => {
   const headers: Record<string, string> = {
@@ -528,6 +531,7 @@ export const createFeedbackActionRequest = ({
       body: JSON.stringify({
         activityGroupId,
         feltSafe,
+        userAttended,
         ...(typeof wouldMeetAgain === "boolean" ? { wouldMeetAgain } : {}),
       }),
       headers,
@@ -658,6 +662,10 @@ export const runFeedbackAction = async (
     feedbackStatus: "completed",
     positiveFeedbackRecorded: body.positiveFeedbackRecorded,
   };
+
+  if (typeof body.userAttended === "boolean") {
+    result.userAttended = body.userAttended;
+  }
 
   if (body.feedbackCompletedAt) {
     result.feedbackCompletedAt = body.feedbackCompletedAt;

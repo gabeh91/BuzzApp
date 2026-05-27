@@ -8,6 +8,7 @@ import { useToast } from "@/ui";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import {
   isBackendActivationResult,
+  isBackendActivationRateLimitResult,
   parseActivateInterestJsonScalar,
   shouldActivateInterestThroughSupabase,
   type BuzzInterest,
@@ -69,6 +70,26 @@ export const useActivateInterestActions = () => {
             const payload = parseActivateInterestJsonScalar(
               response.data?.activateInterest,
             );
+
+            if (isBackendActivationRateLimitResult(payload)) {
+              const message =
+                payload.code === "rate_limited_daily"
+                  ? LL.interests.activation.rateLimitedDaily()
+                  : LL.interests.activation.rateLimitedActivity({
+                      minutes: Math.max(
+                        1,
+                        Math.ceil((payload.retryAfterSeconds ?? 600) / 60),
+                      ),
+                    });
+
+              interestFlow.failActivation(message);
+              showToast({
+                message,
+                variant: "warning",
+              });
+
+              return;
+            }
 
             if (!isBackendActivationResult(payload)) {
               throw new Error("Activation response was invalid");

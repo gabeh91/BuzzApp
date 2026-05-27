@@ -103,3 +103,20 @@ test("direct chat exposes participant safety actions", () => {
   assert.match(hookSource, /leaveDirectConversation/);
   assert.match(hookSource, /setConversation\(\(current\) =>/);
 });
+
+test("direct chat safety sheets open at content-appropriate detents", () => {
+  const screenSource = readFileSync(
+    "src/features/chat/DirectChatScreen.tsx",
+    "utf8",
+  );
+  const sheetSource = readFileSync("src/ui/Sheet.tsx", "utf8");
+
+  assert.match(sheetSource, /initialSnapIndex/);
+  assert.match(sheetSource, /index=\{initialSnapIndex\}/);
+  assert.match(screenSource, /snapPoints=\{\["52%"\]\}/);
+  assert.match(screenSource, /testID="leave-chat-confirmation-sheet"/);
+  assert.match(
+    screenSource,
+    /snapPoints=\{\["58%", "86%"\]\}[\s\S]*initialSnapIndex=\{1\}[\s\S]*testID="report-chat-questionnaire-sheet"/,
+  );
+});

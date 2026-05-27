@@ -1,7 +1,6 @@
 import {
   Extrapolate,
   interpolate,
-  interpolateColor,
   useAnimatedStyle,
   type SharedValue,
 } from "react-native-reanimated";
@@ -14,13 +13,17 @@ import {
 import { morphSpreadBlend } from "./activateFabMorph";
 import { MORPH_LIFT_END } from "./activateFabMorphConfig";
 
+export type ActivateFabDockColors = {
+  border: string;
+  fill: string;
+};
+
 export type ActivateFabDockShellStyleArgs = {
   chargeProgress: SharedValue<number>;
-  colors: { warning: string };
-  fabIdlePulse: { fillEnd: string; borderEnd: string };
+  compactBorderRadius: number;
+  fabColors: ActivateFabDockColors;
   compactBottomOffset: number;
   hairlineW: number;
-  idleColorPulse: SharedValue<number>;
   liftPx: number;
   liveBorderPulse: SharedValue<number>;
   morphProgress: SharedValue<number>;
@@ -30,11 +33,10 @@ export type ActivateFabDockShellStyleArgs = {
 
 export const useActivateFabDockShellStyles = ({
   chargeProgress,
-  colors,
-  fabIdlePulse,
+  compactBorderRadius,
+  fabColors,
   compactBottomOffset,
   hairlineW,
-  idleColorPulse,
   liftPx,
   liveBorderPulse,
   morphProgress,
@@ -53,8 +55,8 @@ export const useActivateFabDockShellStyles = ({
     );
     const width = interpolate(
       spreadBlend,
-      [0, 1],
-      [FAB_DIAMETER, windowWidth],
+      [0, 0.72, 1],
+      [FAB_DIAMETER, windowWidth, windowWidth],
     );
     const height = interpolate(
       heightBlend,
@@ -62,7 +64,12 @@ export const useActivateFabDockShellStyles = ({
       [FAB_DIAMETER, EXPANDED_PANEL_HEIGHT],
     );
     const cornerBlend = Math.pow(spreadBlend, 1.12);
-    const borderRadius = interpolate(cornerBlend, [0, 1], [FAB_DIAMETER / 2, 0]);
+    const borderRadius = interpolate(
+      cornerBlend,
+      [0, 0.72, 1],
+      [compactBorderRadius, 0, 0],
+      Extrapolate.CLAMP,
+    );
     const chargeScale = 1 + chargeProgress.value * 0.045 + readyPulse.value * 0.065;
     const blob = Math.sin(mc * Math.PI);
     const liqScaleX = 1 + 0.024 * blob;
@@ -94,7 +101,7 @@ export const useActivateFabDockShellStyles = ({
       ],
       width,
     };
-  }, [hairlineW, windowWidth]);
+  }, [compactBorderRadius, hairlineW, windowWidth]);
 
   const anchorAnimatedStyle = useAnimatedStyle(() => {
     const m = morphProgress.value;
@@ -114,18 +121,10 @@ export const useActivateFabDockShellStyles = ({
 
   const fabColorStyle = useAnimatedStyle(() => {
     return {
-      backgroundColor: interpolateColor(
-        idleColorPulse.value,
-        [0, 1],
-        [colors.warning, fabIdlePulse.fillEnd],
-      ),
-      borderColor: interpolateColor(
-        idleColorPulse.value,
-        [0, 1],
-        [colors.warning, fabIdlePulse.borderEnd],
-      ),
+      backgroundColor: fabColors.fill,
+      borderColor: fabColors.border,
     };
-  }, [colors.warning, fabIdlePulse.borderEnd, fabIdlePulse.fillEnd, idleColorPulse]);
+  }, [fabColors.border, fabColors.fill]);
 
   const chargeFillStyle = useAnimatedStyle(() => {
     const m = morphProgress.value;
@@ -167,9 +166,6 @@ export const useActivateFabDockShellStyles = ({
     return {
       opacity:
         expandedReveal * interpolate(liveBorderPulse.value, [0, 1], [0.42, 0.9]),
-      transform: [
-        { scaleX: interpolate(liveBorderPulse.value, [0, 1], [0.86, 1]) },
-      ],
     };
   }, [liveBorderPulse, morphProgress]);
 

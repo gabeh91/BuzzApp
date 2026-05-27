@@ -8,6 +8,7 @@ export type IncomingActivationPing = {
   activationId: string;
   interestId: string;
   interestName: string;
+  interestSlug?: string | null;
   existingDirectConversationId?: string | null;
   senderId: string;
   senderName: string;
@@ -66,6 +67,8 @@ const normalizeIncomingPing = (
     expiresAt: readString(value, "expiresAt"),
     interestId,
     interestName: readString(value, "interestName", "this activity"),
+    interestSlug:
+      typeof value.interestSlug === "string" ? value.interestSlug : null,
     senderId,
     senderName: readString(value, "senderName", "Someone nearby"),
     senderPhotoUrl:

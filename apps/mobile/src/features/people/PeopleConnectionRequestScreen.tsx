@@ -1,6 +1,13 @@
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import Animated, {
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useBuzzAuth } from "@/auth/AuthProvider";
@@ -11,8 +18,17 @@ import {
   SCREEN_CONTENT_GUTTER_SPACING,
   type BuzzTheme,
 } from "@/theme/tokens";
-import { Avatar, BackHeader, Button, Panel, Screen, Text as UiText } from "@/ui";
+import {
+  Avatar,
+  BackHeader,
+  Button,
+  Panel,
+  Screen,
+  Text as UiText,
+  TextInputGroup,
+} from "@/ui";
 
+import { SharedInterestRadioList } from "./SharedInterestRadioList";
 import { sendConnectionRequestToSupabase } from "./peopleFeedClient";
 
 type RawPeopleConnectParams = {
@@ -82,6 +98,107 @@ const parseSharedInterests = (
   } catch {
     return [];
   }
+};
+
+const ACTIVITY_REVEAL_DURATION_MS = 280;
+const ACTIVITY_REVEAL_SLIDE_PX = 8;
+
+type ActivityInterestRevealProps = {
+  expanded: boolean;
+  interests: RouteSharedInterest[];
+  onSelect: (interestId: string) => void;
+  selectedId: string;
+  title: string;
+};
+
+const ActivityInterestReveal = ({
+  expanded,
+  interests,
+  onSelect,
+  selectedId,
+  title,
+}: ActivityInterestRevealProps) => {
+  const { theme } = useBuzzTheme();
+  const styles = useMemo(() => createActivityRevealStyles(theme), [theme]);
+  const [mounted, setMounted] = useState(expanded);
+  const progress = useSharedValue(expanded ? 1 : 0);
+
+  useEffect(() => {
+    if (expanded) {
+      setMounted(true);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setMounted(false);
+    }, ACTIVITY_REVEAL_DURATION_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [expanded]);
+
+  useEffect(() => {
+    progress.value = withTiming(expanded ? 1 : 0, {
+      duration: ACTIVITY_REVEAL_DURATION_MS,
+      easing: expanded ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+    });
+  }, [expanded, progress]);
+
+  const revealStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [
+      {
+        translateY: interpolate(
+          progress.value,
+          [0, 1],
+          [ACTIVITY_REVEAL_SLIDE_PX, 0],
+        ),
+      },
+    ],
+  }));
+
+  if (!mounted) {
+    return null;
+  }
+
+  return (
+    <Animated.View
+      accessibilityElementsHidden={!expanded}
+      importantForAccessibility={expanded ? "auto" : "no-hide-descendants"}
+      pointerEvents={expanded ? "auto" : "none"}
+      style={[styles.wrap, revealStyle]}
+    >
+      <View style={styles.divider} />
+      <View style={styles.body}>
+        <UiText variant="panelTitle">{title}</UiText>
+        <SharedInterestRadioList
+          interests={interests}
+          onSelect={onSelect}
+          selectedId={selectedId}
+        />
+      </View>
+    </Animated.View>
+  );
+};
+
+const createActivityRevealStyles = (theme: BuzzTheme) => {
+  const { colors, spacing } = theme;
+
+  return StyleSheet.create({
+    wrap: {
+      marginTop: spacing[4],
+    },
+    divider: {
+      backgroundColor: colors.border,
+      height: 1,
+      marginBottom: spacing[4],
+    },
+    body: {
+      flexDirection: "column",
+      gap: spacing[3],
+    },
+  });
 };
 
 const createHomeSentRoute = ({
@@ -234,55 +351,50 @@ export const PeopleConnectionRequestScreen = ({
           </UiText>
         </Pressable>
 
-        <Pressable
-          accessibilityRole="button"
-          disabled={!canSuggestActivity}
-          onPress={chooseActivityMode}
+        <View
           style={[
             styles.optionCard,
             mode === "activity" ? styles.selectedOptionCard : null,
             !canSuggestActivity ? styles.disabledOptionCard : null,
           ]}
         >
-          <UiText style={styles.optionTitle}>
-            {LL.peopleConnect.activity.title()}
-          </UiText>
-          <UiText style={styles.optionBody}>
-            {canSuggestActivity
-              ? LL.peopleConnect.activity.body()
-              : LL.peopleConnect.noSharedInterests()}
-          </UiText>
-        </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: mode === "activity" }}
+            disabled={!canSuggestActivity}
+            onPress={chooseActivityMode}
+            style={styles.optionHeader}
+          >
+            <UiText style={styles.optionTitle}>
+              {LL.peopleConnect.activity.title()}
+            </UiText>
+            <UiText style={styles.optionBody}>
+              {canSuggestActivity
+                ? LL.peopleConnect.activity.body()
+                : LL.peopleConnect.noSharedInterests()}
+            </UiText>
+          </Pressable>
+
+          {canSuggestActivity ? (
+            <ActivityInterestReveal
+              expanded={mode === "activity"}
+              interests={sharedInterests}
+              onSelect={setSelectedInterestId}
+              selectedId={selectedInterest?.id ?? ""}
+              title={LL.peopleConnect.sharedInterestTitle()}
+            />
+          ) : null}
+        </View>
       </View>
 
-      {mode === "activity" && canSuggestActivity ? (
-        <Panel variant="muted" style={styles.activityPanel}>
-          <UiText variant="panelTitle">
-            {LL.peopleConnect.sharedInterestTitle()}
-          </UiText>
-          <View style={styles.interestGrid}>
-            {sharedInterests.map((interest) => (
-              <Button
-                key={interest.id}
-                label={interest.name}
-                onPress={() => setSelectedInterestId(interest.id)}
-                variant={
-                  interest.id === selectedInterest?.id ? "tonal" : "bordered"
-                }
-              />
-            ))}
-          </View>
-        </Panel>
-      ) : null}
-
       <Panel variant="plain" style={styles.messagePanel}>
-        <UiText variant="panelTitle">{LL.peopleConnect.messageTitle()}</UiText>
-        <TextInput
+        <TextInputGroup
+          description={LL.peopleConnect.messagePlaceholder()}
+          inputStyle={styles.messageInput}
+          label={LL.peopleConnect.messageTitle()}
           multiline
           onChangeText={setNote}
-          placeholder={LL.peopleConnect.messagePlaceholder()}
-          placeholderTextColor={theme.colors.textMuted}
-          style={styles.messageInput}
+          textAlignVertical="top"
           value={note}
         />
       </Panel>
@@ -307,7 +419,7 @@ export const PeopleConnectionRequestScreen = ({
 };
 
 const createStyles = (theme: BuzzTheme, bottomInset: number) => {
-  const { colors, fontSizes, lineHeights, radii, spacing } = theme;
+  const { borderWidths, colors, fontSizes, lineHeights, radii, spacing } = theme;
 
   return StyleSheet.create({
     content: {
@@ -337,12 +449,15 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
       borderColor: colors.border,
       borderRadius: radii.xl,
       borderWidth: 1,
-      gap: spacing[2],
       padding: spacing[5],
     },
+    optionHeader: {
+      gap: spacing[2],
+    },
     selectedOptionCard: {
-      backgroundColor: colors.warningSoft,
-      borderColor: colors.warning,
+      backgroundColor: colors.surface,
+      borderColor: colors.brand,
+      borderWidth: borderWidths.focus,
     },
     disabledOptionCard: {
       opacity: 0.55,
@@ -350,7 +465,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     optionTitle: {
       color: colors.brand,
       fontSize: fontSizes.lg,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       lineHeight: lineHeights.tight,
     },
     optionBody: {
@@ -358,21 +473,11 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
       fontSize: fontSizes.base,
       lineHeight: lineHeights.body,
     },
-    activityPanel: {
-      gap: spacing[4],
-    },
-    interestGrid: {
-      gap: spacing[3],
-    },
     messagePanel: {
       gap: spacing[3],
     },
     messageInput: {
-      color: colors.text,
-      fontSize: fontSizes.base,
-      lineHeight: lineHeights.body,
       minHeight: 92,
-      padding: 0,
       textAlignVertical: "top",
     },
   });

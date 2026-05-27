@@ -47,11 +47,24 @@ export type BackendMatchCandidate = {
 };
 
 export type BackendActivationResult = {
-  ok: boolean;
+  ok: true;
   activationId: string;
   interestId: string;
   interestName: string;
   matchCandidates: BackendMatchCandidate[];
+};
+
+export type BackendActivationRateLimitCode =
+  | "rate_limited_activity"
+  | "rate_limited_daily";
+
+export type BackendActivationRateLimitResult = {
+  ok: false;
+  code: BackendActivationRateLimitCode;
+  retryAfterSeconds?: number;
+  interestId?: string;
+  interestName?: string;
+  limit?: number;
 };
 
 export const createInterestFlowCopy = (translations: I18n = LL): InterestFlowCopy => {
@@ -168,7 +181,19 @@ export const shouldActivateInterestThroughSupabase = (user: BuzzAuthUser): boole
 export const isBackendActivationResult = (value: unknown): value is BackendActivationResult => {
   const result = value as Partial<BackendActivationResult>;
 
-  return Boolean(result.ok && result.activationId && result.interestId && result.interestName && Array.isArray(result.matchCandidates));
+  return Boolean(result.ok === true && result.activationId && result.interestId && result.interestName && Array.isArray(result.matchCandidates));
+};
+
+export const isBackendActivationRateLimitResult = (
+  value: unknown,
+): value is BackendActivationRateLimitResult => {
+  const result = value as Partial<BackendActivationRateLimitResult>;
+
+  return Boolean(
+    result.ok === false &&
+      (result.code === "rate_limited_activity" ||
+        result.code === "rate_limited_daily"),
+  );
 };
 
 /**

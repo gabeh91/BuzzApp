@@ -9,11 +9,12 @@ import {
   completeBackendActivation,
   createInitialInterestFlowState,
   isBackendActivationResult,
+  isBackendActivationRateLimitResult,
   parseActivateInterestJsonScalar,
   selectInterest,
   setActivationAvailabilityIntent,
   shouldActivateInterestThroughSupabase,
-} from "./interestFlow";
+} from "../interestFlow";
 
 const surfing = {
   id: "00000000-0000-0000-0000-000000000001",
@@ -53,6 +54,20 @@ test("parseActivateInterestJsonScalar parses stringified JSON from GraphQL JSON 
   const parsed = parseActivateInterestJsonScalar(raw);
 
   assert.equal(isBackendActivationResult(parsed), true);
+});
+
+test("rate-limited activation responses are parsed separately from successful activations", () => {
+  const raw = JSON.stringify({
+    ok: false,
+    code: "rate_limited_activity",
+    retryAfterSeconds: 421,
+    interestId: surfing.id,
+    interestName: surfing.name,
+  });
+  const parsed = parseActivateInterestJsonScalar(raw);
+
+  assert.equal(isBackendActivationRateLimitResult(parsed), true);
+  assert.equal(isBackendActivationResult(parsed), false);
 });
 
 test("shouldActivateInterestThroughSupabase only sends activation writes for Supabase users", () => {

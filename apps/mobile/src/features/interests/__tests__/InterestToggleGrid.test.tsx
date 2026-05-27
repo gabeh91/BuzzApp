@@ -3,8 +3,8 @@ import { StyleSheet } from "react-native";
 
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
-import { InterestToggleGrid } from "./InterestToggleGrid";
-import type { BuzzInterest } from "./interestFlow";
+import { InterestToggleGrid } from "../InterestToggleGrid";
+import type { BuzzInterest } from "../interestFlow";
 
 const interests: BuzzInterest[] = [
   {

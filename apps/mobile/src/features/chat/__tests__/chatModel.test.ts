@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
-import { createChatDraft } from "./chatModel";
+import { createChatDraft } from "../chatModel";
 
 test("createChatDraft trims message bodies and rejects empty sends", () => {
   assert.deepEqual(createChatDraft("  See you at 6  "), {

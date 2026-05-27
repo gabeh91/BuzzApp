@@ -5,7 +5,10 @@ import Animated from "react-native-reanimated";
 
 import { Text } from "@/ui";
 
-import { activityIconForInterest } from "./activateFabActivityIcon";
+import {
+  ACTIVATE_FAB_ICON,
+  activityIconForInterest,
+} from "./activateFabActivityIcon";
 import type { ActivateFabStyles } from "./activateFabStyles";
 import type { BuzzInterest } from "../interestFlow";
 
@@ -20,7 +23,7 @@ export type ActivateInterestFabDockProps = {
   chargeFillStyle: AnimatedViewStyle;
   clearSelectionFadeStyle: AnimatedViewStyle;
   clearSelectionLabel: string;
-  colors: { text: string };
+  colors: { accent: string; brand: string; text: string };
   compactContentMorphStyle: AnimatedViewStyle;
   compactLabel: string;
   disabled: boolean | undefined;
@@ -122,8 +125,8 @@ export const ActivateInterestFabDock = ({
                 compactContentMorphStyle,
               ]}
             >
-              <Ionicons color={colors.text} name="flash" size={28} />
-              <Text numberOfLines={2} style={styles.label} variant="button">
+              <Ionicons color={colors.brand} name={ACTIVATE_FAB_ICON} size={30} />
+              <Text numberOfLines={1} style={styles.label} variant="button">
                 {compactLabel}
               </Text>
             </Animated.View>
@@ -141,7 +144,7 @@ export const ActivateInterestFabDock = ({
                   name={
                     displaySelectedInterest
                       ? activityIconForInterest(displaySelectedInterest)
-                      : "flash"
+                      : ACTIVATE_FAB_ICON
                   }
                   size={18}
                 />
@@ -160,8 +163,8 @@ export const ActivateInterestFabDock = ({
           </Animated.View>
         ) : (
           <View pointerEvents="none" style={styles.compactContent}>
-            <Ionicons color={colors.text} name="flash" size={28} />
-            <Text numberOfLines={2} style={styles.label} variant="button">
+            <Ionicons color={colors.brand} name={ACTIVATE_FAB_ICON} size={30} />
+            <Text numberOfLines={1} style={styles.label} variant="button">
               {compactLabel}
             </Text>
           </View>

@@ -6,7 +6,7 @@ import {
   canShowExactLocation,
   createBlockPayload,
   createReportDraft,
-} from "./safetyActions";
+} from "../safetyActions";
 
 test("createReportDraft trims report copy and keeps group context", () => {
   const draft = createReportDraft({

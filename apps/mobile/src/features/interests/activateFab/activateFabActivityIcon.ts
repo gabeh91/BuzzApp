@@ -7,6 +7,9 @@ export type ActivityIconInterest = Pick<BuzzInterest, "slug" | "name">;
 
 export type ActivityInterestIconName = ComponentProps<typeof Ionicons>["name"];
 
+/** Compact ping dock — same glyph as outgoing activation UI (`radio-outline`). */
+export const ACTIVATE_FAB_ICON: ActivityInterestIconName = "radio-outline";
+
 /** Known starter slugs — keeps icons stable when copy changes. */
 const ICON_BY_SLUG: Partial<Record<string, ActivityInterestIconName>> = {
   surfing: "water",
