@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getDefaultConfig } from "../schema/configSchema.ts";
-import { generateRootFiles } from "./rootGenerator.ts";
+import { getDefaultConfig } from "../../schema/configSchema.ts";
+import { generateRootFiles } from "../rootGenerator.ts";
 
 test("root scaffold configures GraphQL codegen for Apollo hooks", () => {
   const files = generateRootFiles(getDefaultConfig());

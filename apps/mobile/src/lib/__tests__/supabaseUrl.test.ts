@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveSupabaseUrl } from "./supabaseUrlCore";
+import { resolveSupabaseUrl } from "../supabaseUrlCore";
 
 test("resolveSupabaseUrl keeps iOS and default local Supabase on loopback", () => {
   assert.equal(

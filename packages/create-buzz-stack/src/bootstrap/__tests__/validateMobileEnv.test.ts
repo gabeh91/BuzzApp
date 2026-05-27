@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { validateMobileEnv } from "./validateMobileEnv.ts";
+import { validateMobileEnv } from "../validateMobileEnv.ts";
 
 test("mobile env validation fails when forbidden server keys are present", () => {
   assert.throws(

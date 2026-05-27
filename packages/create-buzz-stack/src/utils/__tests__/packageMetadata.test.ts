@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 test("cli package prepares dist binaries for workspace installs and publish", async () => {
-  const packageJsonUrl = new URL("../../package.json", import.meta.url);
+  const packageJsonUrl = new URL("../../../package.json", import.meta.url);
   const packageJson = JSON.parse(await readFile(packageJsonUrl, "utf8")) as {
     bin?: Record<string, string>;
     files?: string[];

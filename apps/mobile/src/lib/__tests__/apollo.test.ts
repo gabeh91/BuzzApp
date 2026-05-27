@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createBuzzApolloHeaders } from "./apollo";
+import { createBuzzApolloHeaders } from "../apollo";
 
 test("createBuzzApolloHeaders uses anon key for reads when no user token is present", () => {
   assert.deepEqual(

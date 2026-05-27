@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getTopSuburbMatchesForTraits, getTopSuburbNamesForTraits, scoreSuburbsForTraits, type SuburbTagProfile } from "./suburbMatching";
+import { getTopSuburbMatchesForTraits, getTopSuburbNamesForTraits, scoreSuburbsForTraits, type SuburbTagProfile } from "../suburbMatching";
 import type { ProfileTraits } from "@/features/quiz/quizModel";
 
 const traits: ProfileTraits = {

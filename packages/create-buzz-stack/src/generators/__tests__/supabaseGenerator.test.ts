@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { generateSupabaseFiles } from "./supabaseGenerator.ts";
+import { generateSupabaseFiles } from "../supabaseGenerator.ts";
 
 const expandedInterestSlugs = [
   "golf",

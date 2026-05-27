@@ -14,7 +14,7 @@ export function generateWorkspaceFiles(config: BuzzStackConfig): GeneratedFile[]
     "start": "expo start",
     "lint": "echo \\"mobile lint placeholder\\"",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/auth/*.test.ts src/features/*/*.test.ts src/i18n/*.test.ts src/lib/*.test.ts src/navigation/*.test.ts src/theme/*.test.ts"
+    "test": "tsx --test \\"src/**/__tests__/*.test.ts\\""
   },
   "dependencies": {
     "@apollo/client": "^3.14.1",
@@ -941,8 +941,32 @@ const fontFamilies = {
   mono: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" })
 };
 
-export const spacing = { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48 } as const;
-export const radii = { sm: 12, md: 18, lg: 24, xl: 30, "2xl": 36, full: 999 } as const;
+export const spacing = {
+  0: 0,
+  0.25: 1,
+  0.5: 2,
+  0.75: 3,
+  1: 4,
+  2: 8,
+  3: 12,
+  4: 16,
+  5: 20,
+  6: 24,
+  8: 32,
+  10: 40,
+  12: 48
+} as const;
+export const radii = {
+  "2xs": 2,
+  xs: 4,
+  icon: 6,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 24,
+  "2xl": 28,
+  full: 999
+} as const;
 export const fontSizes = { xs: 12, sm: 13, base: 15, md: 16, lg: 17, xl: 18, "2xl": 22, "5xl": 30, hero: 34 } as const;
 export const lineHeights = { tight: 20, body: 24, relaxed: 26, title: 32, hero: 39 } as const;
 export const borderWidths = { hairline: 1, focus: 2 } as const;
@@ -986,10 +1010,10 @@ const darkPalette = {
 const lightShadows = {
   card: {
     shadowColor: "#15251f",
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 14 },
-    elevation: 5
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4
   }
 } as const;
 

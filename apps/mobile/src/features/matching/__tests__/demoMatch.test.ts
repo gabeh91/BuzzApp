@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createDeterministicMatchCandidate } from "./demoMatch";
-import type { MatchCandidatePreview } from "./matchCandidate.types";
+import { createDeterministicMatchCandidate } from "../demoMatch";
+import type { MatchCandidatePreview } from "../matchCandidate.types";
 
 test("createDeterministicMatchCandidate prefers compatible quiz traits", () => {
   const baseTraits = {

@@ -7,7 +7,7 @@ import {
   createResilientStorageAdapter,
   createSecureStoreStorageAdapter,
   type StorageAdapter,
-} from "./storage";
+} from "../storage";
 
 const createFailingStorage = (): StorageAdapter => ({
   getItem: async () => {

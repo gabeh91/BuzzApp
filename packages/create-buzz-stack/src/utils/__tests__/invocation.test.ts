@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isCreateBuzzStackInvocation } from "./invocation.ts";
+import { isCreateBuzzStackInvocation } from "../invocation.ts";
 
 test("buzz-stack bin is not treated as create-buzz-stack because of package directory name", () => {
   assert.equal(

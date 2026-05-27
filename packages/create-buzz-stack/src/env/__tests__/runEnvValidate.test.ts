@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { runEnvValidate } from "./runEnvValidate.ts";
+import { runEnvValidate } from "../runEnvValidate.ts";
 
 async function withTempDir(run: (directory: string) => Promise<void>): Promise<void> {
   const directory = await mkdtemp(path.join(tmpdir(), "buzz-stack-env-"));

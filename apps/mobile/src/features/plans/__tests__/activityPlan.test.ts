@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { createCityContextFallback } from "@/features/city/cityContext";
 
-import { createDefaultActivityPlan } from "./activityPlan";
+import { createDefaultActivityPlan } from "../activityPlan";
 
 test("createDefaultActivityPlan turns an interest and match suggestion into a public structured plan", () => {
   const plan = createDefaultActivityPlan({

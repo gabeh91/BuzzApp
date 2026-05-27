@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createMarkerFile } from "./createMarkerFile.ts";
+import { createMarkerFile } from "../createMarkerFile.ts";
 
 async function withTempDir(run: (directory: string) => Promise<void>): Promise<void> {
   const directory = await mkdtemp(path.join(tmpdir(), "buzz-stack-init-"));

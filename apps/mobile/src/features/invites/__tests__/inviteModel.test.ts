@@ -6,7 +6,7 @@ import {
   createGroupInviteLink,
   createInviteDraft,
   normalizeInviteToken,
-} from "./inviteModel";
+} from "../inviteModel";
 
 const migrationPath = "../../supabase/migrations/000016_invites_backfill.sql";
 const inviteCapacityAnalyticsPath =

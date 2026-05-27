@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getDefaultConfig } from "../schema/configSchema.ts";
-import { generateWorkspaceFiles } from "./workspaceGenerator.ts";
+import { getDefaultConfig } from "../../schema/configSchema.ts";
+import { generateWorkspaceFiles } from "../workspaceGenerator.ts";
 
 test("admin scaffold uses a Next.js supported config filename", () => {
   const files = generateWorkspaceFiles(getDefaultConfig());
@@ -32,7 +32,7 @@ test("mobile scaffold declares Babel runtime for Metro", () => {
   assert.match(mobilePackageJson.contents, /"tsx": "latest"/);
   assert.match(
     mobilePackageJson.contents,
-    /"test": "tsx --test src\/auth\/\*\.test\.ts src\/features\/\*\/\*\.test\.ts src\/i18n\/\*\.test\.ts src\/lib\/\*\.test\.ts src\/navigation\/\*\.test\.ts src\/theme\/\*\.test\.ts"/
+    /"test": "tsx --test \\"src\/\*\*\/__tests__\/\*\.test\.ts\\""/
   );
 });
 

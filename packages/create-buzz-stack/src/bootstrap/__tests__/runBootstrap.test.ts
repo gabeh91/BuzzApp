@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { readMarker } from "../utils/marker.ts";
-import { applyLocalSupabaseMigrations } from "./applyLocalSupabaseMigrations.ts";
-import { validateRailwayConfig } from "./validateRailwayConfig.ts";
+import { readMarker } from "../../utils/marker.ts";
+import { applyLocalSupabaseMigrations } from "../applyLocalSupabaseMigrations.ts";
+import { validateRailwayConfig } from "../validateRailwayConfig.ts";
 
 test("validateRailwayConfig reports disabled when Railway is not enabled", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "buzz-stack-bootstrap-"));

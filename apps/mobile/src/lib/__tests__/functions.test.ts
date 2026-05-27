@@ -20,7 +20,7 @@ import {
   runReportAction,
   runResolveInviteAction,
   runSettledAction,
-} from "./functions";
+} from "../functions";
 
 test("createInviteActionRequest targets create-invite with local-only bypass headers", () => {
   const request = createInviteActionRequest({
@@ -250,6 +250,7 @@ test("createFeedbackActionRequest targets record-feedback with local-only bypass
   assert.deepEqual(JSON.parse(String(request.init.body)), {
     activityGroupId: "00000000-0000-0000-0000-000000000701",
     feltSafe: true,
+    userAttended: true,
     wouldMeetAgain: false,
   });
   assert.equal(

@@ -6,7 +6,7 @@ import {
   createCityContextFallback,
   isCityFeatureEnabled,
   normalizeCityContext,
-} from "./cityContext";
+} from "../cityContext";
 import {
   createCityContextRequest,
   runCityContextRequest,

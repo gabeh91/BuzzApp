@@ -5,7 +5,7 @@ import test from "node:test";
 import { createCityContextFallback } from "@/features/city/cityContext";
 import type { ProfileTraits } from "@/features/quiz/quizModel";
 
-import { createLandingPlan } from "./landingPlan";
+import { createLandingPlan } from "../landingPlan";
 
 const traits: ProfileTraits = {
   energy: "medium",
@@ -76,6 +76,8 @@ test("profile screen gates the full landing plan and shows the city starting poi
   assert.match(profileSource, /landingPlan\.items/);
   assert.match(profileSource, /LL\.profile\.landingPlan/);
   assert.match(profileSource, /LL\.profile\.cityStartingPoint/);
+  assert.match(profileSource, /InterestPillRow/);
+  assert.match(profileSource, /InterestPill/);
   assert.doesNotMatch(profileSource, /melbourne_starting_point_enabled/);
   assert.doesNotMatch(profileSource, /melbourneStartingPoint/);
   assert.match(translationsSource, /landingPlan:/);
