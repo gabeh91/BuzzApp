@@ -24,14 +24,18 @@ test("profile screen owns landing plan, progress, and settled availability contr
   const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
   const translationsSource = readFileSync("src/i18n/en.ts", "utf8");
 
-  assert.match(profileSource, /runSettledAction/);
+  assert.match(profileSource, /routes\.profilePersonalInfo/);
   assert.match(profileSource, /createLandingPlan/);
   assert.match(profileSource, /createSettlingProgress/);
   assert.match(profileSource, /useSettlingProgressState/);
+  assert.match(profileSource, /useReliabilitySummary/);
   assert.match(profileSource, /LL\.profile\.settled/);
+  assert.match(profileSource, /LL\.profile\.reliability/);
   assert.doesNotMatch(homeSource, /createLandingPlan/);
   assert.doesNotMatch(homeSource, /createSettlingProgress/);
   assert.match(translationsSource, /profile:/);
+  assert.match(translationsSource, /personalInfo:/);
+  assert.match(translationsSource, /reliability:/);
   assert.match(translationsSource, /settled:/);
 });
 

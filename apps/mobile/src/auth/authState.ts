@@ -8,6 +8,7 @@ export const createBuzzAuthState = (
 
   return {
     accessToken: undefined,
+    applyLocalProfileUpdate: () => undefined,
     authSheetVisible: false,
     biometricEnabled: false,
     completePendingAuthAction: async () => undefined,

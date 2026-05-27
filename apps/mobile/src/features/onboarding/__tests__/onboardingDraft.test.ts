@@ -7,13 +7,11 @@ import {
   clearDraftInterest,
   isAnonymousOnboardingDraftReusable,
   mergeQuizAnswerIntoDraft,
-  mergeShortProfileLocationIntoDraft,
   mergeShortProfileNameIntoDraft,
-  mergeShortProfileRetreatToName,
   markAnonymousOnboardingComplete,
   resetClaimedAnonymousOnboardingDraft,
   selectDraftInterest,
-} from "./onboardingDraft";
+} from "../onboardingDraft";
 
 test("anonymous onboarding draft captures partly filled quiz answers", () => {
   const draft = mergeQuizAnswerIntoDraft(
@@ -131,33 +129,18 @@ test("editing a claimed anonymous draft starts a reusable local draft", () => {
 });
 
 test("anonymous onboarding draft stores short profile progress", () => {
-  const named = mergeShortProfileNameIntoDraft(
+  const shortProfile = mergeShortProfileNameIntoDraft(
     createAnonymousOnboardingDraft(),
     "  River  ",
+    {
+      id: "city-1",
+      name: "Melbourne",
+    },
   );
 
-  assert.equal(named.profileDisplayName, "River");
-  assert.equal(named.shortProfileSubIndex, 1);
-  assert.equal(named.shortProfileComplete, false);
-
-  const located = mergeShortProfileLocationIntoDraft(named, {
-    id: "city-1",
-    name: "Melbourne",
-  });
-
-  assert.equal(located.profileCityId, "city-1");
-  assert.equal(located.profileCityName, "Melbourne");
-  assert.equal(located.shortProfileComplete, true);
-  assert.equal(located.shortProfileSubIndex, 0);
-});
-
-test("anonymous onboarding draft can retreat from location to name", () => {
-  const located = mergeShortProfileLocationIntoDraft(
-    mergeShortProfileNameIntoDraft(createAnonymousOnboardingDraft(), "Sam"),
-    { id: "c", name: "Melbourne" },
-  );
-  const retreated = mergeShortProfileRetreatToName(located);
-
-  assert.equal(retreated.shortProfileSubIndex, 0);
-  assert.equal(retreated.profileDisplayName, "Sam");
+  assert.equal(shortProfile.profileDisplayName, "River");
+  assert.equal(shortProfile.profileCityId, "city-1");
+  assert.equal(shortProfile.profileCityName, "Melbourne");
+  assert.equal(shortProfile.shortProfileComplete, true);
+  assert.equal(shortProfile.shortProfileSubIndex, 0);
 });

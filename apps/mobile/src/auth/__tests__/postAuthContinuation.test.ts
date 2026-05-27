@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import type { BuzzAuthUser } from "./auth.types";
-import { drainPostAuthPendingAction } from "./postAuthContinuation";
+import type { BuzzAuthUser } from "../auth.types";
+import { drainPostAuthPendingAction } from "../postAuthContinuation";
 
 const supabaseUser = (): BuzzAuthUser => ({
   id: "u1",
@@ -51,6 +51,26 @@ describe("drainPostAuthPendingAction", () => {
 
     assert.equal(outcome, "completed_pending_action");
     assert.equal(ran, true);
+  });
+
+  it("passes the loaded profile quiz state to pending actions", async () => {
+    const outcome = await drainPostAuthPendingAction({
+      user: supabaseUser(),
+      accessToken: "t",
+      profileQuizState: {
+        profileExists: false,
+        quizCompleted: false,
+        userId: "u1",
+      },
+      isProfileQuizOverwritePending: false,
+      runPendingAction: async (_user, _token, context) => {
+        assert.equal(context?.profileQuizState?.quizCompleted, false);
+        assert.equal(context?.profileQuizState?.userId, "u1");
+        return true;
+      },
+    });
+
+    assert.equal(outcome, "completed_pending_action");
   });
 
   it("skips for non-supabase user", async () => {

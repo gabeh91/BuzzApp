@@ -6,8 +6,8 @@ import {
   getInitialAppRoute,
   shouldClaimAnonymousDraft,
   type AuthGateState,
-} from "./authGate";
-import { shouldPromptForProfileQuizOverwrite } from "./profileQuizOverwrite";
+} from "../authGate";
+import { shouldPromptForProfileQuizOverwrite } from "../profileQuizOverwrite";
 
 const authenticated: AuthGateState = {
   biometricEnabled: false,
@@ -25,6 +25,10 @@ test("anonymous users can browse but interaction intents open auth", () => {
   assert.equal(getAuthGateDecision(anonymous, "browse").type, "allow");
   assert.deepEqual(getAuthGateDecision(anonymous, "activate_interest"), {
     intent: "activate_interest",
+    type: "show_auth",
+  });
+  assert.deepEqual(getAuthGateDecision(anonymous, "existing_account_sign_in"), {
+    intent: "existing_account_sign_in",
     type: "show_auth",
   });
   assert.equal(

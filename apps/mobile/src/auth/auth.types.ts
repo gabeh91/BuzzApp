@@ -37,6 +37,7 @@ export type ProfileQuizOverwritePromptState = {
 
 export type AuthenticatedActionContext = {
   profileQuizOverwriteDecision?: ProfileQuizOverwriteDecision;
+  profileQuizState?: ProfileQuizState | null;
 };
 
 export type BuzzAuthState = {
@@ -61,7 +62,10 @@ export type BuzzAuthState = {
   resolveProfileQuizOverwrite: (
     decision: ProfileQuizOverwriteDecision,
   ) => Promise<void>;
-  sendEmailOtp: (email: string) => Promise<void>;
+  sendEmailOtp: (
+    email: string,
+    options?: { shouldCreateUser?: boolean },
+  ) => Promise<void>;
   verifyEmailOtp: (email: string, token: string) => Promise<void>;
   signInWithEmailPassword: (email: string, password: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
@@ -74,4 +78,7 @@ export type BuzzAuthState = {
   status: BuzzAuthStatus;
   unlockWithBiometrics: () => Promise<boolean>;
   user: BuzzAuthUser;
+  applyLocalProfileUpdate: (
+    patch: Partial<Pick<BuzzAuthUser, "displayName" | "cityId" | "cityName">>,
+  ) => void;
 };

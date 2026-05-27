@@ -58,6 +58,11 @@ const en = {
       openingProvider: "Opening...",
     },
     intents: {
+      existing_account_sign_in: {
+        eyebrow: "Welcome back",
+        title: "Sign in to your account",
+        body: "Use the account you already created. New accounts start with the short setup first.",
+      },
       save_profile: {
         eyebrow: "Account",
         title: "Sign in or create an account",
@@ -198,17 +203,13 @@ const en = {
     },
     shortProfile: {
       name: {
-        eyebrow: "Your profile",
-        title: "What should we call you?",
-        body: "First name or the name you like to go by in Buzz.",
-        fieldLabel: "Name",
-        placeholder: "Alex",
+        fieldLabel: "First name",
+        helper: "Shown on your profile when you connect with people.",
       },
       location: {
-        eyebrow: "Your profile",
-        title: "Where are you based?",
-        body: "Buzz matches people and plans in your city first. You can change this later in settings.",
-        cityHint: "Your Buzz city for now",
+        cityHint: "City",
+        sectionLabel: "Your city",
+        note: "We are in Melbourne for now. More cities are on the way—your people and plans stay local to where you are.",
       },
     },
     steps: {
@@ -220,18 +221,18 @@ const en = {
       howItWorks: {
         eyebrow: "How it works",
         title:
-          "Pick something you want to do, say when you are free, then meet around a plan.",
-        body: "Think tennis, coffee, climbing, singing—whatever feels doable with the right people.",
+          "Choose an activity, share when you are free, then meet around a plan.",
+        body: "Think tennis, coffee, climbing, or singing-whatever feels realistic this week.",
       },
       quizIntro: {
         eyebrow: "A few questions",
         title: "So suggestions feel less random.",
-        body: "First a name and city, then a short style quiz—energy, availability, how you plan, and what size group feels comfortable.",
+        body: "Answer as you are, not as you think you should be. The short style quiz covers energy, availability, how you plan, and what size group feels comfortable.",
       },
       shortProfile: {
-        eyebrow: "Your profile",
-        title: "Name and city",
-        body: "Then we move into the quick quiz.",
+        eyebrow: "You",
+        title: "What should we call you?",
+        body: "First name only—that is what people see when you connect.",
       },
       quiz: {
         eyebrow: "Your style",
@@ -256,6 +257,11 @@ const en = {
     },
   },
   home: {
+    tabs: {
+      people: "People",
+      live: "Your pings",
+      nearby: "Nearby",
+    },
     people: {
       eyebrow: "Discover",
       title: "Your matches in {city:string}",
@@ -269,6 +275,16 @@ const en = {
       sending: "Sending...",
       sent: "Request sent",
       failed: "We could not send that yet. Try again in a moment.",
+      sharedMeta: "{count:number} shared",
+      notesMeta: "{count:number} notes",
+    },
+    activityMeta: {
+      going: "{count:number} going",
+      maybe: "{count:number} maybe",
+      pending: "{count:number} pending",
+      people: "{count:number} people",
+      sharedInterest: "Shared interest",
+      replies: "Replies",
     },
     activateFab: {
       pickTitle: "Pick an interest",
@@ -309,6 +325,11 @@ const en = {
       title: "Best-fit suburbs",
       body: "Top areas to explore from your city and lifestyle answers.",
       fallbackReason: "Suggested from your city and lifestyle answers.",
+    },
+    nearby: {
+      body: "Activities close to your current interest and match profile.",
+      empty: "Nearby activity ideas will appear once we have enough local signals.",
+      matchCount: "{count:number} nearby matches are into this.",
     },
     settlingProgress: {
       eyebrow: "Progress",
@@ -383,7 +404,9 @@ const en = {
       body: "{name:string} is also open to {interest:string}.",
       digestBody:
         "{name:string} is open to {interest:string}, with {count:number} more waiting.",
-      yes: "I'm interested",
+      interestDemandOne: "1 person interested in {interest:string}",
+      interestDemandMany: "{count:number} people interested in {interest:string}",
+      yes: "Interested",
       maybe: "Maybe",
       no: "Not this one",
       notNow: "Not now",
@@ -397,6 +420,16 @@ const en = {
       summary:
         "{yes:number} interested · {maybe:number} maybe · {pending:number} pending",
       groupReady: "Group ready",
+      cancel: "Discard ping",
+      cancelled: "Ping discarded.",
+      cancelFailed: "Could not discard that ping. Try again.",
+      cancelling: "Discarding...",
+      keepActive: "Keep active",
+      manage: "Manage ping",
+      manageBody:
+        "This will stop sending {interest:string} to nearby people who have not replied yet.",
+      manageEyebrow: "Active ping",
+      manageTitle: "Discard this ping?",
     },
     plans: {
       title: "Plans",
@@ -407,7 +440,18 @@ const en = {
   chats: {
     eyebrow: "Chats",
     title: "Messages",
-    subtitle: "Connection requests and group chats live in one place.",
+    subtitle: "Your Messages, Requests and Group Chats.",
+    inboxSectionTitle: "Inbox",
+    tabSubtitles: {
+      requests: "Hellos and invites that need a reply.",
+      groups: "Threads for plans you have joined.",
+      direct: "One-to-one chats with your matches.",
+    },
+    tabHints: {
+      requests: "Switch to connection requests and activity invites.",
+      groups: "Switch to group chats.",
+      direct: "Switch to direct chats.",
+    },
     nudge: {
       eyebrow: "Inbox",
       titleOne: "1 thing needs your reply",
@@ -454,7 +498,13 @@ const en = {
       loading: "Loading group chats...",
       members: "{count:number} people",
       unread: "{count:number} unread",
+      newMessages: "{count:number} new messages",
       noMessages: "No messages yet.",
+    },
+    direct: {
+      title: "Direct chats",
+      empty: "Direct chats will appear after you connect with someone.",
+      loading: "Loading direct chats...",
     },
   },
   profile: {
@@ -508,10 +558,34 @@ const en = {
       complete: "Your first loop is complete.",
       nextStep: "Next: {step:string}",
     },
+    aboutYou: "About you",
     matchingQuiz: {
       title: "Personality quiz",
       body: "Your answers shape suburb picks, activities, and who feels like a good match. Retake anytime if your rhythm shifts.",
       retakeCta: "Update quiz answers",
+    },
+    personalInfo: {
+      title: "Personal details",
+      body: "Update how your name appears and confirm the city Buzz uses for nearby plans.",
+      cta: "Update name and city",
+      save: "Save changes",
+      saving: "Saving...",
+      nameRequired: "Add a name so people know who they are talking to.",
+      saveFailed: "We could not save those details yet. Try again in a moment.",
+    },
+    reliability: {
+      eyebrow: "Reliability",
+      title: "Your follow-through",
+      body: "Keep checking in after plans so people know they can count on you.",
+      emptyBody:
+        "Your first plan check-in will start building this record.",
+      planStreak: "Plans attended in a row",
+      checkInStreak: "Check-ins completed in a row",
+      goodPlanStreak: "Good plans in a row",
+      attendanceRate: "Attendance rate",
+      attendanceRateValue: "{percent:number}%",
+      loadingValue: "-",
+      notEnoughData: "Not enough yet",
     },
     settled: {
       title: "Matching availability",
@@ -538,6 +612,14 @@ const en = {
     emptyMatch:
       "Your first group will appear after you accept a suggested plan.",
     backHome: "Back home",
+    tabDetails: "Details",
+    tabChat: "Chat",
+    tabDetailsHint: "View plan, invites, and attendance.",
+    tabChatHint: "Message everyone in this group.",
+    moreMenuTitle: "Group options",
+    moreMenuBody:
+      "Report, block, leave, or create a trusted invite link for a friend.",
+    openMoreMenu: "Open group options",
     planCard: {
       title: "The plan",
       timing: "Timing: {timing:string}",
@@ -604,6 +686,22 @@ const en = {
       leaveFailed: "We could not leave that group yet. Try again in a moment.",
     },
   },
+  postActivityCheckIn: {
+    eyebrow: "Quick check-in",
+    attendanceTitle: "Did you make it to {activity:string}?",
+    attendanceBody:
+      "A quick answer helps Buzz keep future plans and matches reliable.",
+    didAttend: "Yes, I went",
+    didNotAttend: "No, not this time",
+    experienceTitle: "How did {activity:string} go?",
+    experienceBody:
+      "Share a simple signal so we can keep plans useful and safe.",
+    goodMeetAgain: "Good, I would meet again",
+    goodButNoRepeat: "Fine, but not again",
+    somethingFeltOff: "Something felt off",
+    savedToast: "Check-in saved.",
+    failedToast: "We could not save that check-in yet. Try again in a moment.",
+  },
   chat: {
     empty: "No messages yet.",
     composerPlaceholder: "Message the group",
@@ -650,6 +748,10 @@ const en = {
         "{interest:string} is on. Your next suggestion can start from this.",
       chooseBeforeActivating: "Choose an interest first.",
       failed: "We could not activate that interest yet. Try again in a moment.",
+      rateLimitedActivity:
+        "You already pinged this activity recently. Try again in {minutes:number} min.",
+      rateLimitedDaily:
+        "You have reached today's ping limit. Try again tomorrow.",
     },
   },
   quiz: {

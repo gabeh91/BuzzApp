@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Screen, Text as UiText } from "@/ui";
+import { CompactIntro, Screen } from "@/ui";
 import { useCloseAuthModal } from "./authNavigation";
 
 type AuthModalFrameProps = {
@@ -49,12 +49,14 @@ export const AuthModalFrame = ({
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerRow}>
-            <View style={styles.headerCopy}>
-              <UiText variant="eyebrow">{eyebrow}</UiText>
-              <UiText variant="title" style={styles.title}>
-                {title}
-              </UiText>
-            </View>
+            <CompactIntro
+              body={body}
+              bodyVariant="panelBody"
+              eyebrow={eyebrow}
+              style={styles.headerCopy}
+              title={title}
+              titleVariant="panelTitle"
+            />
             <Pressable
               accessibilityLabel={closeAccessibilityLabel}
               accessibilityRole="button"
@@ -64,10 +66,6 @@ export const AuthModalFrame = ({
               <FontAwesome color={theme.colors.text} name="close" size={17} />
             </Pressable>
           </View>
-
-          <UiText variant="body" style={styles.body}>
-            {body}
-          </UiText>
 
           {children}
         </ScrollView>
@@ -102,14 +100,6 @@ const createStyles = (theme: BuzzTheme) => {
     headerCopy: {
       flex: 1,
       gap: spacing[2],
-    },
-    title: {
-      fontSize: 40,
-      lineHeight: 44,
-    },
-    body: {
-      fontSize: 18,
-      lineHeight: 27,
     },
     closeButton: {
       alignItems: "center",

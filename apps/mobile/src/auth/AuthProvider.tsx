@@ -184,6 +184,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
   const initialUserRef = useRef(createAnonymousBuzzUser());
   const currentSessionRef = useRef<Session | null>(null);
   const currentUserRef = useRef<BuzzAuthUser>(initialUserRef.current);
+  const currentProfileQuizStateRef = useRef<ProfileQuizState | null>(null);
   const pendingActionRef = useRef<
     | ((
         user: BuzzAuthUser,
@@ -226,6 +227,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(anonymousUser);
         setBiometricEnabled(false);
         setProfileQuizOverwritePrompt(null);
+        currentProfileQuizStateRef.current = null;
         setProfileQuizState(null);
         setStatus("anonymous");
         return;
@@ -268,6 +270,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
 
       currentSessionRef.current = nextSession;
       currentUserRef.current = nextUser;
+      currentProfileQuizStateRef.current = nextProfileQuizState;
       setSession(nextSession);
       setUser(nextUser);
       setBiometricEnabled(nextBiometricEnabled);
@@ -384,12 +387,15 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
     return true;
   }, [user]);
 
-  const sendEmailOtp = useCallback(async (email: string) => {
+  const sendEmailOtp = useCallback(async (
+    email: string,
+    options: { shouldCreateUser?: boolean } = {},
+  ) => {
     const { error } = await buzzSupabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: createRedirectUrl(),
-        shouldCreateUser: true,
+        shouldCreateUser: options.shouldCreateUser ?? true,
       },
     });
 
@@ -412,6 +418,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
     await drainPostAuthPendingAction({
       user: currentUserRef.current,
       accessToken: session?.access_token ?? undefined,
+      profileQuizState: currentProfileQuizStateRef.current,
       isProfileQuizOverwritePending:
         pendingProfileQuizOverwriteRef.current !== null,
       runPendingAction,
@@ -434,6 +441,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
           persistProfile: false,
         });
         setProfileQuizState(null);
+        currentProfileQuizStateRef.current = null;
       } else {
         await anonymousOnboardingDraftStore.update(() =>
           createAnonymousOnboardingDraft(),
@@ -444,6 +452,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
       await drainPostAuthPendingAction({
         user: pendingConflict.user,
         accessToken: pendingConflict.session.access_token ?? undefined,
+        profileQuizState: currentProfileQuizStateRef.current,
         isProfileQuizOverwritePending: false,
         profileQuizOverwriteResolution: decision,
         runPendingAction,
@@ -600,6 +609,17 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
     [exchangeAuthCode],
   );
 
+  const applyLocalProfileUpdate = useCallback(
+    (patch: Partial<Pick<BuzzAuthUser, "displayName" | "cityId" | "cityName">>) => {
+      setUser((prev) => {
+        const next = { ...prev, ...patch };
+        currentUserRef.current = next;
+        return next;
+      });
+    },
+    [],
+  );
+
   const signOut = useCallback(async () => {
     const signedOutUserId = user.authSource === "supabase" ? user.id : null;
 
@@ -672,6 +692,7 @@ export const BuzzAuthProvider = ({ children }: { children: ReactNode }) => {
     status,
     unlockWithBiometrics,
     user,
+    applyLocalProfileUpdate,
   };
 
   return (

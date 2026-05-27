@@ -100,8 +100,14 @@ export const useContentSlideTransition = (transitionIndex: number) => {
   };
 };
 
-const useHeaderProgressTransition = (isQuizStep: boolean) => {
+const useHeaderProgressTransition = (
+  isQuizStep: boolean,
+  showFlowProgress: boolean,
+  progressHeight: number,
+  progressGap: number,
+) => {
   const quizMode = useSharedValue(isQuizStep ? 1 : 0);
+  const flowVisibility = useSharedValue(showFlowProgress ? 1 : 0);
 
   useEffect(() => {
     quizMode.value = withTiming(isQuizStep ? 1 : 0, {
@@ -109,13 +115,32 @@ const useHeaderProgressTransition = (isQuizStep: boolean) => {
       easing: Easing.out(Easing.cubic),
     });
   }, [isQuizStep, quizMode]);
+  useEffect(() => {
+    flowVisibility.value = withTiming(showFlowProgress ? 1 : 0, {
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [flowVisibility, showFlowProgress]);
 
   const flowProgressStyle = useAnimatedStyle(() => {
     return {
-      opacity: 1 - quizMode.value,
+      opacity: (1 - quizMode.value) * flowVisibility.value,
       transform: [
         {
-          translateY: -12 * quizMode.value,
+          translateY:
+            -12 * quizMode.value + -14 * (1 - flowVisibility.value),
+        },
+      ],
+    };
+  });
+
+  const progressSlotStyle = useAnimatedStyle(() => {
+    return {
+      height: progressHeight * flowVisibility.value,
+      marginTop: progressGap * flowVisibility.value,
+      transform: [
+        {
+          translateY: -12 * (1 - flowVisibility.value),
         },
       ],
     };
@@ -123,10 +148,11 @@ const useHeaderProgressTransition = (isQuizStep: boolean) => {
 
   const quizProgressStyle = useAnimatedStyle(() => {
     return {
-      opacity: quizMode.value,
+      opacity: quizMode.value * flowVisibility.value,
       transform: [
         {
-          translateY: 12 * (1 - quizMode.value),
+          translateY:
+            12 * (1 - quizMode.value) + -14 * (1 - flowVisibility.value),
         },
       ],
     };
@@ -134,6 +160,7 @@ const useHeaderProgressTransition = (isQuizStep: boolean) => {
 
   return {
     flowProgressStyle,
+    progressSlotStyle,
     quizProgressStyle,
   };
 };
@@ -158,17 +185,24 @@ export const FixedOnboardingHeader = ({
   cityName,
   flowProgress,
   quizProgress,
+  showFlowProgress,
 }: {
   cityName: string;
   flowProgress: { current: number; total: number };
   quizProgress: { current: number; total: number } | undefined;
+  showFlowProgress: boolean;
 }) => {
-  const { styles } = useOnboardingTheme();
+  const { styles, headerProgressGap, headerProgressHeight } = useOnboardingTheme();
   const { LL } = useI18n();
   const isQuizStep = Boolean(quizProgress);
   const lastQuizProgress = useRef(quizProgress);
-  const { flowProgressStyle, quizProgressStyle } =
-    useHeaderProgressTransition(isQuizStep);
+  const { flowProgressStyle, progressSlotStyle, quizProgressStyle } =
+    useHeaderProgressTransition(
+      isQuizStep,
+      showFlowProgress,
+      headerProgressHeight,
+      headerProgressGap,
+    );
 
   useEffect(() => {
     if (quizProgress) {
@@ -191,27 +225,32 @@ export const FixedOnboardingHeader = ({
   return (
     <View style={styles.fixedHeader}>
       <AppBrandedCityHeader cityName={cityName} />
-      <View style={styles.headerProgressSlot}>
-        <Animated.View style={[styles.flowProgressLayer, flowProgressStyle]}>
-          <QuizProgressBar
-            current={flowProgress.current}
-            label={flowProgressLabel}
-            total={flowProgress.total}
-          />
-        </Animated.View>
-        {visibleQuizProgress ? (
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.quizProgressLayer, quizProgressStyle]}
-          >
+      <Animated.View
+        pointerEvents={showFlowProgress ? "auto" : "none"}
+        style={[styles.headerProgressFloating, progressSlotStyle]}
+      >
+        <View style={styles.headerProgressSlot}>
+          <Animated.View style={[styles.flowProgressLayer, flowProgressStyle]}>
             <QuizProgressBar
-              current={visibleQuizProgress.current}
-              label={quizProgressLabel ?? ""}
-              total={visibleQuizProgress.total}
+              current={flowProgress.current}
+              label={flowProgressLabel}
+              total={flowProgress.total}
             />
           </Animated.View>
-        ) : null}
-      </View>
+          {visibleQuizProgress ? (
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.quizProgressLayer, quizProgressStyle]}
+            >
+              <QuizProgressBar
+                current={visibleQuizProgress.current}
+                label={quizProgressLabel ?? ""}
+                total={visibleQuizProgress.total}
+              />
+            </Animated.View>
+          ) : null}
+        </View>
+      </Animated.View>
     </View>
   );
 };

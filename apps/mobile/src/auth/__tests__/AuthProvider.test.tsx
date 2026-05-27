@@ -10,9 +10,9 @@ import { Pressable, Text as NativeText } from "react-native";
 import { routes } from "@/navigation/routes";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
-import { AuthCodeScreen } from "./AuthCodeScreen";
-import { BuzzAuthProvider, useBuzzAuth } from "./AuthProvider";
-import { AuthStartScreen } from "./AuthStartScreen";
+import { AuthCodeScreen } from "../AuthCodeScreen";
+import { BuzzAuthProvider, useBuzzAuth } from "../AuthProvider";
+import { AuthStartScreen } from "../AuthStartScreen";
 
 const mockRouterDismiss = jest.fn();
 const mockRouterPush = jest.fn();
@@ -262,7 +262,7 @@ describe("Buzz auth modal flow", () => {
     renderWithProviders(<AuthStartScreen />);
 
     fireEvent.changeText(
-      await screen.findByPlaceholderText("you@example.com"),
+      await screen.findByLabelText("Email"),
       "sam@example.com",
     );
     fireEvent.press(screen.getByRole("button", { name: "Email me a code" }));
@@ -276,6 +276,44 @@ describe("Buzz auth modal flow", () => {
       expect(mockRouterPush).toHaveBeenCalledWith({
         pathname: routes.authCode,
         params: { email: "sam@example.com", intent: "save_profile" },
+      });
+    });
+  });
+
+  it("keeps existing-account onboarding email codes from creating new accounts while keeping OAuth available", async () => {
+    mockUseLocalSearchParams.mockReturnValue({
+      intent: "existing_account_sign_in",
+    });
+    mockSignInWithOtp.mockResolvedValue({ error: null });
+
+    renderWithProviders(<AuthStartScreen />);
+
+    expect(screen.queryByRole("button", { name: "Create account" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Continue with Apple" }),
+    ).toBeTruthy();
+
+    fireEvent.changeText(
+      await screen.findByLabelText("Email"),
+      "sam@example.com",
+    );
+    fireEvent.press(screen.getByRole("button", { name: "Email me a code" }));
+
+    await waitFor(() => {
+      expect(mockSignInWithOtp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "sam@example.com",
+          options: expect.objectContaining({
+            shouldCreateUser: false,
+          }),
+        }),
+      );
+      expect(mockRouterPush).toHaveBeenCalledWith({
+        pathname: routes.authCode,
+        params: {
+          email: "sam@example.com",
+          intent: "existing_account_sign_in",
+        },
       });
     });
   });
@@ -298,10 +336,10 @@ describe("Buzz auth modal flow", () => {
     renderWithProviders(<AuthStartScreen />);
 
     fireEvent.changeText(
-      await screen.findByPlaceholderText("you@example.com"),
+      await screen.findByLabelText("Email"),
       "sam@example.com",
     );
-    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.changeText(screen.getByLabelText("Password"), "password1");
     fireEvent.press(screen.getByRole("button", { name: "Create account" }));
 
     await waitFor(() => {
@@ -347,10 +385,10 @@ describe("Buzz auth modal flow", () => {
     });
 
     fireEvent.changeText(
-      screen.getByPlaceholderText("you@example.com"),
+      screen.getByLabelText("Email"),
       "sam@example.com",
     );
-    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.changeText(screen.getByLabelText("Password"), "password1");
     fireEvent.press(screen.getByRole("button", { name: "Create account" }));
 
     await waitFor(() => {
@@ -407,10 +445,10 @@ describe("Buzz auth modal flow", () => {
 
     fireEvent.press(await screen.findByRole("button", { name: "Say hi" }));
     fireEvent.changeText(
-      await screen.findByPlaceholderText("you@example.com"),
+      await screen.findByLabelText("Email"),
       "sam@example.com",
     );
-    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.changeText(screen.getByLabelText("Password"), "password1");
     fireEvent.press(screen.getByRole("button", { name: "Sign in" }));
 
     expect(await screen.findByText("Overwrite prompt visible")).toBeTruthy();
@@ -421,9 +459,14 @@ describe("Buzz auth modal flow", () => {
     );
 
     await waitFor(() => {
-      expect(mockPendingAuthAction).toHaveBeenCalledWith({
-        profileQuizOverwriteDecision: "keep_existing",
-      });
+      expect(mockPendingAuthAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          profileQuizOverwriteDecision: "keep_existing",
+          profileQuizState: expect.objectContaining({
+            quizCompleted: true,
+          }),
+        }),
+      );
     });
   });
 
@@ -518,10 +561,10 @@ describe("Buzz auth modal flow", () => {
     renderWithProviders(<AuthStartScreen />);
 
     fireEvent.changeText(
-      await screen.findByPlaceholderText("you@example.com"),
+      await screen.findByLabelText("Email"),
       "sam@example.com",
     );
-    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.changeText(screen.getByLabelText("Password"), "password1");
     fireEvent.press(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() => {
@@ -556,10 +599,10 @@ describe("Buzz auth modal flow", () => {
     renderWithProviders(<AuthStartScreen />);
 
     fireEvent.changeText(
-      await screen.findByPlaceholderText("you@example.com"),
+      await screen.findByLabelText("Email"),
       "sam@example.com",
     );
-    fireEvent.changeText(screen.getByPlaceholderText("Password"), "password1");
+    fireEvent.changeText(screen.getByLabelText("Password"), "password1");
     fireEvent.press(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() => {

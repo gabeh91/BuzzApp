@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createBuzzAuthState } from "./authState";
-import { createDemoBuzzUser } from "./demoAuth";
+import { createBuzzAuthState } from "../authState";
+import { createDemoBuzzUser } from "../demoAuth";
 
 test("createDemoBuzzUser keeps demo identity behind a replaceable auth boundary", () => {
   const user = createDemoBuzzUser({

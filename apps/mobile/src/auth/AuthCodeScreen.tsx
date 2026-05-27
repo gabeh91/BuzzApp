@@ -65,7 +65,9 @@ export const AuthCodeScreen = () => {
     setNoticeMessage(undefined);
 
     try {
-      await sendEmailOtp(email);
+      await sendEmailOtp(email, {
+        shouldCreateUser: authIntent !== "existing_account_sign_in",
+      });
       setNoticeMessage(LL.authModal.code.resendNotice());
     } catch {
       setErrorMessage(LL.authModal.code.errors.resendFailed());
@@ -172,7 +174,7 @@ const createStyles = (theme: BuzzTheme) => {
     fieldLabel: {
       color: colors.text,
       fontSize: fontSizes.sm,
-      fontWeight: "900",
+      ...theme.fontStyles.black,
     },
     codeInput: {
       backgroundColor: colors.background,
@@ -181,7 +183,7 @@ const createStyles = (theme: BuzzTheme) => {
       borderWidth: borderWidths.hairline,
       color: colors.text,
       fontSize: 30,
-      fontWeight: "900",
+      ...theme.fontStyles.black,
       letterSpacing: 8,
       minHeight: 64,
       paddingHorizontal: spacing[4],
@@ -198,7 +200,7 @@ const createStyles = (theme: BuzzTheme) => {
     textActionLabel: {
       color: colors.brand,
       fontSize: fontSizes.sm,
-      fontWeight: "900",
+      ...theme.fontStyles.black,
       lineHeight: lineHeights.tight,
     },
     noticeCard: {
@@ -210,7 +212,7 @@ const createStyles = (theme: BuzzTheme) => {
     noticeText: {
       color: colors.text,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
+      ...theme.fontStyles.heavy,
       lineHeight: lineHeights.tight,
     },
   });

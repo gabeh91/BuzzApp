@@ -7,6 +7,7 @@ import type { AuthInteractionIntent } from "./authGate";
 export type AuthModalIntent = Exclude<AuthInteractionIntent, "browse">;
 
 const authModalIntents: readonly AuthModalIntent[] = [
+  "existing_account_sign_in",
   "activate_interest",
   "attend_activity",
   "save_profile",

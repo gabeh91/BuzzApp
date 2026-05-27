@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { deriveProfileTraits, quizQuestions } from "./quizModel";
+import { deriveProfileTraits, quizQuestions } from "../quizModel";
 
 test("quiz ships as a 20 question onboarding model grouped for guided discovery", () => {
   assert.equal(quizQuestions.length, 20);

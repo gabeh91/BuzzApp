@@ -12,7 +12,7 @@ export type AnonymousOnboardingDraft = {
   profileDisplayName?: string;
   profileCityId?: string;
   profileCityName?: string;
-  /** 0 = name, 1 = location while on the short profile step. */
+  /** Legacy resume metadata from the previous two-phase short profile step. */
   shortProfileSubIndex: number;
   shortProfileComplete: boolean;
   completedAt?: string;
@@ -42,31 +42,20 @@ export const createAnonymousOnboardingDraft = (): AnonymousOnboardingDraft => ({
 export const mergeShortProfileNameIntoDraft = (
   draft: AnonymousOnboardingDraft,
   profileDisplayName: string,
-): AnonymousOnboardingDraft => ({
-  ...resetClaimMetadata(draft),
-  profileDisplayName: profileDisplayName.trim(),
-  shortProfileSubIndex: 1,
-  status: "partial",
-});
-
-export const mergeShortProfileLocationIntoDraft = (
-  draft: AnonymousOnboardingDraft,
   city: { id: string; name: string },
-): AnonymousOnboardingDraft => ({
-  ...resetClaimMetadata(draft),
-  profileCityId: city.id,
-  profileCityName: city.name,
-  shortProfileComplete: true,
-  shortProfileSubIndex: 0,
-  status: "partial",
-});
+): AnonymousOnboardingDraft => {
+  const trimmedName = profileDisplayName.trim();
 
-export const mergeShortProfileRetreatToName = (
-  draft: AnonymousOnboardingDraft,
-): AnonymousOnboardingDraft => ({
-  ...draft,
-  shortProfileSubIndex: 0,
-});
+  return {
+    ...resetClaimMetadata(draft),
+    profileCityId: city.id,
+    profileCityName: city.name,
+    profileDisplayName: trimmedName,
+    shortProfileComplete: trimmedName.length > 0,
+    shortProfileSubIndex: 0,
+    status: "partial",
+  };
+};
 
 export const mergeQuizAnswerIntoDraft = (
   draft: AnonymousOnboardingDraft,

@@ -7,8 +7,8 @@ import type { BuzzAuthUser } from "@/auth/auth.types";
 import {
   createBuzzProfilePersistenceInput,
   shouldPersistProfileToSupabase,
-} from "./profilePersistence";
-import type { ProfileTraits, QuizAnswers } from "./quizModel";
+} from "../profilePersistence";
+import type { ProfileTraits, QuizAnswers } from "../quizModel";
 
 const operationsSource = readFileSync("graphql/operations.graphql", "utf8");
 const generatedGraphqlSource = readFileSync("graphql/generated.tsx", "utf8");

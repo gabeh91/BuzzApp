@@ -9,7 +9,7 @@ import {
   goBack,
   goNext,
   onboardingSteps,
-} from "./onboardingFlow";
+} from "../onboardingFlow";
 
 test("onboarding keeps a compact intro before the quiz starts", () => {
   assert.deepEqual(
@@ -17,8 +17,8 @@ test("onboarding keeps a compact intro before the quiz starts", () => {
     [
       "welcome",
       "howItWorks",
-      "quizIntro",
       "shortProfile",
+      "quizIntro",
       "quiz",
       "interests",
       "activation",
@@ -27,11 +27,11 @@ test("onboarding keeps a compact intro before the quiz starts", () => {
   );
 
   assert.ok(
-    onboardingSteps.findIndex((step) => step.id === "quizIntro") <
-      onboardingSteps.findIndex((step) => step.id === "shortProfile"),
+    onboardingSteps.findIndex((step) => step.id === "shortProfile") <
+      onboardingSteps.findIndex((step) => step.id === "quizIntro"),
   );
   assert.ok(
-    onboardingSteps.findIndex((step) => step.id === "shortProfile") <
+    onboardingSteps.findIndex((step) => step.id === "quizIntro") <
       onboardingSteps.findIndex((step) => step.id === "quiz"),
   );
 });
@@ -40,16 +40,16 @@ test("onboarding state advances and retreats without leaking step indexes into s
   const initial = createInitialOnboardingState();
   const afterWelcome = goNext(initial);
   const afterHowItWorks = goNext(afterWelcome);
-  const afterQuizIntro = goNext(afterHowItWorks);
-  const afterShortProfile = goNext(afterQuizIntro);
+  const afterShortProfile = goNext(afterHowItWorks);
+  const afterQuizIntro = goNext(afterShortProfile);
 
   assert.equal(initial.step.id, "welcome");
   assert.equal(afterWelcome.step.id, "howItWorks");
-  assert.equal(afterHowItWorks.step.id, "quizIntro");
-  assert.equal(afterQuizIntro.step.id, "shortProfile");
-  assert.equal(afterShortProfile.step.id, "quiz");
-  assert.equal(goBack(afterShortProfile).step.id, "shortProfile");
+  assert.equal(afterHowItWorks.step.id, "shortProfile");
+  assert.equal(afterShortProfile.step.id, "quizIntro");
+  assert.equal(afterQuizIntro.step.id, "quiz");
   assert.equal(goBack(afterQuizIntro).step.id, "quizIntro");
+  assert.equal(goBack(afterShortProfile).step.id, "shortProfile");
   assert.equal(goBack(afterHowItWorks).step.id, "howItWorks");
   assert.equal(goBack(initial).step.id, "welcome");
 });
@@ -87,7 +87,7 @@ test("onboarding resumes at short profile when a draft has profile fields but no
   assert.equal(resumed.step.id, "shortProfile");
 });
 
-test("onboarding resumes at quiz when short profile is complete without quiz answers", () => {
+test("onboarding resumes at quiz intro when short profile is complete without quiz answers", () => {
   const resumed = createOnboardingStateForAnonymousDraft({
     answers: {},
     selectedInterest: null,
@@ -95,7 +95,7 @@ test("onboarding resumes at quiz when short profile is complete without quiz ans
     status: "partial",
   });
 
-  assert.equal(resumed.step.id, "quiz");
+  assert.equal(resumed.step.id, "quizIntro");
 });
 
 test("onboarding allows anonymous browsing from the activation step", () => {
@@ -125,7 +125,12 @@ test("onboarding start exposes sign in for existing accounts", () => {
 
   assert.match(source, /handleExistingAccountSignIn/);
   assert.match(source, /LL\.onboarding\.actions\.signInExisting/);
-  assert.match(source, /await requireAuth\("save_profile"/);
+  assert.match(source, /await requireAuth\("existing_account_sign_in"/);
+  assert.match(source, /createAnonymousOnboardingDraft/);
+  assert.match(source, /anonymousOnboardingDraftStore\.update\(\(\) =>/);
+  assert.match(source, /onboarding\.reset\(\)/);
+  assert.match(source, /context\?\.profileQuizState\?\.quizCompleted/);
+  assert.match(source, /routes\.profileQuiz/);
   assert.match(source, /const showBackAction = !onboarding\.isFirstStep/);
   assert.match(source, /variant="tonal"/);
   assert.match(translationsSource, /signInExisting:/);

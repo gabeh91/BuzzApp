@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { shouldShowQuizCompletionPrompt } from "./quizCompletionPromptLogic";
+import { shouldShowQuizCompletionPrompt } from "../quizCompletionPromptLogic";
 
 test("quiz completion prompt appears on app surfaces for authenticated users with incomplete quiz context", () => {
   assert.equal(

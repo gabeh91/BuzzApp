@@ -9,12 +9,14 @@ import {
   isCityFeatureEnabled,
 } from "@/features/city/cityContext";
 import { getTopSuburbMatchesForTraits } from "@/features/city/suburbMatching";
+import { InterestPill, InterestPillRow } from "@/features/interests/InterestPill";
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import {
   createLandingPlan,
   type LandingPlanItemStatus,
 } from "@/features/landingPlan/landingPlan";
 import { useSettlingProgressState } from "@/features/progress/SettlingProgressProvider";
+import { useReliabilitySummary } from "@/features/progress/useReliabilitySummary";
 import { createSettlingProgress } from "@/features/progress/settlingProgress";
 import { useQuiz } from "@/features/quiz/QuizProvider";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -26,13 +28,25 @@ import type { BuzzTheme } from "@/theme/tokens";
 import {
   AppBrandedCityHeader,
   Button,
-  HeroPanel,
+  CompactIntro,
   Panel,
   Screen,
   Text as UiText,
 } from "@/ui";
 
 type SettledActionStatus = "idle" | "saving" | "error";
+
+type StartingPointInterest = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+const interestNameFromSlug = (slug: string) =>
+  slug
+    .split("-")
+    .map((part) => (part ? `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}` : ""))
+    .join(" ");
 
 export const ProfileScreen = () => {
   const router = useRouter();
@@ -54,6 +68,13 @@ export const ProfileScreen = () => {
   const { traits } = useQuiz();
   const { state: interestState } = useInterestFlow();
   const { state: settlingProgressState } = useSettlingProgressState();
+  const {
+    loading: reliabilityLoading,
+    summary: reliabilitySummary,
+  } = useReliabilitySummary({
+    enabled: isAuthenticated,
+    userId: user.id,
+  });
   const cityContext = createCityContextFallback({
     cityId: user.cityId,
     cityName: user.cityName,
@@ -71,14 +92,35 @@ export const ProfileScreen = () => {
     cityContext,
     "city_starting_point_enabled",
   );
-  const startingPointInterests = Array.from(
-    new Set([
-      ...(interestState.selectedInterest
-        ? [interestState.selectedInterest.name]
-        : []),
-      ...cityContext.defaultInterests,
-    ]),
-  ).slice(0, 3);
+  const startingPointInterests = useMemo(() => {
+    const interests: StartingPointInterest[] = [];
+    const seenSlugs = new Set<string>();
+
+    if (interestState.selectedInterest) {
+      const { id, name, slug } = interestState.selectedInterest;
+      interests.push({ id, name, slug });
+      seenSlugs.add(slug);
+    }
+
+    for (const slug of cityContext.defaultInterests) {
+      if (interests.length >= 3) {
+        break;
+      }
+
+      if (seenSlugs.has(slug)) {
+        continue;
+      }
+
+      interests.push({
+        id: slug,
+        name: interestNameFromSlug(slug),
+        slug,
+      });
+      seenSlugs.add(slug);
+    }
+
+    return interests;
+  }, [cityContext.defaultInterests, interestState.selectedInterest]);
   const suggestedFirstAction =
     interestState.activation.status === "complete"
       ? LL.profile.cityStartingPoint.actionAfterActivation()
@@ -173,6 +215,11 @@ export const ProfileScreen = () => {
 
   const showCityPlanPanel =
     showCityStartingPoint || showFullLandingPlan || settlingProgress.percent > 0;
+  const attendanceRateLabel = reliabilitySummary.attendanceRate === null
+    ? LL.profile.reliability.notEnoughData()
+    : LL.profile.reliability.attendanceRateValue({
+        percent: Math.round(reliabilitySummary.attendanceRate * 100),
+      });
 
   return (
     <Screen
@@ -182,7 +229,7 @@ export const ProfileScreen = () => {
         <AppBrandedCityHeader cityName={cityContext.city.name} />
       }
     >
-      <HeroPanel
+      <CompactIntro
         body={LL.profile.subtitle()}
         eyebrow={cityContext.city.name}
         title={LL.profile.title()}
@@ -190,21 +237,101 @@ export const ProfileScreen = () => {
 
       {isAuthenticated ? (
         <Panel variant="surface" style={styles.groupPanel}>
-          <UiText variant="panelTitle">{LL.profile.matchingQuiz.title()}</UiText>
-          <UiText variant="panelBody">{LL.profile.matchingQuiz.body()}</UiText>
-          <Button
-            label={LL.profile.matchingQuiz.retakeCta()}
-            onPress={() => {
-              router.push(routes.profileQuiz);
-            }}
-            variant="secondary"
-          />
+          <UiText variant="eyebrow">{LL.profile.aboutYou()}</UiText>
+
+          <View style={styles.groupSection}>
+            <UiText variant="panelTitle">{LL.profile.personalInfo.title()}</UiText>
+            <UiText variant="panelBody">{LL.profile.personalInfo.body()}</UiText>
+            <Button
+              label={LL.profile.personalInfo.cta()}
+              onPress={() => {
+                router.push(routes.profilePersonalInfo);
+              }}
+              variant="secondary"
+            />
+          </View>
+
+          <View style={styles.groupDivider} />
+
+          <View style={styles.groupSection}>
+            <UiText variant="panelTitle">{LL.profile.matchingQuiz.title()}</UiText>
+            <UiText variant="panelBody">{LL.profile.matchingQuiz.body()}</UiText>
+            <Button
+              label={LL.profile.matchingQuiz.retakeCta()}
+              onPress={() => {
+                router.push(routes.profileQuiz);
+              }}
+              variant="secondary"
+            />
+          </View>
+        </Panel>
+      ) : null}
+
+      {isAuthenticated ? (
+        <Panel variant="muted" style={styles.groupPanel}>
+          <UiText variant="eyebrow">{LL.profile.reliability.eyebrow()}</UiText>
+          <View style={styles.groupSection}>
+            <UiText variant="panelTitle">
+              {LL.profile.reliability.title()}
+            </UiText>
+            <UiText variant="panelBody">
+              {reliabilitySummary.hasActivityHistory
+                ? LL.profile.reliability.body()
+                : LL.profile.reliability.emptyBody()}
+            </UiText>
+          </View>
+
+          <View style={styles.reliabilityGrid}>
+            <View style={styles.reliabilityMetric}>
+              <UiText style={styles.reliabilityValue}>
+                {reliabilityLoading
+                  ? LL.profile.reliability.loadingValue()
+                  : String(reliabilitySummary.attendedPlanStreak)}
+              </UiText>
+              <UiText style={styles.reliabilityLabel}>
+                {LL.profile.reliability.planStreak()}
+              </UiText>
+            </View>
+            <View style={styles.reliabilityMetric}>
+              <UiText style={styles.reliabilityValue}>
+                {reliabilityLoading
+                  ? LL.profile.reliability.loadingValue()
+                  : String(reliabilitySummary.checkInStreak)}
+              </UiText>
+              <UiText style={styles.reliabilityLabel}>
+                {LL.profile.reliability.checkInStreak()}
+              </UiText>
+            </View>
+            <View style={styles.reliabilityMetric}>
+              <UiText style={styles.reliabilityValue}>
+                {reliabilityLoading
+                  ? LL.profile.reliability.loadingValue()
+                  : String(reliabilitySummary.reliablePlanStreak)}
+              </UiText>
+              <UiText style={styles.reliabilityLabel}>
+                {LL.profile.reliability.goodPlanStreak()}
+              </UiText>
+            </View>
+          </View>
+
+          <View style={styles.reliabilityFooter}>
+            <UiText style={styles.reliabilityFooterLabel}>
+              {LL.profile.reliability.attendanceRate()}
+            </UiText>
+            <UiText style={styles.reliabilityFooterValue}>
+              {reliabilityLoading
+                ? LL.profile.reliability.loadingValue()
+                : attendanceRateLabel}
+            </UiText>
+          </View>
         </Panel>
       ) : null}
 
       <Panel variant="surface" style={styles.groupPanel}>
-        <UiText variant="panelTitle">
-          {isAuthenticated ? LL.profile.auth.signOutTitle() : LL.profile.auth.title()}
+        <UiText variant="eyebrow">
+          {isAuthenticated
+            ? LL.profile.auth.signOutTitle()
+            : LL.profile.auth.title()}
         </UiText>
 
         {!isAuthenticated ? (
@@ -328,13 +455,11 @@ export const ProfileScreen = () => {
                 <UiText style={styles.suburbFitTitle}>
                   {LL.profile.cityStartingPoint.interestsTitle()}
                 </UiText>
-                <View style={styles.interestRow}>
+                <InterestPillRow>
                   {startingPointInterests.map((interest) => (
-                    <UiText key={interest} style={styles.interestPill}>
-                      {interest}
-                    </UiText>
+                    <InterestPill key={interest.id} interest={interest} />
                   ))}
-                </View>
+                </InterestPillRow>
               </View>
 
               <View style={styles.suburbFitBlock}>
@@ -435,7 +560,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     sectionTitle: {
       color: colors.text,
       fontSize: fontSizes.lg,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       lineHeight: lineHeights.tight,
     },
     suburbFitBlock: {
@@ -445,7 +570,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     suburbFitTitle: {
       color: colors.text,
       fontSize: fontSizes.lg,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
     },
     suburbFitBody: {
       color: colors.textMuted,
@@ -454,22 +579,6 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     },
     suburbFitList: {
       gap: spacing[2],
-    },
-    interestRow: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: spacing[2],
-    },
-    interestPill: {
-      backgroundColor: colors.surfaceMuted,
-      borderRadius: radii.sm,
-      color: colors.brand,
-      fontSize: fontSizes.sm,
-      fontWeight: "900",
-      overflow: "hidden",
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[2],
-      textTransform: "capitalize",
     },
     suburbFitRow: {
       alignItems: "flex-start",
@@ -481,7 +590,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
       borderRadius: radii.full,
       color: colors.brand,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       height: 28,
       lineHeight: 28,
       overflow: "hidden",
@@ -495,7 +604,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     suburbFitName: {
       color: colors.text,
       fontSize: fontSizes.base,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       lineHeight: lineHeights.tight,
     },
     suburbFitReason: {
@@ -514,7 +623,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     planStatus: {
       borderRadius: radii.sm,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       minWidth: 48,
       overflow: "hidden",
       paddingHorizontal: spacing[2],
@@ -540,12 +649,61 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     planItemTitle: {
       color: colors.text,
       fontSize: fontSizes.base,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       lineHeight: lineHeights.tight,
     },
     planItemBody: {
       color: colors.textMuted,
       fontSize: fontSizes.sm,
+      lineHeight: lineHeights.tight,
+    },
+    reliabilityGrid: {
+      flexDirection: "row",
+      gap: spacing[2],
+    },
+    reliabilityMetric: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: radii.lg,
+      borderWidth: borderWidths.hairline,
+      flex: 1,
+      gap: spacing[1],
+      minHeight: 92,
+      padding: spacing[3],
+    },
+    reliabilityValue: {
+      color: colors.text,
+      fontSize: fontSizes["3xl"],
+      ...theme.fontStyles.black,
+      lineHeight: lineHeights.title,
+    },
+    reliabilityLabel: {
+      color: colors.textMuted,
+      fontSize: fontSizes.xs,
+      ...theme.fontStyles.display,
+      lineHeight: lineHeights.tight,
+    },
+    reliabilityFooter: {
+      alignItems: "center",
+      backgroundColor: colors.warningSoft,
+      borderRadius: radii.lg,
+      flexDirection: "row",
+      gap: spacing[3],
+      justifyContent: "space-between",
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+    },
+    reliabilityFooterLabel: {
+      color: colors.text,
+      flex: 1,
+      fontSize: fontSizes.sm,
+      ...theme.fontStyles.display,
+      lineHeight: lineHeights.tight,
+    },
+    reliabilityFooterValue: {
+      color: colors.text,
+      fontSize: fontSizes.base,
+      ...theme.fontStyles.black,
       lineHeight: lineHeights.tight,
     },
   });

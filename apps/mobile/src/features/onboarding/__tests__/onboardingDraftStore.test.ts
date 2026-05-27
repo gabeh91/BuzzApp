@@ -5,8 +5,8 @@ import {
   createAnonymousOnboardingDraft,
   markAnonymousOnboardingComplete,
   mergeQuizAnswerIntoDraft,
-} from "./onboardingDraft";
-import { createAnonymousOnboardingDraftStore } from "./onboardingDraftStore";
+} from "../onboardingDraft";
+import { createAnonymousOnboardingDraftStore } from "../onboardingDraftStore";
 
 const createMemoryStorage = () => {
   const values = new Map<string, string>();

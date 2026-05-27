@@ -5,7 +5,7 @@ import {
   createAnonymousBuzzUser,
   createSupabaseBuzzUser,
   shouldLockStoredSession,
-} from "./authSession";
+} from "../authSession";
 
 test("anonymous browsing user is not an authenticated interaction identity", () => {
   const user = createAnonymousBuzzUser();

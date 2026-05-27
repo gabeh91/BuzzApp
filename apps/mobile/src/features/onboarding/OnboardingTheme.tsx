@@ -7,6 +7,8 @@ import type { OnboardingStyles } from "./OnboardingScreen.styles";
 export type OnboardingThemeContextValue = {
   colors: BuzzTheme["colors"];
   styles: OnboardingStyles;
+  headerProgressHeight: number;
+  headerProgressGap: number;
 };
 
 const OnboardingThemeContext =

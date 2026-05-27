@@ -79,7 +79,7 @@ test("onboarding keeps header and progress fixed above scrollable card content",
   assert.match(onboardingScreenSource, /stickyHeader=\{\s*\n\s*<FixedOnboardingHeader/);
   assert.match(
     onboardingScreenSource,
-    /<View style=\{styles\.stage\}>[\s\S]*?<Animated\.ScrollView[\s\S]*?<Animated\.View style=\{\[styles\.mainCard, transition\.cardStyle\]\}/,
+    /<View style=\{styles\.stage\}>[\s\S]*?<Animated\.ScrollView[\s\S]*?<OnboardingMainCard[\s\S]*?style=\{transition\.cardStyle\}/,
   );
   assert.match(onboardingScreenSource, /quizProgress/);
   assert.doesNotMatch(
@@ -152,20 +152,43 @@ test("ambient background uses different parallax scroll speeds than the card", (
 test("onboarding header crossfades progress bars when entering and leaving quiz", () => {
   assert.match(
     onboardingChromeSource,
-    /const useHeaderProgressTransition = \(isQuizStep: boolean\)/,
+    /const useHeaderProgressTransition = \(\s*isQuizStep: boolean,\s*showFlowProgress: boolean,\s*progressHeight: number,\s*progressGap: number,\s*\)/,
   );
   assert.match(
     onboardingChromeSource,
     /quizMode = useSharedValue\(isQuizStep \? 1 : 0\)/,
   );
-  assert.match(onboardingChromeSource, /flowProgressStyle/);
-  assert.match(onboardingChromeSource, /quizProgressStyle/);
-  assert.match(onboardingChromeSource, /opacity: 1 - quizMode\.value/);
-  assert.match(onboardingChromeSource, /opacity: quizMode\.value/);
-  assert.match(onboardingChromeSource, /translateY: -12 \* quizMode\.value/);
   assert.match(
     onboardingChromeSource,
-    /translateY: 12 \* \(1 - quizMode\.value\)/,
+    /flowVisibility = useSharedValue\(showFlowProgress \? 1 : 0\)/,
+  );
+  assert.match(onboardingChromeSource, /progressSlotStyle/);
+  assert.match(
+    onboardingChromeSource,
+    /height: progressHeight \* flowVisibility\.value/,
+  );
+  assert.match(
+    onboardingChromeSource,
+    /marginTop: progressGap \* flowVisibility\.value/,
+  );
+  assert.match(
+    onboardingChromeSource,
+    /translateY: -12 \* \(1 - flowVisibility\.value\)/,
+  );
+  assert.match(onboardingChromeSource, /flowProgressStyle/);
+  assert.match(onboardingChromeSource, /quizProgressStyle/);
+  assert.match(
+    onboardingChromeSource,
+    /opacity: \(1 - quizMode\.value\) \* flowVisibility\.value/,
+  );
+  assert.match(
+    onboardingChromeSource,
+    /opacity: quizMode\.value \* flowVisibility\.value/,
+  );
+  assert.match(onboardingChromeSource, /-14 \* \(1 - flowVisibility\.value\)/);
+  assert.match(
+    onboardingChromeSource,
+    /translateY:\s*12 \* \(1 - quizMode\.value\) \+ -14 \* \(1 - flowVisibility\.value\)/,
   );
   assert.match(onboardingChromeSource, /lastQuizProgress/);
   assert.match(onboardingChromeSource, /visibleQuizProgress/);
@@ -173,6 +196,56 @@ test("onboarding header crossfades progress bars when entering and leaving quiz"
   assert.match(onboardingChromeSource, /styles\.flowProgressLayer/);
   assert.match(onboardingChromeSource, /styles\.quizProgressLayer/);
   assert.match(onboardingChromeSource, /QuizProgressBar/);
+});
+
+test("onboarding quiz question uses the exact same header component as step headers", () => {
+  assert.match(onboardingScreenSource, /const cardTitle =/);
+  assert.match(onboardingScreenSource, /onboarding\.state\.step\.id === "quiz"/);
+  assert.match(onboardingScreenSource, /quiz\.activeQuestion\.prompt/);
+  assert.match(
+    onboardingScreenSource,
+    /<OnboardingMainCard[\s\S]*title=\{cardTitle\}/,
+  );
+  assert.doesNotMatch(
+    onboardingStepContentSource,
+    /quiz\.activeQuestion\.prompt/,
+  );
+});
+
+test("onboarding welcome intro hides progress until continue", () => {
+  assert.match(
+    onboardingScreenSource,
+    /const showFlowProgress = onboarding\.state\.step\.id !== "welcome"/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /const flowProgress = \{\s*current: Math\.max\(1, onboarding\.state\.index\),\s*total: onboarding\.state\.progress\.total - 1,\s*\}/,
+  );
+  assert.match(onboardingScreenSource, /showFlowProgress=\{showFlowProgress\}/);
+  assert.match(
+    onboardingChromeSource,
+    /styles\.headerProgressFloating, progressSlotStyle/,
+  );
+  assert.match(
+    onboardingChromeSource,
+    /pointerEvents=\{showFlowProgress \? "auto" : "none"\}/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /headerProgressHeight: theme\.spacing\[10\]/,
+  );
+  assert.match(
+    onboardingScreenSource,
+    /headerProgressGap: theme\.spacing\[5\]/,
+  );
+  assert.match(onboardingStylesSource, /headerProgressFloating: \{/);
+  assert.match(onboardingStylesSource, /position: "absolute"/);
+  assert.match(onboardingStylesSource, /top: "100%"/);
+  assert.match(
+    onboardingScreenSource,
+    /showFlowProgress \? styles\.scrollContentWithHeaderProgress : null/,
+  );
+  assert.match(onboardingStylesSource, /scrollContentWithHeaderProgress: \{/);
 });
 
 test("onboarding progress label noun is configurable per progress context", () => {

@@ -1,4 +1,6 @@
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+
+import { Text as UiText } from "@/ui";
 
 import { useInterestFlow } from "@/features/interests/InterestFlowProvider";
 import type {
@@ -10,51 +12,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 
 import { useOnboarding } from "./OnboardingProvider";
 import { useOnboardingTheme } from "./OnboardingTheme";
-
-const ShortProfileContent = ({
-  phase,
-  nameValue,
-  onNameChange,
-  cityName,
-  cityHint,
-}: {
-  phase: number;
-  nameValue: string;
-  onNameChange: (value: string) => void;
-  cityName: string;
-  cityHint: string;
-}) => {
-  const { colors, styles } = useOnboardingTheme();
-  const { LL } = useI18n();
-
-  if (phase === 0) {
-    return (
-      <View style={styles.contentStack}>
-        <Text style={styles.shortProfileFieldLabel}>
-          {LL.onboarding.shortProfile.name.fieldLabel()}
-        </Text>
-        <TextInput
-          autoCapitalize="words"
-          autoCorrect={false}
-          onChangeText={onNameChange}
-          placeholder={LL.onboarding.shortProfile.name.placeholder()}
-          placeholderTextColor={colors.textMuted}
-          style={styles.shortProfileTextInput}
-          value={nameValue}
-        />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.contentStack}>
-      <View style={styles.shortProfileCityCard}>
-        <Text style={styles.shortProfileCityHint}>{cityHint}</Text>
-        <Text style={styles.shortProfileCityName}>{cityName}</Text>
-      </View>
-    </View>
-  );
-};
+import { ShortProfileFields } from "./ShortProfileFields";
 
 const IntroContent = () => {
   const { styles } = useOnboardingTheme();
@@ -77,29 +35,29 @@ const IntroContent = () => {
               index === 1 ? styles.howItWorksItemFeatured : null,
             ]}
           >
-            <Text
+            <UiText
               style={[
                 styles.howItWorksNumber,
                 index === 1 ? styles.howItWorksFeaturedText : null,
               ]}
             >
               0{index + 1}
-            </Text>
-            <Text
+            </UiText>
+            <UiText
               style={[
                 styles.howItWorksText,
                 index === 1 ? styles.howItWorksFeaturedText : null,
               ]}
             >
               {item}
-            </Text>
+            </UiText>
           </View>
         ))}
       </View>
     );
   }
 
-  return <Text style={styles.bodyCopy}>{stepCopy.body()}</Text>;
+  return <UiText variant="body">{stepCopy.body()}</UiText>;
 };
 
 const QuizContent = () => {
@@ -109,7 +67,6 @@ const QuizContent = () => {
 
   return (
     <View style={styles.contentStack}>
-      <Text style={styles.quizPrompt}>{quiz.activeQuestion.prompt}</Text>
       <View style={styles.optionsList}>
         {quiz.activeQuestion.options.map((option) => {
           const selected = selectedOptionId === option.id;
@@ -125,8 +82,8 @@ const QuizContent = () => {
                 selected ? styles.optionCardSelected : null,
               ]}
             >
-              <Text style={styles.optionLabel}>{option.label}</Text>
-              <Text style={styles.optionCopy}>{option.supportingText}</Text>
+              <UiText style={styles.optionLabel}>{option.label}</UiText>
+              <UiText style={styles.optionCopy}>{option.supportingText}</UiText>
             </Pressable>
           );
         })}
@@ -152,13 +109,13 @@ const InterestsContent = ({
     <View style={styles.contentStack}>
       <View style={styles.inlineStatus}>
         {loading ? <ActivityIndicator color={colors.accent} /> : null}
-        <Text style={styles.statusCopy}>
+        <UiText style={styles.statusCopy}>
           {loading
             ? LL.onboarding.interests.loading()
             : error
               ? LL.onboarding.interests.error()
               : LL.onboarding.interests.ready()}
-        </Text>
+        </UiText>
       </View>
       <View style={styles.interestGrid}>
         {interests.map((interest) => {
@@ -176,14 +133,14 @@ const InterestsContent = ({
                 selected ? styles.interestPillSelected : null,
               ]}
             >
-              <Text
+              <UiText
                 style={[
                   styles.interestPillText,
                   selected ? styles.interestPillTextSelected : null,
                 ]}
               >
                 {interest.name}
-              </Text>
+              </UiText>
             </Pressable>
           );
         })}
@@ -236,20 +193,20 @@ const ActivationContent = () => {
   return (
     <View style={styles.contentStack}>
       <View style={styles.activationCard}>
-        <Text style={styles.activationEyebrow}>
+        <UiText style={styles.activationEyebrow}>
           {LL.onboarding.activation.eyebrow()}
-        </Text>
-        <Text style={styles.activationTitle}>
+        </UiText>
+        <UiText style={styles.activationTitle}>
           {selected
             ? selected.name
             : LL.onboarding.activation.chooseInterestFirst()}
-        </Text>
-        <Text style={styles.activationCopy}>{quiz.traits.summary}</Text>
+        </UiText>
+        <UiText style={styles.activationCopy}>{quiz.traits.summary}</UiText>
       </View>
       <View style={styles.availabilityStack}>
-        <Text style={styles.activationOptionLabel}>
+        <UiText style={styles.activationOptionLabel}>
           {LL.onboarding.activation.availability.label()}
-        </Text>
+        </UiText>
         <View style={styles.availabilityGrid}>
           {availabilityOptions.map((option) => {
             const isSelected =
@@ -271,22 +228,22 @@ const ActivationContent = () => {
                   isSelected ? styles.availabilityPillSelected : null,
                 ]}
               >
-                <Text
+                <UiText
                   style={[
                     styles.availabilityPillText,
                     isSelected ? styles.availabilityPillTextSelected : null,
                   ]}
                 >
                   {option.label}
-                </Text>
+                </UiText>
               </Pressable>
             );
           })}
         </View>
       </View>
-      <Text style={styles.bodyCopy}>
+      <UiText style={styles.bodyCopy}>
         {interestFlow.state.activation.message}
-      </Text>
+      </UiText>
     </View>
   );
 };
@@ -299,24 +256,24 @@ const MatchPreviewContent = () => {
 
   if (!match) {
     return (
-      <Text style={styles.bodyCopy}>{LL.onboarding.matchPreview.empty()}</Text>
+      <UiText style={styles.bodyCopy}>{LL.onboarding.matchPreview.empty()}</UiText>
     );
   }
 
   return (
     <View style={styles.contentStack}>
       <View style={styles.matchCard}>
-        <Text style={styles.matchEyebrow}>
+        <UiText style={styles.matchEyebrow}>
           {LL.onboarding.matchPreview.eyebrow()}
-        </Text>
-        <Text style={styles.matchTitle}>{match.headline}</Text>
-        <Text style={styles.matchReason}>{match.reason}</Text>
+        </UiText>
+        <UiText style={styles.matchTitle}>{match.headline}</UiText>
+        <UiText style={styles.matchReason}>{match.reason}</UiText>
       </View>
       <View style={styles.suggestionCard}>
-        <Text style={styles.suggestionTitle}>
+        <UiText style={styles.suggestionTitle}>
           {LL.onboarding.matchPreview.suggestedNextStep()}
-        </Text>
-        <Text style={styles.suggestionCopy}>{match.suggestedPlan}</Text>
+        </UiText>
+        <UiText style={styles.suggestionCopy}>{match.suggestedPlan}</UiText>
       </View>
     </View>
   );
@@ -333,18 +290,19 @@ export const StepContent = ({
   error: Error | undefined;
   shortProfile?:
     | {
-        phase: number;
         nameValue: string;
         onNameChange: (value: string) => void;
         cityName: string;
-        cityHint: string;
+        cityHint?: string;
+        cityNote?: string;
+        layout?: "default" | "onboarding";
       }
     | undefined;
 }) => {
   const { state } = useOnboarding();
 
   if (state.step.id === "shortProfile" && shortProfile) {
-    return <ShortProfileContent {...shortProfile} />;
+    return <ShortProfileFields {...shortProfile} />;
   }
 
   if (state.step.id === "quiz") {

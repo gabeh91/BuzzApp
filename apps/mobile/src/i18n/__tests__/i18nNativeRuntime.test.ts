@@ -10,7 +10,7 @@ test("i18n module evaluates when Intl.PluralRules is unavailable", async () => {
       value: undefined
     });
 
-    const uncachedModulePath = "./index.ts?without-plural-rules";
+    const uncachedModulePath = "../index.ts?without-plural-rules";
     const i18n = await import(uncachedModulePath);
     const LL = i18n.createI18n("en");
 

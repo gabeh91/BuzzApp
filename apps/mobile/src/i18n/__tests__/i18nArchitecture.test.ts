@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-const projectRoot = path.resolve(__dirname, "../..");
+const projectRoot = path.resolve(__dirname, "../../..");
 
 const readProjectFile = (filePath: string) => {
   return readFileSync(path.join(projectRoot, filePath), "utf8");

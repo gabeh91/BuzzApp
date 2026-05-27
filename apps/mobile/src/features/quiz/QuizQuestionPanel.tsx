@@ -14,7 +14,9 @@ export const QuizQuestionPanel = () => {
 
   return (
     <View style={styles.container}>
-      <UiText style={styles.prompt}>{quiz.activeQuestion.prompt}</UiText>
+      <UiText variant="panelTitle" style={styles.prompt}>
+        {quiz.activeQuestion.prompt}
+      </UiText>
       <View style={styles.optionsList}>
         {quiz.activeQuestion.options.map((option) => {
           const selected = selectedOptionId === option.id;
@@ -58,25 +60,23 @@ const createStyles = (theme: BuzzTheme) => {
       padding: spacing[4],
     },
     optionSelected: {
-      backgroundColor: colors.accentSoft,
-      borderColor: colors.accent,
+      backgroundColor: colors.surfaceMuted,
+      borderColor: colors.surfaceMuted,
     },
     optionCopy: {
       color: colors.textMuted,
       fontSize: fontSizes.sm,
       lineHeight: lineHeights.tight,
+      ...theme.fontStyles.body,
     },
     optionLabel: {
       color: colors.text,
       fontSize: fontSizes.base,
-      fontWeight: "900",
       lineHeight: lineHeights.tight,
+      ...theme.fontStyles.labelStrong,
     },
     prompt: {
-      color: colors.text,
-      fontSize: fontSizes["2xl"],
-      fontWeight: "900",
-      lineHeight: lineHeights.title,
+      maxWidth: "92%",
     },
   });
 };

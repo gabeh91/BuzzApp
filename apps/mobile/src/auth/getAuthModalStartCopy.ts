@@ -15,6 +15,12 @@ export const getAuthModalStartCopy = (
   const intents = LL.authModal.intents;
 
   switch (intent) {
+    case "existing_account_sign_in":
+      return {
+        eyebrow: intents.existing_account_sign_in.eyebrow(),
+        title: intents.existing_account_sign_in.title(),
+        body: intents.existing_account_sign_in.body(),
+      };
     case "save_profile":
       return {
         eyebrow: intents.save_profile.eyebrow(),

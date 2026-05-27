@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
 import { FontAwesome } from "@expo/vector-icons";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { getAuthModalStartCopy } from "@/auth/getAuthModalStartCopy";
 import { useI18n } from "@/i18n/I18nProvider";
 import { routes } from "@/navigation/routes";
 import { useBuzzTheme } from "@/theme/ThemeProvider";
 import type { BuzzTheme } from "@/theme/tokens";
-import { Button, Text as UiText } from "@/ui";
+import { Button, Text as UiText, TextInputGroup } from "@/ui";
 import { useBuzzAuth } from "./AuthProvider";
 import { AuthModalFrame } from "./AuthModalFrame";
 import type { SocialAuthProvider } from "./auth.types";
@@ -33,6 +33,8 @@ export const AuthStartScreen = () => {
   const { theme } = useBuzzTheme();
   const styles = createStyles(theme);
   const authIntent = getAuthModalIntentParam(params.intent);
+  const isExistingAccountSignIn =
+    authIntent === "existing_account_sign_in";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busyProvider, setBusyProvider] = useState<SocialAuthProvider | null>(
@@ -99,7 +101,9 @@ export const AuthStartScreen = () => {
     setNoticeMessage(undefined);
 
     try {
-      await sendEmailOtp(normalizedEmail);
+      await sendEmailOtp(normalizedEmail, {
+        shouldCreateUser: !isExistingAccountSignIn,
+      });
       router.push(
         createAuthCodeRoute({ email: normalizedEmail, intent: authIntent }),
       );
@@ -150,13 +154,17 @@ export const AuthStartScreen = () => {
         {socialOptions.map((option) => (
           <Pressable
             accessibilityRole="button"
+            accessibilityState={{
+              disabled: Boolean(busyProvider) || emailBusy,
+            }}
             disabled={Boolean(busyProvider) || emailBusy}
             key={option.provider}
             onPress={() => {
               void handleSocial(option.provider);
             }}
-            style={[
+            style={({ pressed }) => [
               styles.socialButton,
+              pressed ? styles.socialButtonPressed : null,
               busyProvider || emailBusy ? styles.disabledButton : null,
             ]}
           >
@@ -172,6 +180,13 @@ export const AuthStartScreen = () => {
                 ? LL.authModal.start.openingProvider()
                 : option.label}
             </UiText>
+            <View style={styles.socialAffordance}>
+              <FontAwesome
+                color={theme.colors.textMuted}
+                name="angle-right"
+                size={18}
+              />
+            </View>
           </Pressable>
         ))}
       </View>
@@ -185,40 +200,28 @@ export const AuthStartScreen = () => {
       </View>
 
       <View style={styles.emailCard}>
-        <View style={styles.fieldStack}>
-          <UiText style={styles.fieldLabel}>
-            {LL.authModal.start.emailLabel()}
-          </UiText>
-          <TextInput
-            autoCapitalize="none"
-            autoComplete="email"
-            editable={!emailBusy && !busyProvider}
-            inputMode="email"
-            onChangeText={setEmail}
-            placeholder={LL.authModal.start.emailPlaceholder()}
-            placeholderTextColor={theme.colors.textMuted}
-            style={styles.input}
-            value={email}
-          />
-        </View>
+        <TextInputGroup
+          autoCapitalize="none"
+          autoComplete="email"
+          editable={!emailBusy && !busyProvider}
+          inputMode="email"
+          label={LL.authModal.start.emailLabel()}
+          labelBackdropColor={theme.colors.surface}
+          onChangeText={setEmail}
+          value={email}
+        />
 
-        <View style={styles.fieldStack}>
-          <UiText style={styles.fieldLabel}>
-            {LL.authModal.start.passwordLabel()}
-          </UiText>
-          <TextInput
-            autoCapitalize="none"
-            autoComplete="password"
-            editable={!emailBusy && !busyProvider}
-            onChangeText={setPassword}
-            placeholder={LL.authModal.start.passwordPlaceholder()}
-            placeholderTextColor={theme.colors.textMuted}
-            secureTextEntry
-            style={styles.input}
-            textContentType="password"
-            value={password}
-          />
-        </View>
+        <TextInputGroup
+          autoCapitalize="none"
+          autoComplete="password"
+          editable={!emailBusy && !busyProvider}
+          label={LL.authModal.start.passwordLabel()}
+          labelBackdropColor={theme.colors.surface}
+          onChangeText={setPassword}
+          secureTextEntry
+          textContentType="password"
+          value={password}
+        />
 
         <Button
           disabled={passwordDisabled}
@@ -232,18 +235,20 @@ export const AuthStartScreen = () => {
           }}
         />
 
-        <Button
-          disabled={passwordDisabled}
-          label={
-            emailAction === "signUp"
-              ? LL.authModal.start.creatingAccount()
-              : LL.authModal.start.createAccount()
-          }
-          onPress={() => {
-            void handleEmailPassword("signUp");
-          }}
-          variant="tonal"
-        />
+        {isExistingAccountSignIn ? null : (
+          <Button
+            disabled={passwordDisabled}
+            label={
+              emailAction === "signUp"
+                ? LL.authModal.start.creatingAccount()
+                : LL.authModal.start.createAccount()
+            }
+            onPress={() => {
+              void handleEmailPassword("signUp");
+            }}
+            variant="tonal"
+          />
+        )}
 
         <Button
           disabled={otpDisabled}
@@ -278,34 +283,46 @@ const createStyles = (theme: BuzzTheme) => {
 
   return StyleSheet.create({
     socialStack: {
-      gap: spacing[3],
+      gap: spacing[2],
     },
     socialButton: {
       alignItems: "center",
       backgroundColor: colors.surface,
-      borderColor: colors.border,
-      borderRadius: radii.lg,
+      borderColor: colors.overlay,
+      borderRadius: radii.sm,
       borderWidth: borderWidths.hairline,
       flexDirection: "row",
       gap: spacing[3],
-      minHeight: 56,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3],
+      minHeight: 58,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+    },
+    socialButtonPressed: {
+      opacity: 0.84,
+      transform: [{ scale: 0.99 }],
     },
     socialIcon: {
       alignItems: "center",
-      backgroundColor: colors.background,
+      backgroundColor: colors.warningSoft,
       borderRadius: radii.full,
-      height: 34,
+      height: 38,
       justifyContent: "center",
-      width: 34,
+      width: 38,
     },
     socialButtonText: {
       color: colors.text,
       flex: 1,
-      fontSize: fontSizes.base,
-      fontWeight: "900",
+      fontSize: fontSizes.md,
+      ...theme.fontStyles.heavy,
       lineHeight: lineHeights.tight,
+    },
+    socialAffordance: {
+      alignItems: "center",
+      backgroundColor: colors.background,
+      borderRadius: radii.full,
+      height: 30,
+      justifyContent: "center",
+      width: 30,
     },
     dividerRow: {
       alignItems: "center",
@@ -320,7 +337,7 @@ const createStyles = (theme: BuzzTheme) => {
     dividerText: {
       color: colors.textMuted,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
+      ...theme.fontStyles.black,
       letterSpacing: 0.9,
       textTransform: "uppercase",
     },
@@ -329,24 +346,6 @@ const createStyles = (theme: BuzzTheme) => {
       borderRadius: radii.xl,
       gap: spacing[4],
       padding: spacing[4],
-    },
-    fieldStack: {
-      gap: spacing[2],
-    },
-    fieldLabel: {
-      color: colors.text,
-      fontSize: fontSizes.sm,
-      fontWeight: "900",
-    },
-    input: {
-      backgroundColor: colors.background,
-      borderColor: colors.border,
-      borderRadius: radii.lg,
-      borderWidth: borderWidths.hairline,
-      color: colors.text,
-      fontSize: fontSizes.base,
-      minHeight: 56,
-      paddingHorizontal: spacing[4],
     },
     disabledButton: {
       opacity: 0.55,
@@ -360,7 +359,7 @@ const createStyles = (theme: BuzzTheme) => {
     noticeText: {
       color: colors.text,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
+      ...theme.fontStyles.heavy,
       lineHeight: lineHeights.tight,
     },
   });

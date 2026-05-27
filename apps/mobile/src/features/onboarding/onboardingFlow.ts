@@ -1,15 +1,12 @@
 export type OnboardingStepId =
   | "welcome"
   | "howItWorks"
-  | "quizIntro"
   | "shortProfile"
+  | "quizIntro"
   | "quiz"
   | "interests"
   | "activation"
   | "matchPreview";
-
-/** Sub-steps (name, then city) grouped with the quiz in progress UI. */
-export const ONBOARDING_QUIZ_SECTION_PROFILE_STEPS = 2;
 
 export type OnboardingStep = {
   id: OnboardingStepId;
@@ -27,8 +24,8 @@ export type OnboardingState = {
 export const onboardingStepIds: OnboardingStepId[] = [
   "welcome",
   "howItWorks",
-  "quizIntro",
   "shortProfile",
+  "quizIntro",
   "quiz",
   "interests",
   "activation",
@@ -86,7 +83,7 @@ export const createOnboardingStateForAnonymousDraft = (
   }
 
   if (draft.shortProfileComplete) {
-    return createState(onboardingStepIds.indexOf("quiz"));
+    return createState(onboardingStepIds.indexOf("quizIntro"));
   }
 
   if (

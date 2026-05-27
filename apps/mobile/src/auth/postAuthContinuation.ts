@@ -56,6 +56,8 @@ export type DrainPostAuthPendingActionParams = {
   user: BuzzAuthUser;
   /** Pass `undefined` when no session token is available yet. */
   accessToken: string | undefined;
+  /** Latest saved profile quiz state loaded during auth completion. */
+  profileQuizState?: AuthenticatedActionContext["profileQuizState"];
   /** True while the profile-quiz overwrite gate is still active. */
   isProfileQuizOverwritePending: boolean;
   /**
@@ -74,6 +76,7 @@ export type DrainPostAuthPendingActionParams = {
 export const drainPostAuthPendingAction = async ({
   user,
   accessToken,
+  profileQuizState,
   isProfileQuizOverwritePending,
   profileQuizOverwriteResolution,
   runPendingAction,
@@ -90,9 +93,14 @@ export const drainPostAuthPendingAction = async ({
   }
 
   const context: AuthenticatedActionContext | undefined =
-    profileQuizOverwriteResolution === undefined
+    profileQuizOverwriteResolution === undefined && profileQuizState === undefined
       ? undefined
-      : { profileQuizOverwriteDecision: profileQuizOverwriteResolution };
+      : {
+          ...(profileQuizOverwriteResolution === undefined
+            ? {}
+            : { profileQuizOverwriteDecision: profileQuizOverwriteResolution }),
+          ...(profileQuizState === undefined ? {} : { profileQuizState }),
+        };
 
   const ran = await runPendingAction(user, accessToken, context);
   return ran ? "completed_pending_action" : "no_pending_action";

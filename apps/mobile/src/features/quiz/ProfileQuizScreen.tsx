@@ -142,7 +142,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
   return StyleSheet.create({
     backNavText: {
       fontSize: fontSizes.base,
-      fontWeight: "700",
+      ...theme.fontStyles.display,
     },
     buttonStack: {
       gap: spacing[1],

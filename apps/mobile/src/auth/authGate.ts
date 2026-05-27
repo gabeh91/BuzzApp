@@ -2,6 +2,7 @@ import { routes, type BuzzRoute } from "@/navigation/routes";
 
 export type AuthInteractionIntent =
   | "browse"
+  | "existing_account_sign_in"
   | "activate_interest"
   | "attend_activity"
   | "save_profile"

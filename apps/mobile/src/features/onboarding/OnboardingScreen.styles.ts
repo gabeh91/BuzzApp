@@ -5,17 +5,20 @@ import {
   type BuzzTheme,
 } from "@/theme/tokens";
 
-export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) => {
+export const createOnboardingStyles = (
+  theme: BuzzTheme,
+  bottomInset: number,
+  fontScale = 1,
+) => {
   const {
     colors,
     fontSizes,
-    fontStyles,
     lineHeights,
     radii,
     spacing,
     borderWidths,
-    shadows,
   } = theme;
+  const usesLargeTextLayout = fontScale >= 1.15;
 
   return StyleSheet.create({
     screen: {
@@ -26,17 +29,23 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
       flex: 1,
       flexGrow: 1,
       gap: spacing[0],
-      padding: spacing[0],
+      paddingBottom: spacing[0],
+      paddingHorizontal: spacing[0],
+      paddingTop: spacing[0],
     },
     scrollView: {
       flex: 1,
+      overflow: "visible",
     },
     scrollContent: {
       flexGrow: 1,
       /** Match `ProfileQuizScreen` (`bottomInset + spacing[10]`) — onboarding uses `edges={["top"]}` so this is the sole bottom safe padding. */
       paddingBottom: bottomInset + spacing[10],
-      paddingHorizontal: spacing[SCREEN_CONTENT_GUTTER_SPACING],
-      paddingTop: spacing[3],
+      paddingHorizontal: spacing[0],
+      paddingTop: spacing[2],
+    },
+    scrollContentWithHeaderProgress: {
+      paddingTop: spacing[2] + spacing[10] + spacing[5],
     },
     stage: {
       flex: 1,
@@ -45,7 +54,7 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
     layout: {
       flexGrow: 1,
       justifyContent: "space-between",
-      gap: spacing[6],
+      gap: usesLargeTextLayout ? spacing[3] : spacing[4],
     },
     ambientRoot: {
       position: "absolute",
@@ -57,7 +66,7 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
       right: -70,
       width: 220,
       height: 220,
-      borderRadius: 110,
+      borderRadius: radii.full,
       backgroundColor: colors.surfaceMuted,
     },
     ambientGold: {
@@ -66,13 +75,22 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
       left: -95,
       width: 260,
       height: 260,
-      borderRadius: 130,
-      backgroundColor: colors.warningSoft,
+      borderRadius: radii.full,
+      backgroundColor: colors.surfaceMuted,
     },
     fixedHeader: {
       borderBottomColor: colors.overlay,
       borderBottomWidth: borderWidths.hairline,
-      gap: spacing[5],
+      position: "relative",
+      zIndex: 2,
+    },
+    headerProgressFloating: {
+      left: 0,
+      position: "absolute",
+      right: 0,
+      top: "100%",
+      overflow: "hidden",
+      zIndex: 3,
     },
     headerProgressSlot: {
       height: spacing[10],
@@ -85,89 +103,38 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
       ...StyleSheet.absoluteFillObject,
     },
     mainCard: {
-      backgroundColor: colors.surface,
-      borderRadius: radii["2xl"],
-      padding: spacing[6],
-      gap: spacing[6],
-      borderWidth: borderWidths.hairline,
-      borderColor: colors.border,
-      ...shadows.card,
+      backgroundColor: colors.clear,
+      borderRadius: 0,
+      paddingHorizontal: spacing[SCREEN_CONTENT_GUTTER_SPACING],
+      paddingVertical: spacing[0],
+      gap: spacing[4],
+      borderWidth: 0,
+      flex: 0,
+      width: "100%",
     },
     cardRail: {
       flex: 1,
       justifyContent: "center",
+      overflow: "visible",
+      width: "100%",
     },
     titleStack: {
-      gap: spacing[3],
-    },
-    eyebrow: {
-      color: colors.accent,
-      fontSize: fontSizes.xs,
-      fontWeight: "900",
-      letterSpacing: 1.4,
-      textTransform: "uppercase",
-    },
-    title: {
-      color: colors.text,
-      ...fontStyles.display,
-      fontSize: fontSizes.hero,
-      lineHeight: lineHeights.hero,
-      letterSpacing: 0,
+      maxWidth: "92%",
     },
     contentStack: {
-      gap: spacing[4],
-    },
-    shortProfileFieldLabel: {
-      color: colors.textMuted,
-      fontSize: fontSizes.xs,
-      fontWeight: "900",
-      letterSpacing: 0.8,
-      textTransform: "uppercase",
-    },
-    shortProfileTextInput: {
-      borderWidth: borderWidths.hairline,
-      borderColor: colors.border,
-      borderRadius: radii.lg,
-      color: colors.text,
-      fontSize: fontSizes.lg,
-      lineHeight: lineHeights.body,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3],
-    },
-    shortProfileCityCard: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceMuted,
-      borderColor: colors.border,
-      borderRadius: radii.xl,
-      borderWidth: borderWidths.hairline,
-      gap: spacing[2],
-      paddingHorizontal: spacing[5],
-      paddingVertical: spacing[5],
-    },
-    shortProfileCityHint: {
-      color: colors.textMuted,
-      fontSize: fontSizes.sm,
-      fontWeight: "800",
-      letterSpacing: 0.6,
-      textTransform: "uppercase",
-    },
-    shortProfileCityName: {
-      color: colors.text,
-      fontSize: fontSizes["3xl"],
-      fontWeight: "900",
-      textAlign: "center",
+      gap: spacing[3],
     },
     bodyCopy: {
       color: colors.textMuted,
-      fontSize: fontSizes.lg,
-      lineHeight: lineHeights.relaxed,
+      fontSize: fontSizes.base,
+      lineHeight: usesLargeTextLayout ? lineHeights.body : lineHeights.relaxed,
     },
     howItWorksList: {
       gap: spacing[3],
     },
     howItWorksItem: {
       backgroundColor: colors.background,
-      borderRadius: radii.lg,
+      borderRadius: radii.md,
       padding: spacing[4],
       flexDirection: "row",
       gap: spacing[4],
@@ -178,45 +145,48 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
     },
     howItWorksNumber: {
       color: colors.accent,
-      fontWeight: "900",
+      fontSize: fontSizes.lg,
+      ...theme.fontStyles.display,
     },
     howItWorksText: {
       color: colors.text,
       flex: 1,
       fontSize: fontSizes.md,
+      lineHeight: lineHeights.body,
+      ...theme.fontStyles.body,
     },
     howItWorksFeaturedText: {
       color: colors.textInverse,
     },
     quizPrompt: {
-      color: colors.text,
-      fontSize: fontSizes["3xl"],
-      fontWeight: "800",
-      lineHeight: lineHeights.title,
+      maxWidth: "92%",
     },
     optionsList: {
-      gap: spacing[3],
+      gap: spacing[2],
     },
     optionCard: {
       borderWidth: borderWidths.hairline,
       borderColor: colors.border,
       backgroundColor: colors.surface,
-      borderRadius: radii.lg,
-      padding: spacing[4],
+      borderRadius: radii.md,
+      padding: spacing[3],
       gap: spacing[1],
     },
     optionCardSelected: {
-      borderColor: colors.accent,
-      backgroundColor: colors.accentSoft,
+      backgroundColor: colors.surfaceMuted,
+      borderColor: colors.surfaceMuted,
     },
     optionLabel: {
       color: colors.text,
       fontSize: fontSizes.md,
-      fontWeight: "800",
+      lineHeight: lineHeights.tight,
+      ...theme.fontStyles.labelStrong,
     },
     optionCopy: {
       color: colors.textMuted,
+      fontSize: fontSizes.sm,
       lineHeight: lineHeights.tight,
+      ...theme.fontStyles.body,
     },
     inlineStatus: {
       flexDirection: "row",
@@ -245,28 +215,28 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
     },
     interestPillText: {
       color: colors.text,
-      fontWeight: "800",
+      ...theme.fontStyles.labelStrong,
     },
     interestPillTextSelected: {
       color: colors.textInverse,
     },
     activationCard: {
       backgroundColor: colors.surfaceInverse,
-      borderRadius: radii.xl,
-      padding: spacing[5],
-      gap: spacing[3],
+      borderRadius: radii.lg,
+      padding: spacing[4],
+      gap: spacing[2],
     },
     activationEyebrow: {
       color: colors.warning,
       fontSize: fontSizes.sm,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       letterSpacing: 1.2,
       textTransform: "uppercase",
     },
     activationTitle: {
       color: colors.textInverse,
-      fontSize: fontSizes["4xl"],
-      fontWeight: "900",
+      fontSize: fontSizes["3xl"],
+      ...theme.fontStyles.display,
     },
     activationCopy: {
       color: colors.textInverse,
@@ -278,14 +248,14 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
     activationOptionLabel: {
       color: colors.textMuted,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       letterSpacing: 0.8,
       textTransform: "uppercase",
     },
     availabilityGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: spacing[3],
+      gap: spacing[2],
     },
     availabilityPill: {
       backgroundColor: colors.background,
@@ -296,34 +266,35 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
       paddingVertical: spacing[3],
     },
     availabilityPillSelected: {
-      backgroundColor: colors.accentSoft,
-      borderColor: colors.accent,
+      backgroundColor: colors.surface,
+      borderColor: colors.brandSoft,
+      borderWidth: borderWidths.focus,
     },
     availabilityPillText: {
       color: colors.text,
       fontSize: fontSizes.base,
-      fontWeight: "800",
+      ...theme.fontStyles.labelStrong,
     },
     availabilityPillTextSelected: {
-      color: colors.accent,
+      color: colors.text,
     },
     matchCard: {
       backgroundColor: colors.surfaceMuted,
-      borderRadius: radii.xl,
-      padding: spacing[6],
+      borderRadius: radii.lg,
+      padding: spacing[5],
       gap: spacing[3],
     },
     matchEyebrow: {
       color: colors.brand,
       fontSize: fontSizes.sm,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
       letterSpacing: 1.2,
       textTransform: "uppercase",
     },
     matchTitle: {
       color: colors.text,
-      fontSize: fontSizes["5xl"],
-      fontWeight: "900",
+      fontSize: fontSizes["4xl"],
+      ...theme.fontStyles.display,
     },
     matchReason: {
       color: colors.brand,
@@ -331,13 +302,13 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
     },
     suggestionCard: {
       backgroundColor: colors.background,
-      borderRadius: radii.lg,
-      padding: spacing[5],
+      borderRadius: radii.md,
+      padding: spacing[4],
     },
     suggestionTitle: {
       color: colors.text,
       fontSize: fontSizes.lg,
-      fontWeight: "800",
+      ...theme.fontStyles.labelStrong,
     },
     suggestionCopy: {
       color: colors.textMuted,
@@ -345,18 +316,19 @@ export const createOnboardingStyles = (theme: BuzzTheme, bottomInset: number) =>
       lineHeight: lineHeights.body,
     },
     buttonStack: {
-      gap: spacing[1],
+      gap: spacing[2],
+      paddingHorizontal: spacing[SCREEN_CONTENT_GUTTER_SPACING],
     },
     primaryAction: {
-      borderRadius: radii.lg,
+      borderRadius: radii.sm,
     },
     secondaryAction: {
-      borderRadius: radii.lg,
+      borderRadius: radii.sm,
       marginTop: spacing[2],
     },
     backActionText: {
       fontSize: fontSizes.base,
-      fontWeight: "700",
+      ...theme.fontStyles.display,
     },
   });
 };
