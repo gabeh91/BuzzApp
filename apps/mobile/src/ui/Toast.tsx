@@ -523,7 +523,7 @@ const createToastBannerStyles = (theme: BuzzTheme) => {
     message: {
       color: colors.toastChromeForeground,
       fontSize: fontSizes.md,
-      fontWeight: "600",
+      ...theme.fontStyles.labelStrong,
       lineHeight: lineHeights.body,
       textAlign: "left",
     },

@@ -70,7 +70,7 @@ export const BottomTabIcon = ({
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { radii } = theme;
+  const { radii, spacing } = theme;
 
   return StyleSheet.create({
     shell: {
@@ -87,20 +87,20 @@ const createStyles = (theme: BuzzTheme) => {
       width: 24,
     },
     discoverRing: {
-      borderRadius: 12,
+      borderRadius: radii.sm,
       borderWidth: 2,
       height: 23,
       width: 23,
     },
     discoverNeedle: {
-      borderRadius: 1,
+      borderRadius: radii["2xs"],
       height: 12,
       position: "absolute",
       transform: [{ rotate: "38deg" }],
       width: 2,
     },
     discoverDot: {
-      borderRadius: 3,
+      borderRadius: radii.xs,
       height: 5,
       position: "absolute",
       width: 5,
@@ -119,7 +119,7 @@ const createStyles = (theme: BuzzTheme) => {
     },
     unreadDot: {
       backgroundColor: theme.colors.accent,
-      borderRadius: 4,
+      borderRadius: radii.xs,
       height: 8,
       position: "absolute",
       right: 0,
@@ -133,16 +133,16 @@ const createStyles = (theme: BuzzTheme) => {
       width: 24,
     },
     profileHead: {
-      borderRadius: 6,
+      borderRadius: radii.icon,
       borderWidth: 2,
       height: 10,
-      marginBottom: 2,
+      marginBottom: spacing[0.5],
       width: 10,
     },
     profileShoulders: {
       borderBottomWidth: 0,
-      borderTopLeftRadius: 12,
-      borderTopRightRadius: 12,
+      borderTopLeftRadius: radii.sm,
+      borderTopRightRadius: radii.sm,
       borderWidth: 2,
       height: 10,
       width: 23,

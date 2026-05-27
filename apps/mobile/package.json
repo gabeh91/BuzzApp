@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "pnpm run test:logic && pnpm run test:components",
     "test:components": "jest --config jest.config.js --runInBand",
-    "test:logic": "tsx --test src/auth/*.test.ts src/features/*/*.test.ts src/i18n/*.test.ts src/lib/*.test.ts src/navigation/*.test.ts src/theme/*.test.ts"
+    "test:logic": "tsx --test \"src/**/__tests__/*.test.ts\"",
+    "patch-fonts": "python3 scripts/patch-nunito-font-metadata.py"
   },
   "dependencies": {
     "@apollo/client": "^3.14.1",

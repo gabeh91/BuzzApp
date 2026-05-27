@@ -6,6 +6,7 @@ export const routes = {
   chats: "/chats",
   profile: "/profile",
   profileQuiz: "/profile/quiz",
+  profilePersonalInfo: "/profile/personal-info",
   auth: "/auth",
   authCode: "/auth/code",
   group: (id: string) => `/groups/${id}` as const,
@@ -21,6 +22,7 @@ export type BuzzRoute =
   | typeof routes.chats
   | typeof routes.profile
   | typeof routes.profileQuiz
+  | typeof routes.profilePersonalInfo
   | typeof routes.auth
   | typeof routes.authCode
   | ReturnType<typeof routes.group>

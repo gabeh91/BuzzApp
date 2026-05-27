@@ -13,7 +13,9 @@ import {
   List,
   Panel,
   Screen,
+  SegmentedTwoTabs,
   Text,
+  TextInputGroup,
 } from "@/ui";
 
 const renderWithTheme = (ui: ReactElement) =>
@@ -72,6 +74,23 @@ describe("UI primitives", () => {
     expect(screen.getByText("Context")).toBeTruthy();
   });
 
+  it("renders SegmentedTwoTabs and reports tab changes", () => {
+    const onChange = jest.fn();
+
+    renderWithTheme(
+      <SegmentedTwoTabs
+        left={{ label: "Left" }}
+        right={{ label: "Right" }}
+        value="left"
+        onChange={onChange}
+      />,
+    );
+
+    fireEvent.press(screen.getByText("Right"));
+
+    expect(onChange).toHaveBeenCalledWith("right");
+  });
+
   it("renders accessible buttons and dispatches presses through props", () => {
     const onPress = jest.fn();
 
@@ -80,6 +99,61 @@ describe("UI primitives", () => {
     fireEvent.press(screen.getByRole("button", { name: "Accept plan" }));
 
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders TextInputGroup with label and optional description", () => {
+    renderWithTheme(
+      <TextInputGroup
+        description="Shown on your profile when you connect."
+        label="First name"
+        onChangeText={jest.fn()}
+        value=""
+      />,
+    );
+
+    expect(screen.getByText("First name")).toBeTruthy();
+    expect(
+      screen.getByText("Shown on your profile when you connect."),
+    ).toBeTruthy();
+  });
+
+  it("TextInputGroup uses button-matched field radius and floating label animation", () => {
+    const source = readFileSync("src/ui/TextInputGroup.tsx", "utf8");
+
+    expect(source).toMatch(/borderRadius: radii\.sm/);
+    expect(source).toMatch(/withTiming/);
+    expect(source).toMatch(/labelMask/);
+    expect(source).toMatch(/colors\.border/);
+    expect(source).toMatch(/colors\.textMuted/);
+    expect(source).toMatch(/fontStyles\.body/);
+    expect(source).not.toMatch(/colors\.brand/);
+    expect(source).not.toMatch(/fieldAnimatedStyle/);
+    expect(source).toMatch(/labelBackdropColor/);
+    expect(source).toMatch(/labelBehavior/);
+    expect(source).toMatch(/textInputProps\.multiline === true/);
+  });
+
+  it("uses TextInputGroup for standard form text areas", () => {
+    const peopleConnectionSource = readFileSync(
+      "src/features/people/PeopleConnectionRequestScreen.tsx",
+      "utf8",
+    );
+    const directChatSource = readFileSync(
+      "src/features/chat/DirectChatScreen.tsx",
+      "utf8",
+    );
+
+    expect(peopleConnectionSource).toMatch(/TextInputGroup/);
+    expect(peopleConnectionSource).not.toMatch(/<TextInput(?=[\s>])/);
+    expect(directChatSource).toMatch(/TextInputGroup/);
+    expect(directChatSource).not.toMatch(/<TextInput(?=[\s>])/);
+  });
+
+  it("centers button label text when labels wrap to multiple lines", () => {
+    const source = readFileSync("src/ui/Button.tsx", "utf8");
+
+    expect(source).toMatch(/textAlign:\s*"center"/);
+    expect(source).toMatch(/alignSelf:\s*"stretch"/);
   });
 
   it("renders the shared hero panel with consistent content slots", () => {
@@ -96,6 +170,13 @@ describe("UI primitives", () => {
     expect(
       screen.getByText("One reusable card defines the hero spacing."),
     ).toBeTruthy();
+  });
+
+  it("locks shared text primitive font scaling across platforms", () => {
+    const source = readFileSync("src/ui/Text.tsx", "utf8");
+
+    expect(source).toMatch(/allowFontScaling=\{false\}/);
+    expect(source).toMatch(/maxFontSizeMultiplier=\{1\}/);
   });
 
   it("keeps disabled buttons inert", () => {

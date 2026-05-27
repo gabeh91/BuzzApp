@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isOnboardingRoute, routes } from "./routes";
+import { isOnboardingRoute, routes } from "../routes";
 
 test("routes define Expo Router paths for onboarding, root tabs, and activity groups", () => {
   assert.equal(routes.onboarding, "/");
@@ -11,6 +11,7 @@ test("routes define Expo Router paths for onboarding, root tabs, and activity gr
   assert.equal(routes.chats, "/chats");
   assert.equal(routes.profile, "/profile");
   assert.equal(routes.profileQuiz, "/profile/quiz");
+  assert.equal(routes.profilePersonalInfo, "/profile/personal-info");
   assert.equal(routes.auth, "/auth");
   assert.equal(routes.authCode, "/auth/code");
   assert.equal(routes.group("group-123"), "/groups/group-123");
@@ -29,6 +30,7 @@ test("isOnboardingRoute identifies the guided onboarding entry route", () => {
   assert.equal(isOnboardingRoute(routes.chats), false);
   assert.equal(isOnboardingRoute(routes.profile), false);
   assert.equal(isOnboardingRoute(routes.profileQuiz), false);
+  assert.equal(isOnboardingRoute(routes.profilePersonalInfo), false);
   assert.equal(isOnboardingRoute(routes.group("group-123")), false);
   assert.equal(isOnboardingRoute(routes.directChat("chat-123")), false);
   assert.equal(isOnboardingRoute(routes.peopleConnect("profile-123")), false);

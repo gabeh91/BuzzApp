@@ -69,7 +69,7 @@ const createStyles = (theme: BuzzTheme) => {
   return StyleSheet.create({
     base: {
       alignItems: "center",
-      borderRadius: radii.full,
+      borderRadius: radii.sm,
       borderWidth: borderWidths.hairline,
       justifyContent: "center",
       minHeight: 50,
@@ -82,19 +82,19 @@ const createStyles = (theme: BuzzTheme) => {
     },
     secondary: {
       backgroundColor: "transparent",
-      borderColor: colors.brand,
+      borderColor: colors.brandSoft,
     },
     neutral: {
-      backgroundColor: colors.surfaceMuted,
-      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      borderColor: colors.overlay,
     },
     tonal: {
-      backgroundColor: colors.warningSoft,
-      borderColor: "transparent",
+      backgroundColor: colors.surfaceMuted,
+      borderColor: colors.overlay,
     },
     bordered: {
       backgroundColor: colors.surface,
-      borderColor: colors.brand,
+      borderColor: colors.brandSoft,
     },
     plain: {
       backgroundColor: "transparent",
@@ -110,7 +110,9 @@ const createStyles = (theme: BuzzTheme) => {
       color: colors.brand,
     },
     textCore: {
+      alignSelf: "stretch",
       fontSize: fontSizes.md,
+      textAlign: "center",
     },
     neutralText: {
       color: colors.text,
@@ -119,7 +121,7 @@ const createStyles = (theme: BuzzTheme) => {
       color: colors.text,
     },
     borderedText: {
-      color: colors.brand,
+      color: colors.text,
     },
     plainText: {
       color: colors.text,

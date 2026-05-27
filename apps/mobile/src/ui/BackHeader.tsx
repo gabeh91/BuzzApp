@@ -72,7 +72,7 @@ const createStyles = (theme: BuzzTheme) => {
       opacity: 0.72,
     },
     backLabel: {
-      fontWeight: "800",
+      ...theme.fontStyles.heavy,
     },
   });
 };

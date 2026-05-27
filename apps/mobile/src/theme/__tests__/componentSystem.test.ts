@@ -7,6 +7,8 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   assert.equal(existsSync("src/ui/Text.tsx"), true);
   assert.equal(existsSync("src/ui/Panel.tsx"), true);
   assert.equal(existsSync("src/ui/Button.tsx"), true);
+  assert.equal(existsSync("src/ui/TextInputGroup.tsx"), true);
+  assert.equal(existsSync("src/ui/CompactIntro.tsx"), true);
   assert.equal(existsSync("src/ui/Header.tsx"), true);
   assert.equal(existsSync("src/ui/HeroPanel.tsx"), true);
   assert.equal(existsSync("src/ui/List.tsx"), true);
@@ -15,6 +17,7 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   const screenSource = readFileSync("src/ui/Screen.tsx", "utf8");
   const textSource = readFileSync("src/ui/Text.tsx", "utf8");
   const buttonSource = readFileSync("src/ui/Button.tsx", "utf8");
+  const compactIntroSource = readFileSync("src/ui/CompactIntro.tsx", "utf8");
   const panelSource = readFileSync("src/ui/Panel.tsx", "utf8");
   const headerSource = readFileSync("src/ui/Header.tsx", "utf8");
   const heroPanelSource = readFileSync("src/ui/HeroPanel.tsx", "utf8");
@@ -25,6 +28,8 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   assert.match(screenSource, /ScrollView/);
   assert.match(textSource, /variant/);
   assert.match(buttonSource, /variant/);
+  assert.match(compactIntroSource, /eyebrow/);
+  assert.match(compactIntroSource, /panelTitle/);
   assert.match(panelSource, /variant/);
   assert.match(headerSource, /left/);
   assert.match(headerSource, /right/);
@@ -33,6 +38,8 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
   assert.match(heroPanelSource, /body/);
   assert.match(listSource, /@shopify\/flash-list/);
   assert.match(listSource, /FlashList/);
+  assert.match(indexSource, /export \{ CompactIntro \}/);
+  assert.match(indexSource, /export \{[\s\S]*TextInputGroup/);
   assert.match(indexSource, /export \{ List/);
   assert.doesNotMatch(
     indexSource,
@@ -42,6 +49,10 @@ test("mobile app exposes reusable UI primitives for repeated screen chrome", () 
 
 test("Home and Group screens consume shared UI primitives instead of duplicating every primitive style", () => {
   const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
+  const activityCardSource = readFileSync(
+    "src/features/activities/ActivityMatchCard.tsx",
+    "utf8",
+  );
   const groupSource = readFileSync(
     "src/features/groups/GroupScreen.tsx",
     "utf8",
@@ -49,12 +60,17 @@ test("Home and Group screens consume shared UI primitives instead of duplicating
 
   assert.match(homeSource, /@\/ui/);
   assert.match(homeSource, /<Screen/);
-  assert.match(homeSource, /<Header/);
+  assert.match(homeSource, /<StickySegmentedTabs/);
   assert.match(homeSource, /<Panel/);
   assert.match(homeSource, /<UiText/);
   assert.match(homeSource, /PeopleMatchCard/);
+  assert.match(homeSource, /ActivityMatchCard/);
+  assert.doesNotMatch(activityCardSource, /<Panel/);
+  assert.match(activityCardSource, /borderTopWidth/);
+  assert.match(activityCardSource, /borderBottomWidth/);
+  assert.match(activityCardSource, /activityIconForInterest/);
   assert.match(groupSource, /@\/ui/);
-  assert.match(groupSource, /<Header/);
+  assert.match(groupSource, /<BackHeader/);
   assert.match(groupSource, /<Button/);
 });
 
@@ -62,22 +78,23 @@ test("Discover feed uses the shared virtualized List primitive", () => {
   const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
 
   assert.match(homeSource, /<List/);
-  assert.match(homeSource, /renderItem=\{renderPeopleMatch\}/);
-  assert.match(homeSource, /keyExtractor=\{getPersonKey\}/);
-  assert.match(homeSource, /extraData=\{connectionStatuses\}/);
+  assert.match(homeSource, /renderItem=\{renderDiscoverItem\}/);
+  assert.match(homeSource, /keyExtractor=\{\(item\)/);
+  assert.match(homeSource, /discoverTab/);
   assert.match(homeSource, /scroll=\{false\}/);
   assert.doesNotMatch(homeSource, /peopleMatches\.map/);
 });
 
-test("Home and Profile screens share the same hero panel component", () => {
+test("Profile and Home use compact, non-hero intros", () => {
   const homeSource = readFileSync("src/features/home/HomeScreen.tsx", "utf8");
   const profileSource = readFileSync(
     "src/features/profile/ProfileScreen.tsx",
     "utf8",
   );
 
-  assert.match(homeSource, /HeroPanel/);
-  assert.match(profileSource, /HeroPanel/);
+  assert.doesNotMatch(homeSource, /HeroPanel/);
+  assert.match(homeSource, /home\.tabs\.people/);
+  assert.match(profileSource, /CompactIntro/);
   assert.doesNotMatch(homeSource, /heroCard/);
   assert.doesNotMatch(profileSource, /heroCard/);
 });

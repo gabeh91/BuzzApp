@@ -39,7 +39,12 @@ export const Text = ({
   const styles = createStyles(theme);
 
   return (
-    <NativeText {...textProps} style={[styles.base, styles[variant], style]} />
+    <NativeText
+      {...textProps}
+      allowFontScaling={false}
+      maxFontSizeMultiplier={1}
+      style={[styles.base, styles[variant], style]}
+    />
   );
 };
 
@@ -48,27 +53,28 @@ const createStyles = (theme: BuzzTheme) => {
 
   return StyleSheet.create({
     base: {
+      ...theme.fontStyles.body,
       color: colors.text,
       letterSpacing: 0,
     },
     logo: {
-      ...theme.fontStyles.display,
+      ...theme.fontStyles.black,
       color: colors.text,
       fontSize: fontSizes["5xl"],
       lineHeight: 36,
     },
     city: {
+      ...theme.fontStyles.labelStrong,
       color: colors.textMuted,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
       letterSpacing: 1.1,
       textTransform: "uppercase",
     },
     eyebrow: {
+      ...theme.fontStyles.labelStrong,
       color: colors.accent,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
-      letterSpacing: 1.2,
+      letterSpacing: 0.8,
       textTransform: "uppercase",
     },
     title: {
@@ -78,34 +84,37 @@ const createStyles = (theme: BuzzTheme) => {
       lineHeight: lineHeights.hero,
     },
     body: {
+      ...theme.fontStyles.body,
       color: colors.textMuted,
       fontSize: fontSizes.md,
       lineHeight: lineHeights.body,
     },
     panelTitle: {
+      ...theme.fontStyles.display,
       color: colors.brand,
       fontSize: fontSizes.xl,
-      fontWeight: "900",
       lineHeight: lineHeights.title,
     },
     panelBody: {
-      color: colors.brand,
+      ...theme.fontStyles.body,
+      color: colors.text,
       fontSize: fontSizes.base,
-      lineHeight: lineHeights.tight,
+      lineHeight: lineHeights.body,
     },
     button: {
+      ...theme.fontStyles.display,
+      color: colors.text,
       fontSize: fontSizes.sm,
-      fontWeight: "900",
     },
     feedback: {
+      ...theme.fontStyles.labelStrong,
       color: colors.brand,
       fontSize: fontSizes.sm,
-      fontWeight: "800",
       lineHeight: lineHeights.tight,
     },
     status: {
+      ...theme.fontStyles.labelStrong,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
     },
   });
 };

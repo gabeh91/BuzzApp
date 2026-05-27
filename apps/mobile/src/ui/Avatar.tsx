@@ -62,7 +62,7 @@ const createStyles = (theme: BuzzTheme, size: number) => {
     initial: {
       color: colors.brand,
       fontSize: fontSizes["2xl"],
-      fontWeight: "900",
+      ...theme.fontStyles.black,
       lineHeight: lineHeights.title,
     },
   });

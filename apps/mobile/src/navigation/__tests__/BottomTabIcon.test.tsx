@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react-native";
 
 import { ThemeProvider } from "@/theme/ThemeProvider";
-import { BottomTabIcon } from "./BottomTabIcon";
+import { BottomTabIcon } from "../BottomTabIcon";
 
 describe("BottomTabIcon", () => {
   it("renders an accessible discover icon", () => {

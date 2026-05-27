@@ -6,7 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
-import { ToastProvider, useToast } from "./Toast";
+import { ToastProvider, useToast } from "../Toast";
 
 const testSafeAreaMetrics = {
   frame: { x: 0, y: 0, width: 390, height: 844 },

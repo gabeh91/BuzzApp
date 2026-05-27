@@ -24,6 +24,7 @@ type SheetProps = {
   children: ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
   dismissible?: boolean;
+  initialSnapIndex?: number;
   /** Bump when presenting again so the native modal remounts (avoids gorhom stuck-after-dismiss). */
   remountKey?: number;
   onDismiss?: () => void;
@@ -36,6 +37,7 @@ export const Sheet = ({
   children,
   contentStyle,
   dismissible = true,
+  initialSnapIndex = 0,
   remountKey = 0,
   onDismiss,
   snapPoints,
@@ -86,6 +88,7 @@ export const Sheet = ({
       enableDynamicSizing={false}
       enablePanDownToClose={dismissible}
       handleIndicatorStyle={styles.handleIndicator}
+      index={initialSnapIndex}
       onDismiss={handleClose}
       snapPoints={resolvedSnapPoints}
       {...(Platform.OS === "ios"
@@ -100,13 +103,13 @@ export const Sheet = ({
 };
 
 const createStyles = (theme: BuzzTheme) => {
-  const { colors, spacing } = theme;
+  const { colors, radii, spacing } = theme;
 
   return StyleSheet.create({
     background: {
       backgroundColor: colors.surface,
-      borderTopLeftRadius: 30,
-      borderTopRightRadius: 30,
+      borderTopLeftRadius: radii.xl,
+      borderTopRightRadius: radii.xl,
     },
     content: {
       paddingHorizontal: spacing[4],

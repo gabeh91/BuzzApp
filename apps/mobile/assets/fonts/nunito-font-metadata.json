@@ -1,0 +1,38 @@
+[
+  {
+    "file": "NunitoSans-Regular.ttf",
+    "postScript": "NunitoSans-Regular",
+    "subfamily": "Regular",
+    "weight": 400
+  },
+  {
+    "file": "NunitoSans-Medium.ttf",
+    "postScript": "NunitoSans-Medium",
+    "subfamily": "Medium",
+    "weight": 500
+  },
+  {
+    "file": "NunitoSans-SemiBold.ttf",
+    "postScript": "NunitoSans-SemiBold",
+    "subfamily": "SemiBold",
+    "weight": 600
+  },
+  {
+    "file": "NunitoSans-Bold.ttf",
+    "postScript": "NunitoSans-Bold",
+    "subfamily": "Bold",
+    "weight": 700
+  },
+  {
+    "file": "NunitoSans-ExtraBold.ttf",
+    "postScript": "NunitoSans-ExtraBold",
+    "subfamily": "ExtraBold",
+    "weight": 800
+  },
+  {
+    "file": "NunitoSans-Black.ttf",
+    "postScript": "NunitoSans-Black",
+    "subfamily": "Black",
+    "weight": 900
+  }
+]

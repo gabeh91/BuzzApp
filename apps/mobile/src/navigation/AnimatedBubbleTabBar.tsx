@@ -371,9 +371,9 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     },
     tabBar: {
       backgroundColor: colors.surface,
-      borderColor: colors.border,
-      borderTopLeftRadius: radii.xl,
-      borderTopRightRadius: radii.xl,
+      borderColor: colors.overlay,
+      borderTopLeftRadius: radii.lg,
+      borderTopRightRadius: radii.lg,
       borderTopWidth: borderWidths.hairline,
       elevation: 0,
       height: TAB_BAR_CORE_HEIGHT + Math.max(bottomInset, spacing[2]),
@@ -389,12 +389,14 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
       position: "relative",
     },
     activeBubble: {
-      backgroundColor: colors.warningSoft,
-      borderRadius: radii.full,
-      height: 35,
+      backgroundColor: colors.surfaceMuted,
+      borderColor: colors.brandSoft,
+      borderRadius: radii.sm,
+      borderWidth: borderWidths.hairline,
+      height: 38,
       left: 0,
       position: "absolute",
-      top: 2.5,
+      top: 1,
       width: iconBubbleWidth,
     },
     tabItem: {
@@ -421,7 +423,7 @@ const createStyles = (theme: BuzzTheme, bottomInset: number) => {
     tabLabel: {
       color: colors.textMuted,
       fontSize: fontSizes.xs,
-      fontWeight: "900",
+      ...theme.fontStyles.display,
     },
     tabLabelFocused: {
       color: colors.text,

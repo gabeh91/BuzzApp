@@ -2,39 +2,61 @@ import { Platform } from "react-native";
 
 export type BuzzThemeMode = "light" | "dark";
 
+/** Registered in `AppProviders` via `useFonts` (Nunito Sans static cuts, SIL OFL). */
+export const NUNITO_SANS_REGULAR = "NunitoSans-Regular";
+export const NUNITO_SANS_MEDIUM = "NunitoSans-Medium";
+export const NUNITO_SANS_SEMIBOLD = "NunitoSans-SemiBold";
+export const NUNITO_SANS_BOLD = "NunitoSans-Bold";
+export const NUNITO_SANS_EXTRABOLD = "NunitoSans-ExtraBold";
+export const NUNITO_SANS_BLACK = "NunitoSans-Black";
+
+/** @deprecated Prefer `theme.fontStyles` or a specific `NUNITO_SANS_*` constant. */
+export const NUNITO_SANS_FAMILY = NUNITO_SANS_REGULAR;
+
 const fontFamilies = {
-  display: Platform.select({
-    ios: "Avenir Next",
-    android: "Metropolis-ExtraBold",
-    default: "Metropolis-ExtraBold"
-  }),
-  body: Platform.select({
-    ios: "Avenir Next",
-    android: "Metropolis-Regular",
-    default: "Metropolis-Regular"
-  }),
+  sans: NUNITO_SANS_MEDIUM,
+  body: NUNITO_SANS_SEMIBOLD,
+  display: NUNITO_SANS_EXTRABOLD,
   mono: Platform.select({
     ios: "Menlo",
     android: "Menlo-Regular",
-    default: "Menlo-Regular"
-  })
+    default: "Menlo-Regular",
+  }),
 };
 
+/**
+ * Shared sans styles; use these instead of raw `fontWeight` in feature styles.
+ * Each role maps to its own bundled face so weights render consistently on iOS and Android.
+ */
 const fontStyles = {
-  display: Platform.select({
-    ios: { fontFamily: "Avenir Next", fontWeight: "900" as const },
-    android: { fontFamily: "Metropolis-ExtraBold" },
-    default: { fontFamily: "Metropolis-ExtraBold" }
-  }),
-  displayStrong: Platform.select({
-    ios: { fontFamily: "Avenir Next", fontWeight: "800" as const },
-    android: { fontFamily: "Metropolis-ExtraBold" },
-    default: { fontFamily: "Metropolis-ExtraBold" }
-  })
-};
+  body: {
+    fontFamily: NUNITO_SANS_SEMIBOLD,
+  },
+  labelStrong: {
+    fontFamily: NUNITO_SANS_BOLD,
+  },
+  display: {
+    fontFamily: NUNITO_SANS_EXTRABOLD,
+  },
+  /** @deprecated Use `labelStrong` */
+  displayStrong: {
+    fontFamily: NUNITO_SANS_BOLD,
+  },
+  heavy: {
+    fontFamily: NUNITO_SANS_BLACK,
+  },
+  black: {
+    fontFamily: NUNITO_SANS_BLACK,
+  },
+} as const;
+
+export type BuzzFontStyle = keyof typeof fontStyles;
 
 export const spacing = {
   0: 0,
+  0.25: 1,
+  0.5: 2,
+  0.75: 3,
   1: 4,
   2: 8,
   3: 12,
@@ -45,19 +67,22 @@ export const spacing = {
   8: 32,
   10: 40,
   12: 48,
-  16: 64
+  16: 64,
 } as const;
 
 /** Default horizontal + top inset for `Screen`; bottom is left to scroll/list insets. */
 export const SCREEN_CONTENT_GUTTER_SPACING: keyof typeof spacing = 6;
 
 export const radii = {
-  sm: 12,
-  md: 18,
-  lg: 24,
-  xl: 30,
-  "2xl": 36,
-  full: 999
+  "2xs": 2,
+  xs: 4,
+  icon: 6,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 24,
+  "2xl": 28,
+  full: 999,
 } as const;
 
 export const fontSizes = {
@@ -71,7 +96,7 @@ export const fontSizes = {
   "3xl": 25,
   "4xl": 28,
   "5xl": 30,
-  hero: 34
+  hero: 34,
 } as const;
 
 export const lineHeights = {
@@ -79,27 +104,27 @@ export const lineHeights = {
   body: 24,
   relaxed: 26,
   title: 32,
-  hero: 39
+  hero: 39,
 } as const;
 
 export const borderWidths = {
   hairline: 1,
-  focus: 2
+  focus: 2,
 } as const;
 
 const lightPalette = {
   mode: "light",
-  ink: "#15251f",
-  muted: "#66736b",
-  cream: "#f7f0df",
-  paper: "#fffaf0",
+  ink: "#1d2624",
+  muted: "#6a7270",
+  cream: "#f4f2ed",
+  paper: "#fcfbf8",
   moss: "#31483f",
   sage: "#8fa88f",
   clay: "#c96f45",
   claySoft: "rgba(201, 111, 69, 0.14)",
   gold: "#d7a84b",
   goldSoft: "rgba(215, 168, 75, 0.28)",
-  sky: "#d8e9ea",
+  sky: "#e9edf0",
   line: "rgba(21, 37, 31, 0.14)",
   disabled: "rgba(21, 37, 31, 0.26)",
   overlay: "rgba(21, 37, 31, 0.12)",
@@ -112,22 +137,22 @@ const lightPalette = {
   toastChromeBarTrack: "rgba(255, 250, 240, 0.22)",
   toastChromeBarFill: "rgba(255, 250, 240, 0.72)",
   toastChromeDismissPressed: "rgba(255, 250, 240, 0.16)",
-  badgeSelectedTint: "rgba(255, 250, 240, 0.22)"
+  badgeSelectedTint: "rgba(255, 250, 240, 0.22)",
 } as const;
 
 const darkPalette = {
   mode: "dark",
-  ink: "#f8ecd8",
-  muted: "#b8aa94",
-  cream: "#101814",
-  paper: "#17221d",
+  ink: "#f2eee6",
+  muted: "#b4b0a7",
+  cream: "#101314",
+  paper: "#171c1d",
   moss: "#d9e7d7",
   sage: "#9fba9f",
   clay: "#e09063",
   claySoft: "rgba(224, 144, 99, 0.2)",
   gold: "#e7be6a",
   goldSoft: "rgba(231, 190, 106, 0.18)",
-  sky: "#263d40",
+  sky: "#222a2c",
   line: "rgba(248, 236, 216, 0.16)",
   disabled: "rgba(248, 236, 216, 0.24)",
   overlay: "rgba(248, 236, 216, 0.12)",
@@ -140,7 +165,7 @@ const darkPalette = {
   toastChromeBarTrack: "rgba(248, 236, 216, 0.22)",
   toastChromeBarFill: "rgba(248, 236, 216, 0.72)",
   toastChromeDismissPressed: "rgba(248, 236, 216, 0.16)",
-  badgeSelectedTint: "rgba(248, 236, 216, 0.2)"
+  badgeSelectedTint: "rgba(248, 236, 216, 0.2)",
 } as const;
 
 const fabWheel = {
@@ -150,31 +175,30 @@ const fabWheel = {
   gradientClear: "rgba(21, 37, 31, 0)",
   heroTextMuted: "rgba(255, 250, 240, 0.92)",
   textShadow: "rgba(21, 37, 31, 0.72)",
-  energyRingGoldFill: "rgba(215, 168, 75, 0.07)",
-  energyRingGoldBorder: "rgba(215, 168, 75, 0.16)",
-  energyRingSky: "rgba(216, 233, 234, 0.1)",
-  energyRingGoldInner: "rgba(215, 168, 75, 0.1)",
+  energyRingGoldFill: "rgba(216, 233, 234, 0.14)",
+  energyRingGoldBorder: "rgba(143, 168, 177, 0.18)",
+  energyRingSky: "rgba(216, 233, 234, 0.18)",
+  energyRingGoldInner: "rgba(112, 148, 160, 0.12)",
   closeButtonFill: "rgba(255, 250, 240, 0.16)",
   closeButtonBorder: "rgba(255, 250, 240, 0.24)",
-  fabLiveBorder: "rgba(215, 168, 75, 0.78)",
-  chargeFill: "rgba(255, 250, 240, 0.36)",
+  fabCompactGlow: "rgba(143, 168, 177, 0.28)",
+  fabLiveBorder: "rgba(143, 168, 177, 0.74)",
+  chargeFill: "rgba(79, 114, 124, 0.28)",
   clearSelectionFill: "rgba(255, 250, 240, 0.34)",
   clearSelectionBorder: "rgba(21, 37, 31, 0.12)",
-  /** FAB release burst: transparent stops use paper hue so gradients don’t muddy to grey. */
+  /** FAB release burst: transparent stops use paper hue so gradients don't muddy to grey. */
   energyReleasePrimaryG0: "rgba(255, 250, 240, 0)",
-  energyReleasePrimaryG1: "rgba(255, 228, 168, 0.44)",
-  energyReleasePrimaryG2: "rgba(232, 188, 88, 0.88)",
+  energyReleasePrimaryG1: "rgba(216, 233, 234, 0.5)",
+  energyReleasePrimaryG2: "rgba(112, 148, 160, 0.86)",
   energyReleasePrimaryG3: "rgba(255, 250, 240, 0)",
-  /** FAB release tail: same — warm transparent ends. */
+  /** FAB release tail: same neutral transparent ends. */
   energyReleaseSecondaryG0: "rgba(255, 250, 240, 0)",
-  energyReleaseSecondaryG1: "rgba(255, 232, 200, 0.2)",
-  energyReleaseSecondaryG2: "rgba(215, 168, 75, 0.36)",
+  energyReleaseSecondaryG1: "rgba(216, 233, 234, 0.26)",
+  energyReleaseSecondaryG2: "rgba(143, 168, 177, 0.42)",
   energyReleaseSecondaryG3: "rgba(255, 250, 240, 0)",
   wheelButtonBorder: "rgba(255, 250, 240, 0.86)",
   expandedIconBadgeFill: "rgba(255, 250, 240, 0.34)",
   expandedIconBadgeBorder: "rgba(21, 37, 31, 0.12)",
-  idlePulseFillEnd: "#e7bd62",
-  idlePulseBorderEnd: "#efcd7e",
 } as const;
 
 export type FabWheelTheme = typeof fabWheel;
@@ -197,7 +221,7 @@ const createSemanticColors = (palette: typeof lightPalette | typeof darkPalette)
     warning: palette.gold,
     warningSoft: palette.goldSoft,
     border: palette.line,
-    focus: palette.clay
+    focus: palette.clay,
   };
 };
 
@@ -216,10 +240,10 @@ const createTheme = <Mode extends BuzzThemeMode>(
         }
       : {
           shadowColor: palette.ink,
-          shadowOpacity: 0.12,
-          shadowRadius: 24,
-          shadowOffset: { width: 0, height: 14 },
-          elevation: 5,
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 4,
         };
 
   return {

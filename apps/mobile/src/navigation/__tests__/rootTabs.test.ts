@@ -34,7 +34,7 @@ test("root tabs expose Discover, Activities, Chats, and Profile as bottom destin
   assert.match(bubbleTabBarSource, /useSharedValue/);
   assert.match(bubbleTabBarSource, /withSequence/);
   assert.match(bubbleTabBarSource, /withSpring/);
-  assert.match(bubbleTabBarSource, /colors\.warningSoft/);
+  assert.match(bubbleTabBarSource, /colors\.surfaceMuted/);
   assert.match(bubbleTabBarSource, /scaleX: bubbleStretch\.value/);
   assert.match(bubbleTabBarSource, /scaleY: bubbleSquash\.value/);
   assert.match(bubbleTabBarSource, /bubbleMorph/);

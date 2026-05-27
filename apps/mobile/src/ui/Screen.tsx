@@ -112,8 +112,9 @@ const createStyles = (theme: BuzzTheme) => {
       position: "relative",
       zIndex: 10,
     },
+    /** Avoid clipping virtualized lists (e.g. FlashList) that paint past the layout box. */
     clipScrollBody: {
-      overflow: "hidden",
+      overflow: "visible",
     },
     scrollRoot: {
       flex: 1,

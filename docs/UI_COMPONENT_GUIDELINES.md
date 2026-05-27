@@ -239,6 +239,12 @@ Use `StyleSheet.create` and theme tokens for React Native styling.
   feature screens.
 - Do not inline large style objects in JSX. Inline styles should be limited to truly dynamic
   values.
+- Do not add one-off styling props such as `horizontalInset`, `inlinePadding`, `radius`, or
+  `gap` to reusable components. Expose generic style props instead, such as `style`,
+  `containerStyle`, `contentStyle`, `labelStyle`, or another clearly scoped `StyleProp<ViewStyle>`
+  / `StyleProp<TextStyle>` escape hatch.
+- Keep component props for behavior, content, and semantic variants. Screen-specific spacing,
+  alignment, and layout tweaks should be passed through tokenized `StyleSheet` styles.
 - Do not hardcode font families or weights in screens. Use `Text` variants or theme font
   styles.
 - Do not copy a style block from one screen to another. Extract it into a component.
@@ -295,12 +301,16 @@ Rendered strings should use the locale layer.
 
 Use the app typography system.
 
-- iOS display/body can use Avenir Next through theme tokens.
-- Android should use bundled Metropolis faces through theme tokens.
+- iOS and Android both use bundled **Nunito Sans** static faces (SIL OFL) through `theme.fontStyles`.
+  Each semantic role (`body`, `labelStrong`, `display`, etc.) maps to its own registered `fontFamily`
+  so weights stay legible on both platforms—do not rely on `fontWeight` with a single variable file.
+- iOS matches fonts by **PostScript name** inside each `.ttf`. If you regenerate cuts from the variable
+  font, run `pnpm --filter mobile patch-fonts` so every file gets a unique name (otherwise iOS can render
+  every weight as ExtraLight).
 - Mono text should use the bundled Menlo faces through theme tokens.
 - Screens should not pick platform fonts directly.
-- If a font weight does not display correctly on Android, prefer the explicit bundled font face
-  over relying on weight resolution.
+- Prefer `theme.fontStyles` (`body`, `labelStrong`, `display`, `heavy`, `black`) over raw `fontWeight`
+  in feature styles.
 
 ## What Belongs in Shared Components
 
